@@ -3,122 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>እሁድን በፍቅር - መግቢያ</title>
-    <!-- Telegram Web App Script -->
+    <title>እሁድን በፍቅር - Mini App</title>
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Tailwind CSS for styling -->
+    <!-- Tailwind CSS for modern UI -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
-            --tg-text: var(--tg-theme-text-color, #000000);
-            --tg-secondary: var(--tg-theme-secondary-bg-color, #efeff3);
-            --tg-btn: var(--tg-theme-button-color, #2481cc);
+            --tg-text: var(--tg-theme-text-color, #1a1a1a);
+            --tg-hint: var(--tg-theme-hint-color, #6b7280);
+            /* Ehuden Befikir Branding: Green and White */
+            --brand-green: #15803d; 
+            --brand-green-light: #f0fdf4; 
+            --tg-btn: var(--tg-theme-button-color, #15803d);
             --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary: var(--tg-theme-secondary-bg-color, #f9fafb);
         }
-        body { 
-            background-color: var(--tg-bg); 
-            color: var(--tg-text); 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            transition: all 0.2s; 
+
+        body {
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
-        .input-field { 
-            background-color: var(--tg-secondary); 
-            border: 1px solid rgba(0,0,0,0.1); 
-            color: var(--tg-text); 
+
+        .card {
+            background-color: var(--tg-secondary);
+            border-radius: 16px;
         }
-        .tab-btn.active { 
-            border-bottom: 3px solid var(--tg-btn); 
-            color: var(--tg-btn); 
-            font-weight: bold; 
+
+        .input-group input, .input-group select, .input-group textarea {
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            border: 1.5px solid #e5e7eb;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            border-color: var(--brand-green);
+        }
+
+        .active-tab {
+            border-bottom: 4px solid var(--brand-green);
+            color: var(--brand-green);
+            font-weight: 800;
+        }
+
+        .logo-container {
+            background: linear-gradient(135deg, var(--brand-green), #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashed-border {
+            border: 2px dashed #15803d44;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 select-none">
     <div class="max-w-md mx-auto">
-        <header class="mb-6 text-center">
-            <h1 class="text-2xl font-bold text-blue-500">እሁድን በፍቅር</h1>
-            <p class="text-sm opacity-70">የክፍያ እና የብድር አገልግሎት ማዕከል</p>
-        </header>
-
-        <!-- Navigation Tabs -->
-        <div class="flex border-b border-gray-200 mb-6">
-            <button onclick="switchTab('payment')" id="paymentTab" class="tab-btn active flex-1 py-3">ክፍያ ሪፖርት</button>
-            <button onclick="switchTab('loan')" id="loanTab" class="tab-btn flex-1 py-3">ብድር ይጠይቁ</button>
+        <!-- Header / Logo Section -->
+        <div class="text-center mb-8 mt-2">
+            <div class="flex justify-center items-center mb-2">
+                <div class="w-12 h-12 bg-green-700 rounded-2xl flex items-center justify-center shadow-md mr-3">
+                    <span class="text-white text-2xl font-bold">እ</span>
+                </div>
+                <h1 class="text-3xl font-black logo-container tracking-tight">እሁድን በፍቅር</h1>
+            </div>
+            <div class="h-1 w-16 bg-green-700 mx-auto rounded-full opacity-20 mb-2"></div>
+            <p class="text-[10px] font-bold uppercase tracking-widest opacity-50">የእድር ዲጂታል አገልግሎት</p>
         </div>
 
-        <!-- Payment Form -->
-        <form id="paymentForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-semibold mb-1">የክፍያ ዓላማ</label>
-                <select id="purpose" class="input-field w-full p-4 rounded-xl outline-none appearance-none">
-                    <option value="Monthly Fee">የወርሃዊ አባልነት ክፍያ</option>
-                    <option value="Loan Payment">የብድር መመለሻ (Repayment)</option>
-                    <option value="Penalty">የቅጣት ክፍያ</option>
-                    <option value="Special Call">ልዩ መዋጮ</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">የከፈሉበት ቦታ</label>
-                <select id="location" class="input-field w-full p-4 rounded-xl outline-none appearance-none">
-                    <option value="telebirr">ቴሌብር (telebirr)</option>
-                    <option value="CBE Bank">ንግድ ባንክ (CBE)</option>
-                    <option value="CBE Birr">ሲቢኢ ብር (CBE Birr)</option>
-                    <option value="Physical">በእጅ (Meeting)</option>
-                </select>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold mb-1">መጠን (ብር)</label>
-                    <input type="number" id="amount" required placeholder="500" class="input-field w-full p-4 rounded-xl outline-none font-bold">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">ቅጣት (ብር)</label>
-                    <input type="number" id="penalty" placeholder="0" class="input-field w-full p-4 rounded-xl outline-none">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">ተጨማሪ ማስታወሻ</label>
-                <textarea id="note" placeholder="ለምሳሌ፡ የጥቅምት ወር ክፍያ..." class="input-field w-full p-4 rounded-xl outline-none h-20"></textarea>
-            </div>
-            <button type="submit" class="w-full py-4 rounded-2xl font-bold text-lg shadow-lg transform active:scale-95 transition-transform" style="background-color: var(--tg-btn); color: var(--tg-btn-text);">ክፍያውን መዝግብ</button>
-        </form>
+        <!-- Navigation Tabs -->
+        <div class="flex justify-around border-b mb-6 border-gray-100 bg-white sticky top-0 z-10">
+            <button onclick="showTab('payment')" id="payTab" class="flex-1 py-4 text-sm transition-all active-tab uppercase">ክፍያ ሪፖርት</button>
+            <button onclick="showTab('loan')" id="loanTab" class="flex-1 py-4 text-sm transition-all opacity-40 uppercase">ብድር ይጠይቁ</button>
+        </div>
 
-        <!-- Loan Request Form -->
-        <form id="loanForm" class="space-y-4 hidden">
-            <div>
-                <label class="block text-sm font-semibold mb-1">የብድር መጠን (ብር)</label>
-                <input type="number" id="loanAmount" required placeholder="ለምሳሌ፡ 5000" class="input-field w-full p-4 rounded-xl outline-none font-bold">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">የመመለሻ ጊዜ (በወር)</label>
-                <input type="number" id="loanDuration" required placeholder="ለምሳሌ፡ 6" class="input-field w-full p-4 rounded-xl outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">ምክንያት</label>
-                <textarea id="loanReason" required placeholder="ብድሩ ለምን አስፈለገዎት?" class="input-field w-full p-4 rounded-xl outline-none h-32"></textarea>
-            </div>
-            <button type="submit" class="w-full py-4 rounded-2xl font-bold text-lg shadow-lg transform active:scale-95 transition-transform" style="background-color: var(--tg-btn); color: var(--tg-btn-text);">የብድር ጥያቄውን ላክ</button>
-        </form>
+        <!-- Payment Section -->
+        <div id="paymentSection" class="fade-in">
+            <form id="paymentForm" class="space-y-5">
+                <div class="input-group">
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የክፍያ ዓላማ</label>
+                    <select id="purpose" class="w-full p-4 rounded-2xl outline-none focus:ring-0 shadow-sm">
+                        <option value="Monthly Fee">የወርሃዊ መዋጮ</option>
+                        <option value="Loan Payment">የብድር መመለሻ</option>
+                        <option value="Penalty">የቅጣት ክፍያ</option>
+                        <option value="Special">ልዩ መዋጮ</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የከፈሉበት መንገድ</label>
+                    <select id="location" class="w-full p-4 rounded-2xl outline-none shadow-sm">
+                        <option value="Telebirr">ቴሌብር (Telebirr)</option>
+                        <option value="CBE Bank">ንግድ ባንክ (CBE)</option>
+                        <option value="CBE Birr">ሲቢኢ ብር (CBE Birr)</option>
+                        <option value="Meeting">በስብሰባው ላይ (Cash)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">መጠን (ብር)</label>
+                        <input type="number" id="baseAmount" placeholder="500" required class="w-full p-4 rounded-2xl outline-none font-mono font-bold shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">ቅጣት (ብር)</label>
+                        <input type="number" id="penaltyAmount" placeholder="0" class="w-full p-4 rounded-2xl outline-none font-mono shadow-sm">
+                    </div>
+                </div>
+
+                <!-- Receipt Upload Box -->
+                <div class="input-group">
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">ደረሰኝ (Screenshot)</label>
+                    <div id="receiptBox" onclick="document.getElementById('receiptInput').click()" class="dashed-border w-full p-8 rounded-3xl text-center cursor-pointer hover:bg-green-50 transition-all bg-green-50/20 border-green-700/30">
+                        <div id="receiptPreview" class="flex flex-col items-center">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <span id="receiptText" class="text-xs font-semibold text-green-800">የደረሰኙን ፎቶ እዚህ ይምረጡ</span>
+                            <input type="file" id="receiptInput" accept="image/*" class="hidden" onchange="handleFile(this)">
+                        </div>
+                    </div>
+                    <div class="bg-green-100/50 p-3 rounded-xl mt-3 flex items-start">
+                        <span class="mr-2">💡</span>
+                        <p class="text-[10px] text-green-900 font-medium">
+                            ፎርሙን ከጨረሱ በኋላ የደረሰኙን ፎቶ በቴሌግራም ቻቱ ላይ መላክዎን አይርሱ!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">ተጨማሪ ማስታወሻ</label>
+                    <textarea id="note" placeholder="ለምሳሌ፡ የጥቅምት ወር ክፍያ..." class="w-full p-4 rounded-2xl outline-none h-24 resize-none shadow-sm"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-5 rounded-3xl font-black text-lg shadow-xl active:scale-[0.98] transition-all mt-4 hover:shadow-green-900/10" style="background-color: var(--tg-btn); color: var(--tg-btn-text);">
+                    ክፍያውን መዝግብ
+                </button>
+            </form>
+        </div>
+
+        <!-- Loan Section -->
+        <div id="loanSection" class="hidden fade-in">
+            <form id="loanForm" class="space-y-5">
+                <div class="bg-green-700 p-6 rounded-3xl text-white mb-6 shadow-lg relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="text-xl font-bold mb-1">የብድር አገልግሎት</h3>
+                        <p class="text-xs opacity-80">ጥያቄዎን ሲያቀርቡ በአስተዳዳሪው ታይቶ ምላሽ ይሰጥዎታል</p>
+                    </div>
+                    <div class="absolute -right-4 -bottom-4 opacity-10">
+                        <svg width="120" height="120" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የሚፈልጉት የብድር መጠን (ብር)</label>
+                    <input type="number" id="loanAmount" placeholder="3000" required class="w-full p-4 rounded-2xl outline-none font-mono font-bold shadow-sm">
+                </div>
+
+                <div class="input-group">
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የመመለሻ ጊዜ (በወር)</label>
+                    <input type="number" id="loanDuration" placeholder="6" required class="w-full p-4 rounded-2xl outline-none font-mono shadow-sm">
+                </div>
+
+                <div class="input-group">
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">ብድሩ ለምን አስፈለገዎት?</label>
+                    <textarea id="loanReason" required placeholder="ዝርዝር ምክንያት ይጥቀሱ..." class="w-full p-4 rounded-2xl outline-none h-40 resize-none shadow-sm"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-5 rounded-3xl font-black text-lg shadow-xl active:scale-[0.98] transition-all mt-4" style="background-color: var(--tg-btn); color: var(--tg-btn-text);">
+                    የብድር ጥያቄ ላክ
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer Section with Branding -->
+        <div class="flex flex-col items-center mt-12 mb-8 opacity-40">
+            <p class="text-[10px] font-bold tracking-widest uppercase mb-1 text-green-900">እሁድን በፍቅር Digital v2.1</p>
+            <div class="h-[1px] w-12 bg-green-700 opacity-30 mb-2"></div>
+            <p class="text-[9px] font-bold text-green-800 tracking-tighter">POWERED BY SKYMARK SYSTEM SOLUTION</p>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Make the app take full height
+        tg.ready();
+        tg.expand();
+        
+        tg.setHeaderColor(tg.themeParams.bg_color || '#ffffff');
 
-        // Tab Switching Logic
-        function switchTab(tab) {
-            document.getElementById('paymentForm').classList.toggle('hidden', tab !== 'payment');
-            document.getElementById('loanForm').classList.toggle('hidden', tab !== 'loan');
-            document.getElementById('paymentTab').classList.toggle('active', tab === 'payment');
-            document.getElementById('loanTab').classList.toggle('active', tab === 'loan');
+        function handleFile(input) {
+            const text = document.getElementById('receiptText');
+            if (input.files && input.files[0]) {
+                text.innerText = "✅ ተመርጧል: " + input.files[0].name.substring(0, 15) + "...";
+                text.parentElement.classList.add('text-green-700');
+            }
         }
 
-        // Handle Payment Submission
+        function showTab(tab) {
+            const paySec = document.getElementById('paymentSection');
+            const loanSec = document.getElementById('loanSection');
+            const payTab = document.getElementById('payTab');
+            const loanTab = document.getElementById('loanTab');
+
+            if (tab === 'payment') {
+                paySec.classList.remove('hidden');
+                loanSec.classList.add('hidden');
+                payTab.classList.add('active-tab');
+                payTab.classList.remove('opacity-40');
+                loanTab.classList.remove('active-tab');
+                loanTab.classList.add('opacity-40');
+            } else {
+                paySec.classList.add('hidden');
+                loanSec.classList.remove('hidden');
+                loanTab.classList.add('active-tab');
+                loanTab.classList.remove('opacity-40');
+                payTab.classList.remove('active-tab');
+                payTab.classList.add('opacity-40');
+            }
+        }
+
         document.getElementById('paymentForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const base = parseFloat(document.getElementById('amount').value) || 0;
-            const penalty = parseFloat(document.getElementById('penalty').value) || 0;
+            const base = parseFloat(document.getElementById('baseAmount').value) || 0;
+            const penalty = parseFloat(document.getElementById('penaltyAmount').value) || 0;
             
             const data = {
                 type: 'payment_report',
@@ -130,12 +255,9 @@
                 note: document.getElementById('note').value
             };
             
-            // Send data back to the bot and close the Mini App
             tg.sendData(JSON.stringify(data));
-            tg.close();
         });
 
-        // Handle Loan Submission
         document.getElementById('loanForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const data = {
@@ -146,7 +268,6 @@
             };
             
             tg.sendData(JSON.stringify(data));
-            tg.close();
         });
     </script>
 </body>
