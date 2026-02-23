@@ -24,9 +24,7 @@
             background-color: var(--tg-bg);
             color: var(--tg-text);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            margin: 0; padding: 0; overflow-x: hidden;
         }
 
         .input-group input, .input-group select, .input-group textarea {
@@ -53,43 +51,44 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .dashed-border {
-            border: 2px dashed #15803d44;
-        }
+        .dashed-border { border: 2px dashed #15803d44; }
 
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-
+        /* Animation */
+        .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .gateway-logo {
+        /* Gateway Logo Styling */
+        .gateway-card {
             background: white;
             border: 1px solid #e2e8f0;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 800;
-            color: #15803d;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            padding: 8px 12px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 60px;
+            min-width: 80px;
+            height: 45px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .gateway-card img {
+            max-height: 24px;
+            max-width: 100%;
+            object-fit: contain;
         }
     </style>
 </head>
 <body class="p-4 select-none">
     <div class="max-w-md mx-auto">
         
-        <!-- Header Section with Logo -->
+        <!-- Header Section -->
         <div class="text-center mb-6 mt-2">
             <div class="flex flex-col justify-center items-center mb-2">
-                <img src="logo.png" alt="Ehuden Befikir Logo" class="w-20 h-20 rounded-2xl shadow-lg mb-3 object-cover border-2 border-green-700" onerror="this.style.display='none'">
-                <h1 class="text-3xl font-black logo-container tracking-tight">እሁድን በፍቅር</h1>
+                <img src="logo.png" alt="Logo" class="w-24 h-24 rounded-2xl shadow-xl mb-3 object-cover border-2 border-green-700" onerror="this.src='https://ui-avatars.com/api/?name=%E1%8A%A5%E1%88%81%E1%8%B5%E1%8A%95+%E1%8A%A2%E1%8%B5%E1%8A%95&background=15803d&color=fff&size=128'">
+                <h1 class="text-2xl font-black logo-container tracking-tight uppercase">እሁድን በፍቅር</h1>
             </div>
             <div class="h-1 w-16 bg-green-700 mx-auto rounded-full opacity-20 mb-2"></div>
             <p class="text-[14px] font-black uppercase tracking-widest text-green-700">እዚህ ይክፈሉ (Pay Here)</p>
@@ -115,7 +114,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የከፈሉበት መንገድ (Payment Method)</label>
+                    <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የከፈሉበት መንገድ</label>
                     <select id="location" class="w-full p-4 rounded-2xl shadow-sm">
                         <option value="Telebirr">ቴሌብር (Telebirr)</option>
                         <option value="CBE Bank">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
@@ -135,18 +134,10 @@
                     </div>
                 </div>
 
-                <!-- Receipt Box Info -->
                 <div class="input-group">
                     <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የደረሰኝ መረጃ (Receipt)</label>
                     <div class="dashed-border w-full p-6 rounded-3xl text-center bg-green-50/20 border-green-700/30">
-                        <div class="flex flex-col items-center">
-                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                </svg>
-                            </div>
-                            <span class="text-[10px] font-semibold text-green-800 leading-tight">ፎርሙን ከጨረሱ በኋላ የደረሰኙን ፎቶ በቴሌግራም ቻቱ ላይ መላክዎን አይርሱ!</span>
-                        </div>
+                        <span class="text-[10px] font-semibold text-green-800 leading-tight">ፎርሙን ከጨረሱ በኋላ የደረሰኙን ፎቶ በቴሌግራም ቻቱ ላይ መላክዎን አይርሱ!</span>
                     </div>
                 </div>
 
@@ -156,26 +147,31 @@
                 </div>
 
                 <!-- SUBMIT BUTTON AND LOGOS -->
-                <div class="flex flex-col items-center space-y-4 pt-2">
+                <div class="flex flex-col items-center space-y-6 pt-2">
                     <button type="submit" class="w-full py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all" style="background-color: var(--tg-btn); color: var(--tg-btn-text);">
                         ደረሰኝ ላክ
                     </button>
                     
                     <div class="flex flex-col items-center w-full">
-                        <p class="text-[12px] font-black uppercase text-green-700 tracking-widest mb-3">በቀላሉ እዚህ ይክፈሉ (Easy Pay Here)</p>
-                        <div class="flex flex-wrap justify-center gap-2 w-full">
-                            <div class="gateway-logo">CHAPA</div>
-                            <div class="gateway-logo">GizePay</div>
-                            <div class="gateway-logo">YenePay</div>
-                            <div class="gateway-logo">Arifpay</div>
-                            <div class="gateway-logo">WeBirr</div>
+                        <p class="text-[12px] font-black uppercase text-green-700 tracking-widest mb-4 italic">በቀላሉ እዚህ ይክፈሉ (Easy Pay Here)</p>
+                        <div class="flex justify-center gap-3 w-full">
+                            <!-- Updated Image filenames -->
+                            <div class="gateway-card">
+                                <img src="Chapa.png" alt="Chapa" onerror="this.parentElement.innerText='CHAPA'">
+                            </div>
+                            <div class="gateway-card">
+                                <img src="Arifpay.png" alt="Arifpay" onerror="this.parentElement.innerText='Arifpay'">
+                            </div>
+                            <div class="gateway-card">
+                                <img src="StarPay.png" alt="StarPay" onerror="this.parentElement.innerText='StarPay'">
+                            </div>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
 
-        <!-- Loan Section -->
+        <!-- Loan Section (Under Development) -->
         <div id="loanSection" class="hidden fade-in">
             <div class="bg-green-50 border-2 border-green-700/20 p-8 rounded-[2.5rem] text-center shadow-inner">
                 <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -183,26 +179,18 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                
                 <h3 class="text-xl font-black text-green-800 mb-2 uppercase tracking-tight">በዝግጅት ላይ</h3>
-                <p class="text-sm font-medium text-green-900/70 mb-6 leading-relaxed">
-                    የብድር አገልግሎት በአሁኑ ሰዓት በዝግጅት ላይ ነው። በቅርቡ አገልግሎት መስጠት እንጀምራለን።
-                </p>
-                
+                <p class="text-sm font-medium text-green-900/70 mb-6 leading-relaxed">የብድር አገልግሎት በአሁኑ ሰዓት በዝግጅት ላይ ነው። በቅርቡ አገልግሎት መስጠት እንጀምራለን።</p>
                 <hr class="border-green-700/10 mb-6">
-                
                 <h3 class="text-lg font-bold text-gray-800 mb-2 uppercase">Under Development</h3>
-                <p class="text-xs font-medium text-gray-500 leading-relaxed">
-                    Loan service is currently under development and will be available very soon.
-                </p>
+                <p class="text-xs font-medium text-gray-500 leading-relaxed">Loan service is currently under development.</p>
             </div>
-            
             <button onclick="showTab('payment')" class="w-full py-4 mt-6 text-sm font-bold text-green-800 opacity-60 hover:opacity-100 transition-opacity">
                 ← ወደ ክፍያ ተመለስ (Back to Payment)
             </button>
         </div>
 
-        <!-- Footer Section -->
+        <!-- Footer -->
         <div class="flex flex-col items-center mt-12 mb-8 opacity-40">
             <p class="text-[10px] font-bold tracking-widest uppercase mb-1 text-green-900">እሁድን በፍቅር Digital v2.1</p>
             <p class="text-[9px] font-bold text-green-800 tracking-tighter uppercase">POWERED BY SKYMARK SYSTEM SOLUTION</p>
@@ -213,7 +201,6 @@
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-        
         tg.setHeaderColor(tg.themeParams.bg_color || '#ffffff');
 
         function showTab(tab) {
@@ -225,19 +212,15 @@
 
         document.getElementById('paymentForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const base = parseFloat(document.getElementById('baseAmount').value) || 0;
-            const penalty = parseFloat(document.getElementById('penaltyAmount').value) || 0;
-            
             const data = {
                 type: 'payment_report',
                 purpose: document.getElementById('purpose').value,
                 location: document.getElementById('location').value,
-                baseAmount: base,
-                penaltyAmount: penalty,
-                totalAmount: base + penalty,
+                baseAmount: parseFloat(document.getElementById('baseAmount').value) || 0,
+                penaltyAmount: parseFloat(document.getElementById('penaltyAmount').value) || 0,
+                totalAmount: (parseFloat(document.getElementById('baseAmount').value) || 0) + (parseFloat(document.getElementById('penaltyAmount').value) || 0),
                 note: document.getElementById('note').value
             };
-            
             tg.sendData(JSON.stringify(data));
         });
     </script>
