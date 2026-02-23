@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>እሁድን በፍቅር - Edir Digital v2.8</title>
+    <title>እሁድን በፍቅር - Edir Digital v3.0</title>
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Tailwind CSS -->
@@ -52,21 +52,29 @@
             height: 3px; background-color: white; border-radius: 4px;
         }
 
-        /* Selection Cards */
+        /* Method Selection Styling (Matched to Tab) */
         .method-card {
             border: 2px solid #e2e8f0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             background: white;
             position: relative;
+            color: var(--tg-text);
         }
 
         .method-card.selected {
+            background-color: var(--brand-green) !important;
             border-color: var(--brand-green);
-            background-color: #f0fdf4;
+            color: white !important;
             transform: scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(21, 128, 61, 0.2);
         }
 
+        .method-card.selected span {
+            color: white !important;
+        }
+
+        /* Digital Gateway Icons */
         .sub-gateway-card {
             border: 1.5px solid #e2e8f0;
             transition: all 0.2s ease;
@@ -104,7 +112,16 @@
             border: 1px solid #f1f5f9;
         }
 
-        /* Status & Help Indicators */
+        /* Input Styling */
+        .input-group select, .input-group input {
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.8rem; width: 100%; font-size: 16px;
+        }
+
+        /* Status & Level Cards */
         .level-indicator {
             padding: 12px;
             border-radius: 1rem;
@@ -115,8 +132,6 @@
         }
 
         .level-1 { background-color: #f0fdf4; border-color: #bcf0da; color: #15803d; } 
-        .level-2 { background-color: #fffbeb; border-color: #fde68a; color: #b45309; } 
-        .level-3 { background-color: #fef2f2; border-color: #fecaca; color: #b91c1c; } 
 
         .status-card-item {
             opacity: 0; transform: translateY(15px);
@@ -124,12 +139,6 @@
         }
 
         .status-card-item.slide-active { opacity: 1; transform: translateY(0); }
-
-        .help-item {
-            border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 12px;
-        }
-        .help-item:last-child { border-bottom: none; }
 
         .loader {
             border: 3px solid #f3f3f3;
@@ -179,24 +188,27 @@
                 </div>
             </div>
 
-            <!-- Digital Sub-Gateways -->
+            <!-- Digital Sub-Gateways (Updated labels to old name style) -->
             <div id="subGatewaySection" class="section-card space-y-4 hidden bg-green-50/40 border-green-100">
                 <label class="text-[11px] font-black uppercase text-green-700 tracking-wider text-center block">መተግበሪያ ይምረጡ</label>
                 <div class="grid grid-cols-3 gap-3">
+                    <!-- 1. Chapa -->
                     <div class="sub-gateway-card p-2 py-3 rounded-xl flex flex-col items-center justify-center active" onclick="selectSubGateway('chapa', this)">
                         <div class="check-badge">✓</div>
                         <img src="https://chapa.co/favicon.ico" class="w-7 h-7 mb-1 rounded-full object-contain">
-                        <span class="text-[8px] font-black uppercase mt-1">Chapa</span>
+                        <span class="text-[8px] font-black uppercase mt-1">ቻፓ (Chapa)</span>
                     </div>
+                    <!-- 2. ArifPay -->
                     <div class="sub-gateway-card p-2 py-3 rounded-xl flex flex-col items-center justify-center" onclick="selectSubGateway('arifpay', this)">
                         <div class="check-badge">✓</div>
                         <img src="https://arifpay.net/favicon.ico" class="w-7 h-7 mb-1 rounded-full object-contain">
-                        <span class="text-[8px] font-black uppercase mt-1">ArifPay</span>
+                        <span class="text-[8px] font-black uppercase mt-1">አሪፍ ፔይ (ArifPay)</span>
                     </div>
+                    <!-- 3. Telebirr -->
                     <div class="sub-gateway-card p-2 py-3 rounded-xl flex flex-col items-center justify-center" onclick="selectSubGateway('telebirr', this)">
                         <div class="check-badge">✓</div>
                         <img src="https://www.ethiotelecom.et/favicon.ico" class="w-7 h-7 mb-1 rounded-full object-contain">
-                        <span class="text-[8px] font-black uppercase mt-1">Telebirr</span>
+                        <span class="text-[8px] font-black uppercase mt-1">ቴሌብር (Telebirr)</span>
                     </div>
                 </div>
             </div>
@@ -292,55 +304,16 @@
             </div>
         </section>
 
-        <!-- 4. IMPROVED HELP SECTION -->
+        <!-- 4. Help Section -->
         <section id="helpSection" class="hidden space-y-6 fade-in">
-            <div class="section-card space-y-6">
+            <div class="section-card bg-white space-y-6">
                 <h3 class="text-center font-black uppercase text-slate-700 tracking-widest border-b pb-3">መመሪያ እና እርዳታ</h3>
-                
-                <div class="space-y-6">
-                    <!-- Help: Payment -->
-                    <div class="help-item">
-                        <p class="text-[12px] font-black text-green-700 uppercase mb-2">💳 ክፍያ እንዴት ይፈጸማል?</p>
-                        <ul class="text-[13px] text-slate-600 space-y-2 ml-1">
-                            <li><span class="font-bold">1.</span> በ"ክፍያ" ገጽ ላይ የክፍያውን አይነት እና ወር ይምረጡ።</li>
-                            <li><span class="font-bold">2.</span> መደበኛ ክፍያ እና ካለብዎት የቅጣት መጠን ያስገቡ።</li>
-                            <li><span class="font-bold">3.</span> "በደረሰኝ" ከመረጡ የደረሰኝ ፎቶ ይጫኑ፤ "ቀላል ክፍያ" ከሆነ ደግሞ መተግበሪያውን ይምረጡ።</li>
-                            <li><span class="font-bold">4.</span> "መረጃውን ላክ" ሲጫኑ ሚኒ አፑ ተዘግቶ ወደ ቦቱ ይመልስዎታል።</li>
-                        </ul>
-                    </div>
-
-                    <!-- Help: Status -->
-                    <div class="help-item">
-                        <p class="text-[12px] font-black text-blue-700 uppercase mb-2">📊 የአባልነት ደረጃዎች ትርጉም</p>
-                        <div class="space-y-3">
-                            <div class="flex items-start gap-2">
-                                <span class="text-green-600 font-bold">●</span>
-                                <p class="text-[12px] text-slate-600"><span class="font-black">ደረጃ 1፦</span> ሁሉንም ክፍያዎች በወቅቱ የከፈለ (ጥሩ አባል)።</p>
-                            </div>
-                            <div class="flex items-start gap-2">
-                                <span class="text-yellow-500 font-bold">●</span>
-                                <p class="text-[12px] text-slate-600"><span class="font-black">ደረጃ 2፦</span> መካከለኛ ቀሪ ክፍያ ያለበት።</p>
-                            </div>
-                            <div class="flex items-start gap-2">
-                                <span class="text-red-600 font-bold">●</span>
-                                <p class="text-[12px] text-slate-600"><span class="font-black">ደረጃ 3፦</span> ከፍተኛ ቀሪ ያለበት እና አስቸኳይ ክፍያ የሚጠበቅበት።</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Help: General -->
-                    <div class="help-item">
-                        <p class="text-[12px] font-black text-orange-600 uppercase mb-2">💡 ጠቃሚ ማሳሰቢያ</p>
-                        <p class="text-[12px] text-slate-600 leading-relaxed">
-                            የከፈሉት ክፍያ በአስተዳዳሪው (በገንዘብ ያዡ) እንደተረጋገጠ በ"ሁኔታ" ገጽ ላይ ያለው ቀሪ ሂሳብዎ በራሱ ይቀንሳል። ማረጋገጫው እስከ 24 ሰዓት ሊወስድ ይችላል።
-                        </p>
-                    </div>
-                </div>
+                <p class="text-sm font-bold text-slate-600 italic text-center">መጀመሪያ ፎርሙን ይሙሉ፤ ከዚያ የደረሰኝ ፎቶ ለቦቱ ይላኩ።</p>
             </div>
         </section>
 
         <footer class="text-center py-8 opacity-30">
-            <p class="text-[10px] font-black uppercase tracking-widest">Edir Digital v2.8 • SKYMARK</p>
+            <p class="text-[10px] font-black uppercase tracking-widest">Edir Digital v3.0 • SKYMARK</p>
         </footer>
     </main>
 
