@@ -15,6 +15,7 @@
             --brand-green: #15803d; 
             --tg-btn: var(--tg-theme-button-color, #15803d);
             --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary: var(--tg-theme-secondary-bg-color, #f9fafb);
         }
 
         body {
@@ -50,6 +51,7 @@
 
         .dashed-border { border: 2px dashed #15803d44; }
 
+        /* Animation */
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
@@ -191,7 +193,7 @@
                 <p class="text-sm font-medium text-green-900/70 mb-6 leading-relaxed">የብድር አገልግሎት በአሁኑ ሰዓት በዝግጅት ላይ ነው። በቅርቡ አገልግሎት መስጠት እንጀምራለን።</p>
                 <hr class="border-green-700/10 mb-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-2 uppercase">Under Development</h3>
-                <p class="text-xs font-medium text-gray-500 leading-relaxed">Loan service is currently under development.</p>
+                <p class="text-xs font-medium text-gray-500 leading-relaxed">Loan service is currently under development and will be active in the next update.</p>
             </div>
             <button onclick="showTab('payment')" class="w-full py-4 mt-6 text-sm font-bold text-green-800 opacity-60 hover:opacity-100 transition-opacity">
                 ← ወደ ክፍያ ተመለስ (Back to Payment)
@@ -233,27 +235,40 @@
         tg.expand();
         tg.setHeaderColor(tg.themeParams.bg_color || '#ffffff');
 
-        // Handle commands launched from bot (Deep Linking)
+        // Handle commands launched from bot (Deep Linking/Routing)
         window.onload = () => {
             const startParam = tg.initDataUnsafe.start_param;
             if (startParam === 'pay') {
                 showTab('payment');
             } else if (startParam === 'loan') {
                 showTab('loan');
+            } else {
+                showTab('payment'); // Default
             }
         };
 
         function showTab(tab) {
-            document.getElementById('paymentSection').classList.toggle('hidden', tab !== 'payment');
-            document.getElementById('loanSection').classList.toggle('hidden', tab !== 'loan');
-            document.getElementById('payTab').classList.toggle('active-tab', tab === 'payment');
-            document.getElementById('loanTab').classList.toggle('active-tab', tab === 'loan');
-            
-            // Update hint text based on tab
+            const paymentSection = document.getElementById('paymentSection');
+            const loanSection = document.getElementById('loanSection');
+            const payTab = document.getElementById('payTab');
+            const loanTab = document.getElementById('loanTab');
             const hint = document.getElementById('navHint');
+
             if (tab === 'payment') {
+                paymentSection.classList.remove('hidden');
+                loanSection.classList.add('hidden');
+                payTab.classList.add('active-tab');
+                payTab.classList.remove('opacity-40');
+                loanTab.classList.remove('active-tab');
+                loanTab.classList.add('opacity-40');
                 hint.innerText = "እዚህ ይክፈሉ (Pay Here)";
             } else {
+                paymentSection.classList.add('hidden');
+                loanSection.classList.remove('hidden');
+                loanTab.classList.add('active-tab');
+                loanTab.classList.remove('opacity-40');
+                payTab.classList.remove('active-tab');
+                payTab.classList.add('opacity-40');
                 hint.innerText = "የብድር አገልግሎት (Loan Service)";
             }
         }
@@ -286,19 +301,26 @@
 
         document.getElementById('paymentForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            
+            // Collect Form Data
             const base = parseFloat(document.getElementById('baseAmount').value) || 0;
             const penalty = parseFloat(document.getElementById('penaltyAmount').value) || 0;
-            
+            const purpose = document.getElementById('purpose').value;
+            const location = document.getElementById('location').value;
+            const note = document.getElementById('note').value;
+
+            // Prepare JSON Payload for Bot
             const data = {
                 type: 'payment_report',
-                purpose: document.getElementById('purpose').value,
-                location: document.getElementById('location').value,
+                purpose: purpose,
+                location: location,
                 base_amount: base,
                 penalty_amount: penalty,
                 totalAmount: base + penalty,
-                note: document.getElementById('note').value
+                note: note
             };
             
+            // Send data to Telegram Bot and close Mini App
             tg.sendData(JSON.stringify(data));
         });
     </script>
