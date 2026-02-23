@@ -10,11 +10,11 @@ const MINI_APP_URL = process.env.MINI_APP_URL;
 const EDIR_GROUP_ID = process.env.EDIR_GROUP_ID; 
 
 if (!BOT_TOKEN) {
-    console.error("❌ ERROR: BOT_TOKEN is missing!");
+    console.error("❌ ERROR: BOT_TOKEN is missing in Environment Variables!");
     process.exit(1);
 }
 
-// Initialize Database
+// Initialize SQLite Database
 const db = new Database('members.db');
 
 // --- DATABASE SCHEMA ---
@@ -53,9 +53,9 @@ db.exec(`
 const bot = new Telegraf(BOT_TOKEN);
 bot.use(session());
 
-// --- MIDDLEWARE: GROUP ACCESS CHECK (PILOT MODE READY) ---
+// --- MIDDLEWARE: GROUP ACCESS CHECK ---
 const checkGroupMembership = async (ctx, next) => {
-    // If EDIR_GROUP_ID is not set correctly or in Pilot mode, skip check
+    // Skip check if Group ID is placeholder or not set
     if (!EDIR_GROUP_ID || EDIR_GROUP_ID.includes("123456789")) return next();
     
     if (ctx.from && ctx.chat.type === 'private') {
@@ -67,7 +67,6 @@ const checkGroupMembership = async (ctx, next) => {
             }
         } catch (error) {
             console.error("Group Check Error:", error.message);
-            // In case of error (bot not admin in group), we allow access for testing
             return next();
         }
     }
@@ -106,6 +105,60 @@ bot.hears("❓ እርዳታ", (ctx) => {
     ctx.replyWithMarkdown("📖 **መመሪያ**\n\n1. 'ክፍያ ያስገቡ' የሚለውን ይጫኑ\n2. ፎርሙን ሞልተው ሲጨርሱ 'Submit' ይበሉ\n3. በመቀጠል የደረሰኙን ፎቶ እዚህ ይላኩ።");
 });
 
+// --- ADMIN COMMANDS ---
+
+bot.command('admin', (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return ctx.reply("❌ ይህ ትዕዛዝ ለአስተዳዳሪዎች ብቻ ነው።");
+    
+    const pendingPayments = db.prepare("SELECT COUNT(*) as count FROM payments WHERE status = 'AWAIT_APPROVAL'").get().count;
+    const pendingLoans = db.prepare("SELECT COUNT(*) as count FROM loan_requests WHERE status = 'PENDING'").get().count;
+    const totalMembers = db.prepare("SELECT COUNT(*) as count FROM members").get().count;
+
+    const adminMsg = `🛠 **የአስተዳዳሪ መቆጣጠሪያ (Admin Dashboard)**\n\n` +
+        `👥 ጠቅላላ ተመዝጋቢዎች: **${totalMembers}**\n` +
+        `💰 ማረጋገጫ የሚጠብቁ ክፍያዎች: **${pendingPayments}**\n` +
+        `📩 ማረጋገጫ የሚጠብቁ ብድሮች: **${pendingLoans}**\n\n` +
+        `ለዝርዝር የገንዘብ ሪፖርት /stats ይበሉ።\n` +
+        `ሁሉንም አባላት ለማነጋገር /broadcast [መልእክት] ይጠቀሙ።`;
+
+    ctx.replyWithMarkdown(adminMsg, Markup.inlineKeyboard([
+        [Markup.button.callback("📜 የአባላት ዝርዝር", "admin_list_members")],
+        [Markup.button.callback("📥 የክፍያ ሁኔታ", "admin_pending_summary")]
+    ]));
+});
+
+bot.command('broadcast', async (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    
+    const message = ctx.message.text.replace('/broadcast', '').trim();
+    if (!message) return ctx.reply("❌ እባክዎ መልእክት ይጻፉ። ምሳሌ፡ `/broadcast ሰላም አባላት...`", { parse_mode: 'Markdown' });
+
+    const members = db.prepare("SELECT user_id FROM members").all();
+    let successCount = 0;
+    
+    await ctx.reply(`📣 ብሮድካስት እየተላከ ነው ለ ${members.length} አባላት...`);
+
+    for (const member of members) {
+        try {
+            await ctx.telegram.sendMessage(member.user_id, `📢 **ከእሁድን በፍቅር አስተዳዳሪ:**\n\n${message}`, { parse_mode: 'Markdown' });
+            successCount++;
+        } catch (err) {
+            console.error(`Failed to send broadcast to ${member.user_id}`);
+        }
+    }
+    ctx.reply(`✅ ብሮድካስት ተጠናቋል። ለ ${successCount} አባላት ደርሷል።`);
+});
+
+bot.action('admin_list_members', (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    const members = db.prepare("SELECT username, status FROM members LIMIT 20").all();
+    let list = "👥 **የአባላት ዝርዝር (የመጀመሪያዎቹ 20):**\n\n";
+    members.forEach(m => {
+        list += `• @${m.username} - ${m.status === 'APPROVED' ? '✅' : '⏳'}\n`;
+    });
+    ctx.replyWithMarkdown(list);
+});
+
 // --- WEB APP DATA HANDLER ---
 
 bot.on('web_app_data', async (ctx) => {
@@ -125,7 +178,6 @@ bot.on('web_app_data', async (ctx) => {
             );
             await ctx.reply("📩 የብድር ጥያቄዎ ተልኳል። አስተዳዳሪው ሲያጸድቀው መልእክት ይደርስዎታል።");
             
-            // Notify Admin
             if (ADMIN_ID) {
                 const adminKb = Markup.inlineKeyboard([
                     [Markup.button.callback('✅ ፍቀድ', `lapp_${res.lastInsertRowid}_${ctx.from.id}`), 
@@ -152,7 +204,7 @@ bot.on(['photo', 'document'], async (ctx) => {
         pending.userId, pending.username, pending.purpose, pending.location, pending.baseAmount, pending.penaltyAmount, pending.totalAmount, pending.note || '', fileId, new Date().toLocaleString()
     );
 
-    ctx.session.pendingPayment = null; // Clear session
+    ctx.session.pendingPayment = null; 
 
     if (ADMIN_ID) {
         const adminKb = Markup.inlineKeyboard([
@@ -208,10 +260,10 @@ bot.command('stats', (ctx) => {
     ctx.replyWithMarkdown(`💰 **የገንዘብ ሪፖርት**\n\n• መዋጮ፡ **${stats.monthly || 0} ብር**\n• የተመለሰ ብድር፡ **${stats.loans || 0} ብር**\n• ቅጣት፡ **${stats.penalties || 0} ብር**\n---\n📢 **አጠቃላይ ካዝና፡ ${stats.grand_total || 0} ብር**\n\n_Powered by Skymark_`);
 });
 
-// Render እንዲቀበለው የሚረዳ ሰርቨር
+// Health check server for Render
 http.createServer((req, res) => {
     res.writeHead(200);
-    res.end('Ehuden Befikir Bot is running!');
+    res.end('Ehuden Befikir Bot is active!');
 }).listen(process.env.PORT || 3000);
 
 bot.launch().then(() => console.log('✅ Ehuden Befikir Bot is ACTIVE!'));
