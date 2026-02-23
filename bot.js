@@ -1,7 +1,13 @@
 require('dotenv').config();
 const { Telegraf, session, Markup } = require('telegraf');
 const Database = require('better-sqlite3');
+const http = require('http');
 
+// Render ሰርቨር ቦቱ መስራቱን እንዲያውቅ የሚረዳ ትንሽ ዌብ ሰርቨር
+http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('Ehuden Befikir Bot is running!');
+}).listen(process.env.PORT || 3000);
 // --- CONFIGURATION ---
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : null;
@@ -207,3 +213,4 @@ bot.launch()
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
