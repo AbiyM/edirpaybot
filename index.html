@@ -99,7 +99,7 @@
                 <h1 class="text-2xl font-black logo-container tracking-tight uppercase">እሁድን በፍቅር</h1>
             </div>
             <div class="h-1 w-16 bg-green-700 mx-auto rounded-full opacity-20 mb-2"></div>
-            <p class="text-[14px] font-black uppercase tracking-widest text-green-700">እዚህ ይክፈሉ (Pay Here)</p>
+            <p id="navHint" class="text-[14px] font-black uppercase tracking-widest text-green-700">እዚህ ይክፈሉ (Pay Here)</p>
         </div>
 
         <!-- Navigation Tabs -->
@@ -233,11 +233,29 @@
         tg.expand();
         tg.setHeaderColor(tg.themeParams.bg_color || '#ffffff');
 
+        // Handle commands launched from bot (Deep Linking)
+        window.onload = () => {
+            const startParam = tg.initDataUnsafe.start_param;
+            if (startParam === 'pay') {
+                showTab('payment');
+            } else if (startParam === 'loan') {
+                showTab('loan');
+            }
+        };
+
         function showTab(tab) {
             document.getElementById('paymentSection').classList.toggle('hidden', tab !== 'payment');
             document.getElementById('loanSection').classList.toggle('hidden', tab !== 'loan');
             document.getElementById('payTab').classList.toggle('active-tab', tab === 'payment');
             document.getElementById('loanTab').classList.toggle('active-tab', tab === 'loan');
+            
+            // Update hint text based on tab
+            const hint = document.getElementById('navHint');
+            if (tab === 'payment') {
+                hint.innerText = "እዚህ ይክፈሉ (Pay Here)";
+            } else {
+                hint.innerText = "የብድር አገልግሎት (Loan Service)";
+            }
         }
 
         function showConstructionModal(name) {
