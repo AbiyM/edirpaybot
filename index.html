@@ -12,12 +12,9 @@
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #1a1a1a);
-            --tg-hint: var(--tg-theme-hint-color, #6b7280);
-            /* Ehuden Befikir Branding: Green and White */
             --brand-green: #15803d; 
             --tg-btn: var(--tg-theme-button-color, #15803d);
             --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
-            --tg-secondary: var(--tg-theme-secondary-bg-color, #f9fafb);
         }
 
         body {
@@ -53,14 +50,12 @@
 
         .dashed-border { border: 2px dashed #15803d44; }
 
-        /* Animation */
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Gateway Logo Styling */
         .gateway-card {
             background: white;
             border: 1px solid #e2e8f0;
@@ -86,7 +81,6 @@
             object-fit: contain;
         }
 
-        /* Custom Modal Styling */
         #modalOverlay {
             background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(4px);
@@ -100,7 +94,8 @@
         <!-- Header Section -->
         <div class="text-center mb-6 mt-2">
             <div class="flex flex-col justify-center items-center mb-2">
-                <img src="logo.png" alt="Logo" class="w-24 h-24 rounded-2xl shadow-xl mb-3 object-cover border-2 border-green-700" onerror="this.src='https://ui-avatars.com/api/?name=%E1%8A%A5%E1%88%81%E1%8%B5%E1%8A%95+%E1%8A%A2%E1%8%B5%E1%8A%95&background=15803d&color=fff&size=128'">
+                <!-- Main Branding Logo -->
+                <img src="logo.jpg" alt="Logo" class="w-24 h-24 rounded-2xl shadow-xl mb-3 object-cover border-2 border-green-700" onerror="this.src='https://ui-avatars.com/api/?name=%E1%8A%A5%E1%88%81%E1%8%B5%E1%8A%95+%E1%8A%A2%E1%8%B5%E1%8A%95&background=15803d&color=fff&size=128'">
                 <h1 class="text-2xl font-black logo-container tracking-tight uppercase">እሁድን በፍቅር</h1>
             </div>
             <div class="h-1 w-16 bg-green-700 mx-auto rounded-full opacity-20 mb-2"></div>
@@ -118,7 +113,7 @@
             <form id="paymentForm" class="space-y-5">
                 <div class="input-group">
                     <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የክፍያ ዓላማ</label>
-                    <select id="purpose" class="w-full p-4 rounded-2xl shadow-sm">
+                    <select id="purpose" class="w-full p-4 rounded-2xl shadow-sm outline-none">
                         <option value="Monthly Fee">የወርሃዊ መዋጮ (Monthly Fee)</option>
                         <option value="Loan Payment">የብድር መመለሻ (Loan Repayment)</option>
                         <option value="Penalty">የቅጣት ክፍያ (Penalty)</option>
@@ -128,7 +123,7 @@
 
                 <div class="input-group">
                     <label class="text-[11px] font-black ml-1 mb-1.5 block uppercase text-green-800 opacity-80">የከፈሉበት መንገድ</label>
-                    <select id="location" class="w-full p-4 rounded-2xl shadow-sm">
+                    <select id="location" class="w-full p-4 rounded-2xl shadow-sm outline-none">
                         <option value="Telebirr">ቴሌብር (Telebirr)</option>
                         <option value="CBE Bank">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
                         <option value="Other Banks">ሌሎች ባንኮች (Other Banks)</option>
@@ -159,8 +154,8 @@
                     <textarea id="note" placeholder="ለምሳሌ፡ የጥቅምት ወር ክፍያ..." class="w-full p-4 rounded-2xl h-20 resize-none shadow-sm"></textarea>
                 </div>
 
-                <!-- SUBMIT BUTTON AND LOGOS -->
-                <div class="flex flex-col items-center space-y-6 pt-2">
+                <!-- Submit Button & Easy Pay Label -->
+                <div class="flex flex-col items-center space-y-4 pt-2">
                     <button type="submit" class="w-full py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all" style="background-color: var(--tg-btn); color: var(--tg-btn-text);">
                         ደረሰኝ ላክ
                     </button>
@@ -168,12 +163,12 @@
                     <div class="flex flex-col items-center w-full">
                         <p class="text-[12px] font-black uppercase text-green-700 tracking-widest mb-4 italic">በቀላሉ እዚህ ይክፈሉ (Easy Pay Here)</p>
                         <div class="flex justify-center gap-3 w-full">
-                            <!-- Updated Image filenames -->
+                            <!-- Gateways with construction modal -->
                             <div class="gateway-card" onclick="showConstructionModal('Chapa')">
                                 <img src="Chapa.png" alt="Chapa" onerror="this.parentElement.innerText='CHAPA'">
                             </div>
-                            <div class="gateway-card" onclick="showConstructionModal('Arifpay')">
-                                <img src="Arifpay.png" alt="Arifpay" onerror="this.parentElement.innerText='Arifpay'">
+                            <div class="gateway-card" onclick="showConstructionModal('ArifPay')">
+                                <img src="ArifPay.png" alt="Arifpay" onerror="this.parentElement.innerText='Arifpay'">
                             </div>
                             <div class="gateway-card" onclick="showConstructionModal('StarPay')">
                                 <img src="StarPay.png" alt="StarPay" onerror="this.parentElement.innerText='StarPay'">
@@ -184,7 +179,7 @@
             </form>
         </div>
 
-        <!-- Loan Section -->
+        <!-- Loan Section (Placeholder) -->
         <div id="loanSection" class="hidden fade-in">
             <div class="bg-green-50 border-2 border-green-700/20 p-8 rounded-[2.5rem] text-center shadow-inner">
                 <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -212,7 +207,7 @@
 
     <!-- Construction Modal Overlay -->
     <div id="modalOverlay" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0">
-        <div class="bg-white w-[85%] max-w-sm rounded-[2rem] p-8 shadow-2xl transform scale-90 transition-transform duration-300 ease-out" id="modalBox">
+        <div class="bg-white w-[85%] max-w-sm rounded-[2rem] p-8 shadow-2xl transform scale-90 transition-all duration-300" id="modalBox">
             <div class="text-center">
                 <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -253,7 +248,6 @@
             overlay.classList.remove('hidden');
             setTimeout(() => {
                 overlay.classList.add('opacity-100');
-                overlay.classList.remove('opacity-0');
                 box.classList.remove('scale-90');
                 box.classList.add('scale-100');
             }, 10);
@@ -264,7 +258,6 @@
             const box = document.getElementById('modalBox');
             
             overlay.classList.remove('opacity-100');
-            overlay.classList.add('opacity-0');
             box.classList.remove('scale-100');
             box.classList.add('scale-90');
             
@@ -275,15 +268,19 @@
 
         document.getElementById('paymentForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            const base = parseFloat(document.getElementById('baseAmount').value) || 0;
+            const penalty = parseFloat(document.getElementById('penaltyAmount').value) || 0;
+            
             const data = {
                 type: 'payment_report',
                 purpose: document.getElementById('purpose').value,
                 location: document.getElementById('location').value,
-                baseAmount: parseFloat(document.getElementById('baseAmount').value) || 0,
-                penaltyAmount: parseFloat(document.getElementById('penaltyAmount').value) || 0,
-                totalAmount: (parseFloat(document.getElementById('baseAmount').value) || 0) + (parseFloat(document.getElementById('penaltyAmount').value) || 0),
+                base_amount: base,
+                penalty_amount: penalty,
+                totalAmount: base + penalty,
                 note: document.getElementById('note').value
             };
+            
             tg.sendData(JSON.stringify(data));
         });
     </script>
