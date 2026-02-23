@@ -4,7 +4,7 @@ import sqlite3
 import json
 from datetime import datetime
 from dotenv import load_dotenv
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, MenuButtonWebApp
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -26,7 +26,7 @@ if MINI_APP_URL and not MINI_APP_URL.endswith('/'):
 
 GROUP_ID = os.getenv("EDIR_GROUP_ID")
 
-# ስህተቶችን ለመከታተል Logging ማስተካከል
+# Logging ማስተካከል
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
     level=logging.INFO
@@ -60,7 +60,6 @@ def init_db():
 
 # --- የደህንነት ፍተሻ (Membership Check) ---
 async def check_membership(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # የግሩፕ ID ካልተሞላ ፍተሻውን ማለፍ
     if not GROUP_ID or str(GROUP_ID) in ["YOUR_GROUP_ID", "-1001234567890", ""]:
         return True
     try:
@@ -68,18 +67,26 @@ async def check_membership(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if member.status in ['member', 'administrator', 'creator']:
             return True
     except Exception as e:
-        logging.warning(f"Group check warning: {e}")
-        return True # ስህተት ካለ ለጊዜው እንዲያልፍ ማድረግ
+        return True
     
     await update.effective_message.reply_text("❌ ይቅርታ! ይህን ቦት ለመጠቀም መጀመሪያ የእሁድን በፍቅር የቴሌግራም ግሩፕ አባል መሆን አለብዎት።")
     return False
 
-# --- የትዕዛዝ አስተናጋጆች (Command Handlers) ---
+# --- የትዕዛዝ አስተናጋጆች ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ቦቱን ሲያስጀምሩ የሚመጣ መልእክት"""
+    """ቦቱን ሲያስጀምሩ ሜኑውን በማጽዳት ወደ 'Open' የሚቀይር ተግባር"""
     if not await check_membership(update, context): return
     
+    # 1. በጎን በኩል የሚታዩትን የትዕዛዝ ዝርዝሮች (Commands) ማጥፋት
+    await context.bot.delete_my_commands()
+    
+    # 2. የሜኑ ቁልፉን (Bot Menu Button) ወደ 'ክፈት' (Open) መቀየር
+    await context.bot.set_chat_menu_button(
+        chat_id=update.effective_chat.id,
+        menu_button=MenuButtonWebApp(text="ክፈት (Open)", web_app=WebAppInfo(url=MINI_APP_URL))
+    )
+
     user = update.effective_user
     conn = sqlite3.connect("members.db")
     conn.execute("INSERT OR IGNORE INTO members (user_id, username) VALUES (?, ?)", (user.id, user.username))
@@ -87,104 +94,59 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     keyboard = [
-        [InlineKeyboardButton("🚀 ክፍያ ያስገቡ", web_app=WebAppInfo(url=f"{MINI_APP_URL}?startapp=pay"))],
+        [InlineKeyboardButton("🚀 ክፍያ ያስገቡ (Pay)", web_app=WebAppInfo(url=f"{MINI_APP_URL}?startapp=pay"))],
         [InlineKeyboardButton("📊 ሁኔታዬን አሳይ", callback_data="user_status"), 
          InlineKeyboardButton("❓ እርዳታ", callback_data="user_help")]
     ]
     
-    msg = (f"ሰላም {user.first_name}! 👋 ወደ **እሁድን በፍቅር** ቦት በሰላም መጡ።\n\n"
-           "መዋጮን፣ ቅጣትን እና ብድርን እዚህ ማስተዳደር ይችላሉ።\n\n"
-           "_Powered by Skymark System Solution_")
+    msg = (f"ሰላም {user.first_name}! 👋 ወደ **እሁድን በፍቅር** ቦት እንኳን ደህና መጡ።\n\n"
+           "ከታች በግራ በኩል ያለውን **'ክፈት (Open)'** ቁልፍ በመጫን በማንኛውም ሰዓት አገልግሎቱን ማግኘት ይችላሉ።")
     await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """እርዳታ ለማግኘት"""
     if not await check_membership(update, context): return
-    
     help_text = ("📖 **የአጠቃቀም መመሪያ**\n\n"
-                 "1. **/pay** የሚለውን ይጫኑ ወይም '🚀 ክፍያ ያስገቡ' የሚለውን ቁልፍ ይጠቀሙ።\n"
-                 "2. ፎርሙን ሞልተው ሲጨርሱ የደረሰኝ ፎቶ (Screenshot) እዚህ ቦት ላይ ይላኩ።\n"
-                 "3. **/status** በማለት ክፍያዎ መጽደቁን ያረጋግጡ።\n\n"
-                 "ለተጨማሪ እገዛ በሚኒ አፑ ውስጥ 'እርዳታ' የሚለውን ታብ ይመልከቱ።")
-    
-    if update.callback_query:
-        await update.callback_query.message.reply_text(help_text, parse_mode="Markdown")
-    else:
-        await update.message.reply_text(help_text, parse_mode="Markdown")
+                 "ከታች በግራ በኩል ያለውን **'ክፈት (Open)'** የሚለውን ቁልፍ በመጠቀም ክፍያ መፈጸም ወይም ሁኔታዎን ማየት ይችላሉ።")
+    await update.message.reply_text(help_text, parse_mode="Markdown")
 
 async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """የአባልነት ሁኔታን ለማየት"""
     if not await check_membership(update, context): return
-    
     user_id = update.effective_user.id
     conn = sqlite3.connect("members.db")
     member = conn.execute("SELECT status FROM members WHERE user_id = ?", (user_id,)).fetchone()
     conn.close()
-    
     status = "✅ የጸደቀ አባል" if member and member[0] == 'APPROVED' else "⏳ በመጠባበቅ ላይ ያለ"
-    msg = f"🔍 **የአባልነት ሁኔታዎ፦**\n\n{status}\n\nየበለጠ መረጃ ለማየት ሚኒ አፑን ይክፈቱ።"
-    
-    if update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="Markdown")
-    else:
-        await update.message.reply_text(msg, parse_mode="Markdown")
-
-async def pay_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ለክፍያ በቀጥታ የሚወስድ አቋራጭ"""
-    if not await check_membership(update, context): return
-    keyboard = [[InlineKeyboardButton("🚀 ፎርሙን ክፈት", web_app=WebAppInfo(url=f"{MINI_APP_URL}?startapp=pay"))]]
-    await update.message.reply_text("የክፍያ ሪፖርት ለማቅረብ ከታች ያለውን ቁልፍ ይጫኑ፡", reply_markup=InlineKeyboardMarkup(keyboard))
-
-async def loan_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ለብድር በቀጥታ የሚወስድ አቋራጭ"""
-    if not await check_membership(update, context): return
-    keyboard = [[InlineKeyboardButton("🏦 የብድር አገልግሎት", web_app=WebAppInfo(url=f"{MINI_APP_URL}?startapp=loan"))]]
-    await update.message.reply_text("ስለ ብድር መረጃ ለማግኘት ከታች ያለውን ቁልፍ ይጫኑ፡", reply_markup=InlineKeyboardMarkup(keyboard))
-
-# --- የአስተዳዳሪ ተግባራት (Admin Tasks) ---
+    await update.message.reply_text(f"🔍 **የአባልነት ሁኔታዎ፦**\n\n{status}", parse_mode="Markdown")
 
 async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ያልጸደቁ ክፍያዎችን ለማየት (Admin Only)"""
-    if update.effective_user.id != ADMIN_ID:
-        return await update.message.reply_text("❌ ይህ ትዕዛዝ ለአስተዳዳሪ ብቻ ነው።")
-    
+    if update.effective_user.id != ADMIN_ID: return
     conn = sqlite3.connect("members.db")
     p_count = conn.execute("SELECT COUNT(*) FROM payments WHERE status = 'AWAIT_APPROVAL'").fetchone()[0]
-    m_count = conn.execute("SELECT COUNT(*) FROM members").fetchone()[0]
     conn.close()
-    
-    await update.message.reply_text(f"🛠 **Admin Dashboard**\n\n• ጠቅላላ ተመዝጋቢዎች፦ {m_count}\n• ያልጸደቁ ክፍያዎች፦ {p_count}\n\nሪፖርት ለማየት /stats ይበሉ።")
+    await update.message.reply_text(f"🛠 **Admin Dashboard**\n\nያልጸደቁ ክፍያዎች፦ {p_count}\nሪፖርት ለማየት /stats ይበሉ።")
 
 async def stats_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """የፋይናንስ ማጠቃለያ ለማየት (Admin Only)"""
     if update.effective_user.id != ADMIN_ID: return
-    
     conn = sqlite3.connect("members.db")
     stats = conn.execute('SELECT SUM(total_amount) FROM payments WHERE status = "APPROVED"').fetchone()
     conn.close()
     total = stats[0] if stats[0] else 0
     await update.message.reply_text(f"💰 **ጠቅላላ በካዝና ያለ ገንዘብ፦**\n\n{total} ብር")
 
-# --- የመረጃ መቀበያ (Data Handling) ---
+# --- ዳታ መቀበያ ---
 
 async def on_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ሚኒ አፑ መረጃ ሲልክ የሚቀበል ተግባር"""
     data = json.loads(update.effective_message.web_app_data.data)
-    user = update.effective_user
-
     if data.get('type') == 'payment_report':
         context.user_data['pending_pay'] = data
         await update.message.reply_text(f"✅ የ**{data['purpose']}** መረጃ ተመዝግቧል።\n\nአሁን የደረሰኙን ፎቶ (Image) እዚህ ይላኩ።")
 
 async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ደረሰኝ ሲላክ ከዳታው ጋር አቀናጅቶ ዳታቤዝ የሚመዘግብ ተግባር"""
     if 'pending_pay' not in context.user_data:
-        return await update.message.reply_text("እባክዎ መጀመሪያ ፎርሙን ሞልተው 'ደረሰኝ ላክ' ይበሉ።")
-
+        return await update.message.reply_text("እባክዎ መጀመሪያ በሚኒ አፑ በኩል መረጃ ይላኩ።")
     data = context.user_data['pending_pay']
     user = update.effective_user
     file_id = update.message.photo[-1].file_id
-
     conn = sqlite3.connect("members.db")
     cursor = conn.cursor()
     cursor.execute('''INSERT INTO payments (user_id, username, purpose, location, base_amount, penalty_amount, total_amount, note, file_id, timestamp) 
@@ -193,63 +155,45 @@ async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     p_id = cursor.lastrowid
     conn.commit()
     conn.close()
-
     del context.user_data['pending_pay']
     await update.message.reply_text("📩 ደረሰኝዎ ተልኳል! በአስተዳዳሪው ሲረጋገጥ እናሳውቅዎታለን።")
-
-    # ለአስተዳዳሪው የማረጋገጫ መልእክት መላክ
     if ADMIN_ID:
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ አጽድቅ", callback_data=f"papp_{p_id}_{user.id}"), 
-             InlineKeyboardButton("❌ ሰርዝ", callback_data=f"prej_{p_id}_{user.id}")]
-        ])
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton("✅ አጽድቅ", callback_data=f"papp_{p_id}_{user.id}"), InlineKeyboardButton("❌ ሰርዝ", callback_data=f"prej_{p_id}_{user.id}")]])
         await context.bot.send_photo(ADMIN_ID, file_id, caption=f"🚨 **አዲስ ክፍያ**\n👤 @{user.username}\n🎯 {data['purpose']}\n💵 {data['totalAmount']} ብር", reply_markup=kb)
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """የቁልፍ ምላሾችን የሚያስተናግድ ተግባር"""
     query = update.callback_query
     await query.answer()
-    
     if query.data == "user_status": return await status_cmd(update, context)
     if query.data == "user_help": return await help_cmd(update, context)
-
     if query.from_user.id != ADMIN_ID: return
-    
     parts = query.data.split("_")
     action, rec_id, target_uid = parts[0], parts[1], int(parts[2])
     is_app = "app" in action
-    
     conn = sqlite3.connect("members.db")
     conn.execute("UPDATE payments SET status = ? WHERE id = ?", ("APPROVED" if is_app else "REJECTED", rec_id))
-    if is_app: 
-        conn.execute("UPDATE members SET status = 'APPROVED' WHERE user_id = ?", (target_uid,))
+    if is_app: conn.execute("UPDATE members SET status = 'APPROVED' WHERE user_id = ?", (target_uid,))
     conn.commit()
     conn.close()
-
     await context.bot.send_message(target_uid, "🎉 ክፍያዎ ጸድቋል!" if is_app else "⚠️ ክፍያዎ ውድቅ ተደርጓል።")
     await query.edit_message_caption(caption=f"{query.message.caption}\n\n🏁 **ውጤት፦ {'ጸድቋል ✅' if is_app else 'ውድቅ ተደርጓል ❌'}**")
 
-# --- MAIN ---
-
 def main():
-    """ቦቱን የሚያነሳ ዋና ተግባር"""
     init_db()
     app = Application.builder().token(BOT_TOKEN).build()
-
-    # ትዕዛዞችን በሙሉ እዚህ መመዝገብ
+    
+    # ትዕዛዞቹ በኮድ ውስጥ ይሰራሉ ነገር ግን በሜኑ ዝርዝር ውስጥ አይታዩም
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("status", status_cmd))
-    app.add_handler(CommandHandler("pay", pay_cmd))
-    app.add_handler(CommandHandler("loan", loan_cmd))
     app.add_handler(CommandHandler("admin", admin_panel))
     app.add_handler(CommandHandler("stats", stats_cmd))
     
     app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, on_web_app_data))
     app.add_handler(MessageHandler(filters.PHOTO, on_photo))
     app.add_handler(CallbackQueryHandler(callback_handler))
-
-    print("🚀 Ehuden Befikir Bot is active and running...")
+    
+    print("🚀 Ehuden Befikir Bot is active...")
     app.run_polling()
 
 if __name__ == "__main__":
