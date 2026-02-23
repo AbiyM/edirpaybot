@@ -185,7 +185,7 @@
              <div class="bg-white border-2 border-slate-100 p-6 rounded-3xl shadow-sm space-y-6">
                 <h3 class="text-lg font-black text-slate-800 uppercase text-center border-b pb-3">የአሁኑ ሁኔታ (Status)</h3>
                 
-                <!-- Fixed Total Balance Card (Always Visible) -->
+                <!-- Fixed Total Balance Card -->
                 <div class="bg-slate-900 p-5 rounded-3xl shadow-xl text-center border-b-4 border-green-500">
                     <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">ጠቅላላ ቀሪ ሂሳብ</span>
                     <h2 class="text-3xl font-mono font-black text-white mt-1">0.00 <span class="text-sm">ብር</span></h2>
@@ -328,7 +328,7 @@
                 activeTab.classList.add('active-tab', 'text-slate-900');
             }
 
-            // 3. Trigger automatic slide-in effect for status cards
+            // 3. Trigger automatic staggered slide-in effect for status cards
             if (tab === 'status') {
                 const cards = document.querySelectorAll('.status-card-item');
                 // Reset first
@@ -338,7 +338,7 @@
                 cards.forEach((card, index) => {
                     setTimeout(() => {
                         card.classList.add('slide-active');
-                    }, (index + 1) * 150); // Each card enters 150ms after the previous one
+                    }, (index + 1) * 150);
                 });
             }
         }
