@@ -72,12 +72,25 @@
             min-width: 80px;
             height: 45px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .gateway-card:active {
+            transform: scale(0.95);
         }
 
         .gateway-card img {
             max-height: 24px;
             max-width: 100%;
             object-fit: contain;
+        }
+
+        /* Custom Modal Styling */
+        #modalOverlay {
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
         }
     </style>
 </head>
@@ -156,13 +169,13 @@
                         <p class="text-[12px] font-black uppercase text-green-700 tracking-widest mb-4 italic">በቀላሉ እዚህ ይክፈሉ (Easy Pay Here)</p>
                         <div class="flex justify-center gap-3 w-full">
                             <!-- Updated Image filenames -->
-                            <div class="gateway-card">
+                            <div class="gateway-card" onclick="showConstructionModal('Chapa')">
                                 <img src="Chapa.png" alt="Chapa" onerror="this.parentElement.innerText='CHAPA'">
                             </div>
-                            <div class="gateway-card">
+                            <div class="gateway-card" onclick="showConstructionModal('Arifpay')">
                                 <img src="Arifpay.png" alt="Arifpay" onerror="this.parentElement.innerText='Arifpay'">
                             </div>
-                            <div class="gateway-card">
+                            <div class="gateway-card" onclick="showConstructionModal('StarPay')">
                                 <img src="StarPay.png" alt="StarPay" onerror="this.parentElement.innerText='StarPay'">
                             </div>
                         </div>
@@ -171,7 +184,7 @@
             </form>
         </div>
 
-        <!-- Loan Section (Under Development) -->
+        <!-- Loan Section -->
         <div id="loanSection" class="hidden fade-in">
             <div class="bg-green-50 border-2 border-green-700/20 p-8 rounded-[2.5rem] text-center shadow-inner">
                 <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -197,6 +210,28 @@
         </div>
     </div>
 
+    <!-- Construction Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0">
+        <div class="bg-white w-[85%] max-w-sm rounded-[2rem] p-8 shadow-2xl transform scale-90 transition-transform duration-300 ease-out" id="modalBox">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-black text-gray-800 mb-2 uppercase tracking-tight">በዝግጅት ላይ</h3>
+                <p class="text-sm font-medium text-gray-600 mb-6 leading-relaxed">
+                    ይህ የ<span id="gatewayName" class="font-bold text-green-700"></span> በቀጥታ የመክፈያ ዘዴ በአሁኑ ሰዓት በዝግጅት ላይ ነው። በቅርቡ አገልግሎት መስጠት እንጀምራለን።
+                </p>
+                <div class="border-t border-gray-100 pt-6">
+                    <button onclick="closeConstructionModal()" class="w-full py-4 bg-green-700 text-white rounded-2xl font-bold shadow-lg shadow-green-900/20 active:scale-95 transition-all uppercase">
+                        እሺ (OK)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -208,6 +243,34 @@
             document.getElementById('loanSection').classList.toggle('hidden', tab !== 'loan');
             document.getElementById('payTab').classList.toggle('active-tab', tab === 'payment');
             document.getElementById('loanTab').classList.toggle('active-tab', tab === 'loan');
+        }
+
+        function showConstructionModal(name) {
+            const overlay = document.getElementById('modalOverlay');
+            const box = document.getElementById('modalBox');
+            document.getElementById('gatewayName').innerText = name;
+            
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.add('opacity-100');
+                overlay.classList.remove('opacity-0');
+                box.classList.remove('scale-90');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeConstructionModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const box = document.getElementById('modalBox');
+            
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-90');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
         }
 
         document.getElementById('paymentForm').addEventListener('submit', (e) => {
