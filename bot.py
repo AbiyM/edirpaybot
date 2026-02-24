@@ -12,7 +12,9 @@ const http = require('http');
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_IDS = process.env.ADMIN_IDS ? process.env.ADMIN_IDS.split(',').map(id => parseInt(id.trim())) : [];
 const MINI_APP_URL = process.env.MINI_APP_URL;
-const TEST_GROUP_ID = process.env.TEST_GROUP_ID ? parseInt(process.env.TEST_GROUP_ID) : null;
+
+// Using your provided Group ID as the default fallback
+const TEST_GROUP_ID = process.env.TEST_GROUP_ID ? parseInt(process.env.TEST_GROUP_ID) : -1003740305702;
 
 if (!BOT_TOKEN) {
     console.error("❌ BOT_TOKEN is missing from .env!");
@@ -67,7 +69,7 @@ const getMemberKeyboard = (id) => {
 
 const getAdminKeyboard = () => {
     return Markup.keyboard([
-        ["📑 የሚጠባበቁ ክፍያዎች", "📊 ግሩፕ መለያ (ID)"],
+        ["📑 የሚጠባበቁ ክፍያዎች", "📊 ግሩፕ ማጠቃለያ"],
         ["👤 ወደ አባልነት ተመለስ (User Mode)"]
     ]).resize();
 };
@@ -92,11 +94,27 @@ bot.command('id', (ctx) => ctx.reply(`የዚህ ቻት መለያ (ID): ${ctx.cha
 // Role Switching
 bot.hears("⚙️ የአስተዳዳሪ ሁነታ (Admin Mode)", (ctx) => {
     if (!isAdmin(ctx.from.id)) return ctx.reply("ይቅርታ፣ ይህ ክፍል ለገንዘብ ያዦች ብቻ የተፈቀደ ነው።");
-    ctx.reply("🛠 አሁን በ**አስተዳዳሪ ሁነታ** ላይ ነዎት። የሚመጡ ክፍያዎችን ማጽደቅ ይችላሉ።", getAdminKeyboard());
+    ctx.reply("🛠 አሁን በ**አስተዳዳሪ ሁነታ** ላይ ነዎት። የሚመጡ ክፍያዎችን ማጽደቅ እና የግሩፕ ሁኔታን ማየት ይችላሉ።", getAdminKeyboard());
 });
 
 bot.hears("👤 ወደ አባልነት ተመለስ (User Mode)", (ctx) => {
     ctx.reply("👤 ወደ **አባልነት ሁነታ** ተመልሰዋል። መዋጮዎን እዚህ መክፈል ይችላሉ።", getMemberKeyboard(ctx.from.id));
+});
+
+// Group Stats for Admins
+bot.hears("📊 ግሩፕ ማጠቃለያ", (ctx) => {
+    if (!isAdmin(ctx.from.id)) return;
+    
+    const stats = db.prepare(`SELECT COUNT(*) as count, SUM(total_amount) as total FROM payments WHERE status = 'APPROVED'`).get();
+    const membersCount = db.prepare(`SELECT COUNT(*) as count FROM members`).get();
+    
+    let msg = `📋 **የግሩፕ አጠቃላይ ማጠቃለያ**\n\n`;
+    msg += `👥 ጠቅላላ አባላት: ${membersCount.count}\n`;
+    msg += `✅ የጸደቁ ክፍያዎች: ${stats.count}\n`;
+    msg += `💰 አጠቃላይ የተሰበሰበ: **${stats.total || 0} ብር**\n\n`;
+    msg += `📍 ግሩፕ ID: \`${TEST_GROUP_ID}\``;
+    
+    ctx.replyWithMarkdown(msg);
 });
 
 // Handling Payments from Mini App
@@ -106,7 +124,6 @@ bot.on('web_app_data', async (ctx) => {
         if (data.type === 'payment_report') {
             const time = new Date().toLocaleString('en-GB', { timeZone: 'Africa/Addis_Ababa' });
             
-            // ፎርሙ ተሞልቶ ሲመጣ በሴሽን (Session) ማስቀመጥ (ለፎቶ መጠበቂያ)
             ctx.session.pendingPayment = { 
                 ...data, 
                 timestamp: time 
@@ -115,7 +132,6 @@ bot.on('web_app_data', async (ctx) => {
             if (data.gateway === 'manual') {
                 await ctx.reply(`✅ የ${data.totalAmount} ብር ክፍያ መረጃ ተመዝግቧል።\n\n📷 አሁን የባንክ ደረሰኝዎን ፎቶ (Receipt Photo) እዚህ ይላኩ።`);
             } else {
-                // ዲጂታል ክፍያ ከሆነ በቀጥታ ማስገባት
                 const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, total_amount, timestamp) VALUES (?, ?, ?, ?, ?, ?)`)
                     .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.totalAmount, time);
                 
@@ -135,13 +151,12 @@ bot.on(['photo', 'document'], async (ctx) => {
 
     const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
     
-    // በዳታቤዝ መመዝገብ
     const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, total_amount, file_id, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)`)
         .run(ctx.from.id, ctx.from.username || 'N/A', pending.gateway, pending.purpose, pending.totalAmount, fileId, pending.timestamp);
 
     notifyAdmins(ctx, pending, res.lastInsertRowid, fileId, pending.timestamp);
     
-    ctx.session.pendingPayment = null; // ሴሽኑን ማጽዳት
+    ctx.session.pendingPayment = null; 
     await ctx.reply(`📩 ደረሰኝዎ ለገንዘብ ያዡ ተልኳል። ሲረጋገጥ መልእክት ይደርስዎታል። እናመሰግናለን!`);
 });
 
@@ -158,11 +173,15 @@ async function notifyAdmins(ctx, data, dbId, fileId, time) {
         [Markup.button.callback('❌ ውድቅ አድርግ', `p_rej_${dbId}_${ctx.from.id}`)]
     ]);
 
-    ADMIN_IDS.forEach(adminId => {
-        if (fileId) {
-            bot.telegram.sendPhoto(adminId, fileId, { caption: adminCaption, parse_mode: 'Markdown', ...kb });
-        } else {
-            bot.telegram.sendMessage(adminId, adminCaption, { parse_mode: 'Markdown', ...kb });
+    ADMIN_IDS.forEach(async (adminId) => {
+        try {
+            if (fileId) {
+                await bot.telegram.sendPhoto(adminId, fileId, { caption: adminCaption, parse_mode: 'Markdown', ...kb });
+            } else {
+                await bot.telegram.sendMessage(adminId, adminCaption, { parse_mode: 'Markdown', ...kb });
+            }
+        } catch (error) {
+            console.error(`Failed to notify admin ${adminId}:`, error.message);
         }
     });
 }
@@ -179,8 +198,12 @@ bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
     if (isApprove) {
         tier = updateMemberTier(targetUid);
         if (TEST_GROUP_ID && tier !== 'መሠረታዊ') {
-            const member = db.prepare('SELECT username FROM members WHERE user_id = ?').get(targetUid);
-            bot.telegram.sendMessage(TEST_GROUP_ID, `🌟 **የደረጃ ዕድገት!**\nአባል @${member?.username || targetUid} አሁን የ**${tier}** ደረጃ ላይ ደርሰዋል። 🎉`, { parse_mode: 'Markdown' });
+            try {
+                const member = db.prepare('SELECT username FROM members WHERE user_id = ?').get(targetUid);
+                await bot.telegram.sendMessage(TEST_GROUP_ID, `🌟 **የደረጃ ዕድገት!**\nአባል @${member?.username || targetUid} አሁን የ**${tier}** ደረጃ ላይ ደርሰዋል። 🎉`, { parse_mode: 'Markdown' });
+            } catch (error) {
+                console.error("Failed to notify group:", error.message);
+            }
         }
     }
 
