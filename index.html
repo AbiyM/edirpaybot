@@ -134,6 +134,33 @@
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Tier Specific Colors */
+        .tier-basic { color: #94a3b8; }
+        .tier-pro { color: #3b82f6; }
+        .tier-elite { color: #f59e0b; }
+
+        /* Loan UI Improvements */
+        .loan-glow {
+            box-shadow: 0 0 15px rgba(21, 128, 61, 0.1);
+        }
+        .locked-feature {
+            position: relative;
+            overflow: hidden;
+        }
+        .locked-feature::after {
+            content: "በቅርቡ";
+            position: absolute;
+            top: 10px;
+            right: -25px;
+            background: #64748b;
+            color: white;
+            font-size: 7px;
+            font-weight: 900;
+            padding: 2px 30px;
+            transform: rotate(45deg);
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body class="select-none">
@@ -151,7 +178,10 @@
         </div>
         <div class="text-right">
             <span id="userName" class="text-xs font-black block truncate max-w-[110px]">አባል</span>
-            <span id="memberId" class="text-[8px] font-bold opacity-50 uppercase tracking-widest">ID: #---</span>
+            <div class="flex flex-col items-end">
+                <span id="headerLevel" class="text-[7px] font-black uppercase tracking-tighter tier-basic">መሠረታዊ</span>
+                <span id="memberId" class="text-[8px] font-bold opacity-50 uppercase tracking-widest">ID: #---</span>
+            </div>
         </div>
     </header>
 
@@ -286,16 +316,44 @@
                 <div class="absolute -right-10 -top-10 w-44 h-44 bg-green-500/10 rounded-full blur-3xl"></div>
                 <div class="space-y-1">
                     <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">ጠቅላላ የተከፈለ ሂሳብ</p>
-                    <h2 class="text-5xl font-black tracking-tight"><span id="totalBalance">0.00</span> <span class="text-xs opacity-40 font-bold ml-1">ETB</span></h2>
+                    <h2 class="text-5xl font-black tracking-tight"><span id="totalBalance">0.00</span> <span class="text-xs opacity-40 font-bold ml-1">ብር</span></h2>
                 </div>
                 <div class="mt-8 bg-white/5 p-5 rounded-[1.5rem] border border-white/10 flex justify-between items-center">
                     <div>
                         <p class="text-[10px] font-black uppercase opacity-50 mb-1">የቀረ ዕዳ (Remaining)</p>
-                        <h3 class="text-2xl font-black text-red-400"><span id="remainingBalance">0.00</span> ETB</h3>
+                        <h3 class="text-2xl font-black text-red-400"><span id="remainingBalance">0.00</span> ብር</h3>
                     </div>
                     <div class="text-right">
-                        <p class="text-[9px] font-black uppercase opacity-40">ሁኔታ</p>
-                        <p id="memberStatus" class="text-xs font-black uppercase text-green-400">ያልታወቀ</p>
+                        <p class="text-[9px] font-black uppercase opacity-40">ደረጃ (Level)</p>
+                        <p id="memberLevelDisplay" class="text-xs font-black uppercase tier-basic">መሠረታዊ</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tier Progress Info -->
+            <div class="section-card p-6 space-y-4">
+                <h4 class="text-[10px] font-black uppercase opacity-40 tracking-widest text-center">የአባልነት ደረጃዎች መስፈርቶች</h4>
+                <div class="space-y-4">
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="tier-basic font-black text-[10px] uppercase">መሠረታዊ (Basic)</span>
+                            <span class="text-[8px] font-bold opacity-60">አዲስ አባል</span>
+                        </div>
+                        <p class="text-[8px] leading-tight opacity-50 font-bold">ሲመዘገቡ የሚሰጥ መደበኛ ደረጃ።</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="tier-pro font-black text-[10px] uppercase">ፕሮ (Pro)</span>
+                            <span class="text-[8px] font-bold text-blue-500">መስፈርት</span>
+                        </div>
+                        <p class="text-[8px] leading-tight opacity-70 font-bold">ከ 1,500 ብር በላይ ክፍያ + ቢያንስ 5 የጸደቁ ክፍያዎች።</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="tier-elite font-black text-[10px] uppercase">ልዩ (Elite)</span>
+                            <span class="text-[8px] font-bold text-amber-600">መስፈርት</span>
+                        </div>
+                        <p class="text-[8px] leading-tight opacity-70 font-bold">ከ 5,000 ብር በላይ ክፍያ + ቢያንስ 12 የጸደቁ ክፍያዎች።</p>
                     </div>
                 </div>
             </div>
@@ -304,12 +362,12 @@
                 <div class="section-card p-6 flex flex-col items-center">
                     <span class="text-2xl block mb-3">📅</span>
                     <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1 text-center">መደበኛ መዋጮ</p>
-                    <p class="text-xl font-black"><span id="sumMonthly">0.00</span> <span class="text-[9px] opacity-30">ETB</span></p>
+                    <p class="text-xl font-black"><span id="sumMonthly">0.00</span> <span class="text-[9px] opacity-30">ብር</span></p>
                 </div>
                 <div class="section-card p-6 flex flex-col items-center">
-                    <span class="text-2xl block mb-3">⚠️</span>
-                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1 text-center">የቅጣት ክፍያ</p>
-                    <p class="text-xl font-black text-red-600"><span id="sumPenalty">0.00</span> <span class="text-[9px] opacity-30">ETB</span></p>
+                    <span class="text-2xl block mb-3">✅</span>
+                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1 text-center">የጸደቁ ክፍያዎች</p>
+                    <p class="text-xl font-black"><span id="approvedCount">0</span> <span class="text-[9px] opacity-30">ተሳትፎ</span></p>
                 </div>
             </div>
 
@@ -324,20 +382,70 @@
             <div class="space-y-4">
                 <h4 class="text-[10px] font-black uppercase opacity-40 tracking-[0.3em] px-2">የቅርብ ጊዜ እንቅስቃሴዎች</h4>
                 <div id="transactionList" class="space-y-3 text-center py-5">
-                    <div class="opacity-20 text-xs font-black uppercase tracking-widest">ምንም እንቅስቃሴ የለም</div>
+                    <!-- Transactions go here -->
                 </div>
             </div>
         </section>
 
-        <!-- 3. Loan Section -->
+        <!-- 3. Loan Section (Enhanced Roadmap) -->
         <section id="loanSection" class="hidden animate-section space-y-6">
-            <div class="section-card p-8 text-center bg-slate-50 border-dashed border-2">
-                <div class="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">🏦</div>
-                <h3 class="text-xl font-black uppercase text-slate-800 tracking-tight">የብድር አገልግሎት</h3>
-                <p class="text-[11px] font-bold text-slate-500 mt-2 leading-relaxed">የዲጂታል ብድር አገልግሎት በቅርቡ ይጀምራል። አባላት ያሉባቸውን መዋጮዎች በማጠናቀቅ ለብድር ዝግጁ መሆን ይችላሉ።</p>
-                <div class="mt-6 py-2 px-5 bg-slate-200 rounded-full inline-block text-[10px] font-black uppercase text-slate-600 animate-pulse">
-                    🚧 በግንባታ ላይ
+            <!-- Header Construction Banner -->
+            <div class="section-card p-8 text-center bg-slate-900 text-white relative overflow-hidden loan-glow">
+                <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-brand-green/20 rounded-full blur-2xl"></div>
+                <div class="w-20 h-20 bg-brand-green rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-5 shadow-2xl">🏦</div>
+                <h3 class="text-2xl font-black uppercase tracking-tight">የብድር አገልግሎት</h3>
+                <div class="mt-4 flex items-center justify-center gap-2">
+                    <span class="w-2 h-2 bg-yellow-400 rounded-full animate-ping"></span>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-yellow-400">በግንባታ ላይ (Under Development)</p>
                 </div>
+                <p class="text-[11px] font-bold text-slate-400 mt-4 leading-relaxed">የዲጂታል ብድር አሰራርን ይበልጥ ቀልጣፋ እና ፍትሃዊ ለማድረግ ሲስተሙ እየተዘጋጀ ይገኛል።</p>
+            </div>
+
+            <!-- Planned Features Grid -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="section-card p-5 locked-feature bg-slate-50/50">
+                    <span class="text-2xl block mb-2">📈</span>
+                    <p class="text-[9px] font-black uppercase opacity-40">የብድር ማስያዣ</p>
+                    <p class="text-[11px] font-black mt-1">Guarantor System</p>
+                    <p class="text-[8px] font-bold opacity-40 mt-1">ሌላ አባል እንዲመሰክርልዎ የሚደረግበት።</p>
+                </div>
+                <div class="section-card p-5 locked-feature bg-slate-50/50">
+                    <span class="text-2xl block mb-2">⚖️</span>
+                    <p class="text-[9px] font-black uppercase opacity-40">ዝቅተኛ ወለድ</p>
+                    <p class="text-[11px] font-black mt-1">Interest Rates</p>
+                    <p class="text-[8px] font-bold opacity-40 mt-1">ለአባላት ብቻ የሚሆን ዝቅተኛ ወለድ።</p>
+                </div>
+                <div class="section-card p-5 locked-feature bg-slate-50/50">
+                    <span class="text-2xl block mb-2">🗓️</span>
+                    <p class="text-[9px] font-black uppercase opacity-40">ክፍያ ጊዜ</p>
+                    <p class="text-[11px] font-black mt-1">Flexible Schedule</p>
+                    <p class="text-[8px] font-bold opacity-40 mt-1">እንደ ፍላጎትዎ የሚመቻች የክፍያ ጊዜ።</p>
+                </div>
+                <div class="section-card p-5 locked-feature bg-slate-50/50">
+                    <span class="text-2xl block mb-2">📜</span>
+                    <p class="text-[9px] font-black uppercase opacity-40">ዲጂታል ውል</p>
+                    <p class="text-[11px] font-black mt-1">E-Contract</p>
+                    <p class="text-[8px] font-bold opacity-40 mt-1">በቦቱ በኩል የሚፈረም የብድር ውል።</p>
+                </div>
+            </div>
+
+            <!-- Tier Perks Alert -->
+            <div class="section-card p-5 border-l-8 border-amber-500 bg-amber-50/50">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm">⭐</div>
+                    <div>
+                        <h4 class="text-xs font-black uppercase text-amber-900">የደረጃ ጥቅማጥቅም</h4>
+                        <p class="text-[10px] font-bold text-amber-700 leading-tight mt-1">የ"ፕሮ" እና "ልዩ" አባላት ቅድሚያ ብድር የማግኘት እና የወለድ ቅናሽ ይኖራቸዋል።</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coming Soon Notice -->
+            <div class="p-6 text-center">
+                <button disabled class="w-full py-4 bg-slate-200 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest">
+                    አገልግሎቱ ሲጀምር አሳውቀኝ 🔔
+                </button>
+                <p class="text-[9px] font-bold opacity-30 mt-3 uppercase tracking-tighter">Powered by Skymark Solution • v3.6</p>
             </div>
         </section>
 
@@ -353,6 +461,10 @@
                     <div class="flex gap-3">
                         <span class="text-brand-green font-black">2.</span>
                         <p>የዲጂታል ክፍያ (EasyPay) ሲጠቀሙ ክፍያው በቀጥታ ለቦቱ ይላካል።</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="text-brand-green font-black">3.</span>
+                        <p>የቅጣት ስሌቱ በራስ-ሰር የሚሰራ ሲሆን ከቀን 1-5 ነፃ፣ ከ6-10 ቀን 20 ብር፣ ከ11 ቀን በላይ 50 ብር ነው።</p>
                     </div>
                 </div>
             </div>
@@ -378,13 +490,13 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global State - Set to window for HTML accessibility
+        // Global State
         window.paymentMode = 'manual';
         window.selectedGateway = 'chapa';
         window.currentUser = null;
         const MONTHLY_FEE = 100;
 
-        // UI Logic attached to Window
+        // UI Logic
         window.showTab = (t) => {
             ['payment', 'status', 'loan', 'help'].forEach(s => {
                 const sec = document.getElementById(s+'Section');
@@ -535,26 +647,65 @@
             }
         }
 
-        function setupDataListeners(uid) {
-            onSnapshot(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'), (ds) => {
-                const statusEl = document.getElementById('memberStatus');
-                if (ds.exists() && statusEl) {
-                    statusEl.innerText = ds.data().isVerified ? 'የተረጋገጠ አባል' : 'ያልተረጋገጠ';
-                }
-            });
+        function updateMembershipLevel(totalPaid, approvedCount) {
+            let level = "መሠረታዊ";
+            let tierClass = "tier-basic";
+            
+            if (totalPaid > 5000 && approvedCount >= 12) {
+                level = "ልዩ (Elite)";
+                tierClass = "tier-elite";
+            } 
+            else if (totalPaid > 1500 && approvedCount >= 5) {
+                level = "ፕሮ (Pro)";
+                tierClass = "tier-pro";
+            }
 
+            const headerLevelEl = document.getElementById('headerLevel');
+            const statusLevelEl = document.getElementById('memberLevelDisplay');
+            
+            if (headerLevelEl) {
+                headerLevelEl.innerText = level;
+                headerLevelEl.className = `text-[7px] font-black uppercase tracking-tighter ${tierClass}`;
+            }
+            if (statusLevelEl) {
+                statusLevelEl.innerText = level;
+                statusLevelEl.className = `text-xs font-black uppercase ${tierClass}`;
+            }
+        }
+
+        function setupDataListeners(uid) {
             onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'payments'), (snap) => {
                 const list = document.getElementById('transactionList');
                 if (!list) return;
 
+                // --- MOCK EXAMPLE FOR DEVELOPMENT ---
+                const mockExampleHtml = `
+                    <div class="status-pill p-5 rounded-3xl flex items-center justify-between border-2 border-dashed border-green-200 bg-green-50/50">
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-xl shadow-sm">📅</div>
+                            <div class="text-left">
+                                <p class="text-xs font-black text-slate-800">ምሳሌ፦ መደበኛ መዋጮ</p>
+                                <p class="text-[9px] font-bold text-green-600 uppercase tracking-tighter">CHAPA • ዛሬ (ምሳሌ)</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-black">100 ብር</p>
+                            <span class="text-[8px] font-black px-2.5 py-1 rounded-full text-green-600 bg-green-100 border border-green-200">ጸድቋል ✅</span>
+                        </div>
+                    </div>
+                `;
+
                 if (snap.empty) {
-                    list.innerHTML = '<div class="opacity-20 text-xs font-black uppercase tracking-widest">ምንም እንቅስቃሴ የለም</div>';
-                    const remEl = document.getElementById('remainingBalance');
-                    if (remEl) remEl.innerText = (6 * MONTHLY_FEE).toLocaleString();
+                    list.innerHTML = `
+                        <div class="opacity-20 text-[9px] font-black uppercase tracking-widest mb-3">መረጃ ስለሌለ የምሳሌ ታሪክ ይታያል</div>
+                        ${mockExampleHtml}
+                    `;
+                    if (document.getElementById('remainingBalance')) document.getElementById('remainingBalance').innerText = (6 * MONTHLY_FEE).toLocaleString();
+                    updateMembershipLevel(0, 0);
                     return;
                 }
 
-                let h = '', m = 0, p = 0, t = 0, pend = false;
+                let h = '', m = 0, p = 0, t = 0, approvedCount = 0, pend = false;
                 const sortedDocs = snap.docs.map(d => ({id: d.id, ...d.data()}))
                                            .sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
 
@@ -562,6 +713,7 @@
                     const status = tx.status || 'AWAIT_APPROVAL';
                     if (status === 'AWAIT_APPROVAL') pend = true;
                     if (status === 'APPROVED') {
+                        approvedCount++;
                         t += (tx.totalAmount || 0);
                         if (tx.purpose && tx.purpose.includes('መዋጮ')) m += (tx.baseAmount || tx.totalAmount || 0);
                         p += (tx.penaltyAmount || 0);
@@ -572,7 +724,7 @@
                     const gw = tx.gateway ? tx.gateway.toUpperCase() : 'UNKNOWN';
 
                     h += `
-                        <div class="status-pill p-5 rounded-3xl flex items-center justify-between shadow-sm">
+                        <div class="status-pill p-5 rounded-3xl flex items-center justify-between shadow-sm border border-slate-100 bg-white">
                             <div class="flex items-center gap-4">
                                 <div class="w-11 h-11 bg-black/5 rounded-2xl flex items-center justify-center text-xl shadow-inner">${icon}</div>
                                 <div class="text-left">
@@ -588,17 +740,14 @@
                 });
 
                 list.innerHTML = h;
-                const sumMEl = document.getElementById('sumMonthly');
-                const sumPEl = document.getElementById('sumPenalty');
-                const totalBEl = document.getElementById('totalBalance');
-                const remBEl = document.getElementById('remainingBalance');
-                const pAlertEl = document.getElementById('pendingAlert');
+                if (document.getElementById('sumMonthly')) document.getElementById('sumMonthly').innerText = m.toLocaleString();
+                if (document.getElementById('sumPenalty')) document.getElementById('sumPenalty').innerText = p.toLocaleString();
+                if (document.getElementById('totalBalance')) document.getElementById('totalBalance').innerText = t.toLocaleString();
+                if (document.getElementById('approvedCount')) document.getElementById('approvedCount').innerText = approvedCount;
+                if (document.getElementById('remainingBalance')) document.getElementById('remainingBalance').innerText = Math.max(0, (6 * MONTHLY_FEE) - m).toLocaleString();
+                if (document.getElementById('pendingAlert')) document.getElementById('pendingAlert').classList.toggle('hidden', !pend);
 
-                if (sumMEl) sumMEl.innerText = m.toLocaleString();
-                if (sumPEl) sumPEl.innerText = p.toLocaleString();
-                if (totalBEl) totalBEl.innerText = t.toLocaleString();
-                if (remBEl) remBEl.innerText = Math.max(0, (6 * MONTHLY_FEE) - m).toLocaleString();
-                if (pAlertEl) pAlertEl.classList.toggle('hidden', !pend);
+                updateMembershipLevel(t, approvedCount);
             });
         }
 
@@ -650,10 +799,12 @@
             };
 
             try {
-                await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), {
-                    ...payload,
-                    status: 'AWAIT_APPROVAL'
-                });
+                if (window.currentUser) {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), {
+                        ...payload,
+                        status: 'AWAIT_APPROVAL'
+                    });
+                }
                 tg.sendData(JSON.stringify(payload));
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(() => tg.close(), 1000);
