@@ -302,6 +302,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Contact Admin Link - Strictly Admin Only -->
             <a id="adminHelpLink" href="https://t.me/Abiym" target="_blank" class="hidden bg-blue-600/10 border border-blue-600/20 p-6 rounded-[2rem] flex items-center justify-between active:scale-95 transition-all">
                 <div class="flex items-center gap-5">
                     <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl">💬</div>
@@ -328,24 +329,35 @@
         window.paymentMode = 'manual';
         window.selectedGateway = 'chapa';
         
-        // ADMIN_LIST - Replace with your authorized ID(s)
-        const ADMIN_LIST = ["644558000"]; 
+        /**
+         * ADMIN_LIST
+         * IMPORTANT: Add your personal Telegram User ID here as a string.
+         * You can get your ID from @userinfobot or @MissRose_bot on Telegram.
+         */
+        const ADMIN_LIST = ["644558000", "ADD_YOUR_ID_HERE"]; 
 
         function checkRole() {
+            // Get user data from Telegram WebApp
             const user = tg.initDataUnsafe?.user;
+            
             if (user && ADMIN_LIST.includes(user.id.toString())) {
                 const adminTab = document.getElementById('adminTab');
                 const adminBadge = document.getElementById('adminBadge');
                 const adminHelpLink = document.getElementById('adminHelpLink');
                 const mainNav = document.getElementById('mainNav');
 
+                // Show admin elements
                 if (adminTab) adminTab.classList.remove('hidden');
                 if (adminBadge) adminBadge.classList.remove('hidden');
                 if (adminHelpLink) adminHelpLink.classList.remove('hidden');
+                
+                // Switch navigation to 5 columns to fit the Admin tab
                 if (mainNav) {
                     mainNav.classList.remove('grid-cols-4');
                     mainNav.classList.add('grid-cols-5');
                 }
+            } else {
+                console.log("Not an admin or outside Telegram environment.");
             }
         }
 
@@ -425,7 +437,9 @@
             setTimeout(() => tg.close(), 1000);
         });
 
-        checkRole();
+        // Run role check on load
+        setTimeout(checkRole, 500);
+        
         if (tg.initDataUnsafe?.user) {
             document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name || "አባል";
         }
