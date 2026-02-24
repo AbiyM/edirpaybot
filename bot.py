@@ -13,10 +13,9 @@ const http = require('http');
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : null;
 const MINI_APP_URL = process.env.MINI_APP_URL;
-const GITHUB_URL = process.env.GITHUB_URL || "https://github.com/";
 
 if (!BOT_TOKEN) {
-    console.error("❌ ስህተት: የቦት ቶከን (BOT_TOKEN) አልተገኘም!");
+    console.error("❌ ስህተት: የቦት ቶከን (BOT_TOKEN) በ .env ፋይል ውስጥ አልተገኘም!");
     process.exit(1);
 }
 
@@ -55,7 +54,7 @@ const getAddisTime = () => {
 };
 
 /**
- * የአባልነት ደረጃን ለማዘመን የሚረዳ ተግባር (Logic for Payment + Participation)
+ * የአባልነት ደረጃን በክፍያ እና በተሳትፎ ብዛት ማዘመን
  */
 function updateMemberTier(userId) {
     const stats = db.prepare(`
@@ -85,8 +84,7 @@ bot.start((ctx) => {
     );
     
     const welcomeMsg = `እንኳን ወደ **እሁድን በፍቅር** ዲጂታል መተግበሪያ በሰላም መጡ! 👋\n\n` +
-        `ይህ ቦት መዋጮዎን እንዲከፍሉ፣ የክፍያ ሁኔታዎን እንዲከታተሉ እና የብድር አገልግሎቶችን እንዲያገኙ ይረዳዎታል።\n\n` +
-        `ለመጀመር '📱 ሚኒ አፑን ተጠቀም' የሚለውን ቁልፍ ይጫኑ።`;
+        `ለመጀመር '📱 ሚኒ አፑን ተጠቀም' የሚለውን ቁልፍ በመጫን መዋጮዎን መክፈል እና ሁኔታዎን ማየት ይችላሉ።`;
     
     return ctx.replyWithMarkdown(welcomeMsg, 
         Markup.keyboard([
@@ -96,11 +94,7 @@ bot.start((ctx) => {
     );
 });
 
-bot.command('github', (ctx) => {
-    return ctx.replyWithMarkdown(`💻 **የምንጭ ኮድ (Source Code)**\n\n🔗 [GitHub Repository](${GITHUB_URL})`);
-});
-
-// --- 4. የሚኒ አፕ መረጃ መቀበያ (Mini App Data Handler) ---
+// --- 4. የሚኒ አፕ መረጃ መቀበያ (Webhook/WebAppData Handler) ---
 
 bot.on('web_app_data', async (ctx) => {
     try {
@@ -108,7 +102,6 @@ bot.on('web_app_data', async (ctx) => {
         
         if (data.type === 'payment_report') {
             const isDigital = data.isDigital === true;
-            const gatewayDisplay = data.gateway.toUpperCase();
             const serverTime = getAddisTime();
             
             ctx.session.pendingPayment = { 
@@ -123,6 +116,7 @@ bot.on('web_app_data', async (ctx) => {
             replyMsg += `📅 ቀን፦ ${serverTime}\n`;
 
             if (isDigital) {
+                // ዲጂታል ክፍያ (ለምሳሌ Chapa) ከሆነ በቀጥታ ይመዘገባል
                 const res = db.prepare(`
                     INSERT INTO payments (user_id, username, gateway, purpose, total_amount, tx_ref, timestamp) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -138,7 +132,7 @@ bot.on('web_app_data', async (ctx) => {
         }
     } catch (e) {
         console.error("Web App Data Error:", e);
-        ctx.reply("❌ መረጃውን በማስተናገድ ላይ ስህተት አጋጥሟል።");
+        ctx.reply("❌ መረጃውን በማስተናገድ ላይ ስህተት አጋጥሟል። እባክዎ ደግመው ይሞክሩ።");
     }
 });
 
@@ -162,13 +156,13 @@ bot.on(['photo', 'document'], async (ctx) => {
         pending.baseAmount, pending.penaltyAmount, pending.totalAmount, fileId, time
     );
 
-    ctx.session.pendingPayment = null;
+    ctx.session.pendingPayment = null; // Cleanup session
     notifyAdmin(ctx, pending, res.lastInsertRowid, fileId, time);
 
-    await ctx.reply("📩 ደረሰኝዎ ለገንዘብ ያዡ ተልኳል። ሲረጋገጥ መልእክት ይደርስዎታል።");
+    await ctx.reply("📩 ደረሰኝዎ ለገንዘብ ያዡ ተልኳል። ሲረጋገጥ መልእክት ይደርስዎታል። እናመሰግናለን!");
 });
 
-// --- 6. የአስተዳዳሪ ማሳወቂያ ---
+// --- 6. ለአስተዳዳሪው ማሳወቅ (Admin Notification) ---
 
 async function notifyAdmin(ctx, data, dbId, fileId, time) {
     if (!ADMIN_ID) return;
@@ -183,7 +177,7 @@ async function notifyAdmin(ctx, data, dbId, fileId, time) {
         `🎯 ዓላማ፦ ${data.purpose}\n` +
         `💵 መጠን፦ ${data.totalAmount} ብር\n` +
         `📅 ቀን፦ ${time}\n` +
-        (data.tx_ref ? `🔢 TX Ref: \`${data.tx_ref}\`` : `📷 ደረሰኝ ከታች ተያይዟል`);
+        (data.tx_ref ? `🔢 TX Ref: \`${data.tx_ref}\`` : `📷 ደረሰኝ ተያይዟል`);
 
     if (fileId) {
         await ctx.telegram.sendPhoto(ADMIN_ID, fileId, { caption: adminCaption, parse_mode: 'Markdown', ...adminKb });
@@ -192,7 +186,7 @@ async function notifyAdmin(ctx, data, dbId, fileId, time) {
     }
 }
 
-// --- 7. የአስተዳዳሪ ውሳኔዎች ---
+// --- 7. የአስተዳዳሪ ውሳኔዎች (Actions) ---
 
 bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return ctx.answerCbQuery("ፈቃድ የለዎትም!");
@@ -205,32 +199,31 @@ bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
     let userTier = 'መሠረታዊ';
     if (isApprove) {
         db.prepare("UPDATE members SET status = 'APPROVED' WHERE user_id = ?").run(targetUserId);
-        userTier = updateMemberTier(targetUserId); // ደረጃን በራስ-ሰር ማዘመን
+        userTier = updateMemberTier(targetUserId); // ደረጃን በራስ-ሰር አዘምን
     }
 
     const notifyMsg = isApprove 
-        ? `🎉 እንኳን ደስ አለዎት! ክፍያዎ በአስተዳዳሪው ጸድቋል።\n🌟 የአሁኑ ደረጃዎ፦ **${userTier}**` 
+        ? `🎉 እንኳን ደስ አለዎት! የ${dbId} ቁጥር ክፍያዎ በአስተዳዳሪው ጸድቋል።\n🌟 የአሁኑ ደረጃዎ፦ **${userTier}**` 
         : "⚠️ ይቅርታ፣ የላኩት የክፍያ መረጃ በአስተዳዳሪው ውድቅ ተደርጓል። እባክዎ መረጃውን በድጋሚ በትክክል ይላኩ።";
 
     try {
         await ctx.telegram.sendMessage(targetUserId, notifyMsg, { parse_mode: 'Markdown' });
     } catch (e) {
-        console.error("User notification failed", e);
+        console.error("Notification failed", e);
     }
 
-    const resultText = isApprove ? `ጸድቋል (Tier: ${userTier}) ✅` : 'ውድቅ ተደርጓል ❌';
-    const currentCaption = ctx.callbackQuery.message.caption || ctx.callbackQuery.message.text;
-    
-    if (ctx.callbackQuery.message.photo) {
-        await ctx.editMessageCaption(`${currentCaption}\n\n🏁 ውጤት፦ ${resultText}`);
-    } else {
-        await ctx.editMessageText(`${currentCaption}\n\n🏁 ውጤት፦ ${resultText}`);
-    }
-    
+    const resultText = isApprove ? `ጸድቋል (${userTier}) ✅` : 'ውድቅ ተደርጓል ❌';
     await ctx.answerCbQuery(isApprove ? "ጸድቋል" : "ተሰርዟል");
+    
+    const currentText = ctx.callbackQuery.message.caption || ctx.callbackQuery.message.text;
+    if (ctx.callbackQuery.message.photo) {
+        await ctx.editMessageCaption(`${currentText}\n\n🏁 ውጤት፦ ${resultText}`);
+    } else {
+        await ctx.editMessageText(`${currentText}\n\n🏁 ውጤት፦ ${resultText}`);
+    }
 });
 
-// --- 8. ተጨማሪ ትዕዛዞች (Misc Handlers) ---
+// --- 8. ተጨማሪ ትዕዛዞች ---
 
 bot.hears("📊 ሁኔታዬን እይ", (ctx) => {
     const member = db.prepare('SELECT tier FROM members WHERE user_id = ?').get(ctx.from.id);
@@ -252,20 +245,21 @@ bot.hears("❓ እርዳታ", (ctx) => {
     ctx.replyWithMarkdown(`📖 **አጭር መመሪያ**\n\n` +
         `1. '📱 ሚኒ አፑን ተጠቀም' የሚለውን ይጫኑ\n` +
         `2. የክፍያ ፎርሙን ይሙሉ\n` +
-        `3. በደረሰኝ ከሆነ ፎቶውን እዚህ ቦት ላይ ይላኩ\n\n` +
-        `💻 **GitHub:** የኮዱን ምንጭ ለማየት /github ይበሉ።`);
+        `3. በደረሰኝ ከሆነ ፎቶውን እዚህ ቦት ላይ ይላኩ\n` +
+        `4. ሲረጋገጥ መልእክት ይደርስዎታል።`);
 });
 
-bot.hears("📱 ሚኒ አፑን ተጠቀም", (ctx) => {
-    ctx.replyWithMarkdown(`📱 **ሚኒ አፑን ለመክፈት ከታች ያለውን ሊንክ ይጫኑ፦**\n\n[እዚህ ይጫኑ](${MINI_APP_URL})`);
+// Health check server for Render (port binding)
+const server = http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('Edir Pro Bot is Active');
+});
+server.listen(process.env.PORT || 3000, () => {
+    console.log(`🚀 Server listening on port ${process.env.PORT || 3000}`);
 });
 
-bot.on('text', (ctx) => {
-    if (ctx.message.text.startsWith('/')) return;
-    ctx.reply("እባክዎ ከታች ያለውን ሜኑ በመጠቀም '📱 ሚኒ አፑን ተጠቀም' የሚለውን ይጫኑ።");
-});
+bot.launch().then(() => console.log('🚀 Telegram Bot is running...'));
 
-// Health check server
-http.createServer((req, res) => { res.writeHead(200); res.end('Active'); }).listen(process.env.PORT || 3000);
-
-bot.launch().then(() => console.log('🚀 Edir Pro Bot is active...'));
+// Enable graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
