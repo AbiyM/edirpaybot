@@ -134,24 +134,6 @@
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Loan Specific Styling */
-        .feature-locked {
-            opacity: 0.5;
-            filter: grayscale(0.8);
-            position: relative;
-        }
-        .lock-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #64748b;
-            color: white;
-            font-size: 8px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: 900;
-        }
     </style>
 </head>
 <body class="select-none">
@@ -357,21 +339,6 @@
                     🚧 በግንባታ ላይ
                 </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="section-card p-5 feature-locked">
-                    <span class="lock-badge">COMING</span>
-                    <span class="text-2xl block mb-2">📊</span>
-                    <p class="text-[9px] font-black uppercase opacity-40">የብድር ማስያዣ</p>
-                    <p class="text-xs font-bold">ብድር ማስያዣ ስሌት</p>
-                </div>
-                <div class="section-card p-5 feature-locked">
-                    <span class="lock-badge">COMING</span>
-                    <span class="text-2xl block mb-2">📜</span>
-                    <p class="text-[9px] font-black uppercase opacity-40">የብድር ታሪክ</p>
-                    <p class="text-xs font-bold">የቆዩ ብድሮች</p>
-                </div>
-            </div>
         </section>
 
         <!-- 4. Help Section -->
@@ -386,10 +353,6 @@
                     <div class="flex gap-3">
                         <span class="text-brand-green font-black">2.</span>
                         <p>የዲጂታል ክፍያ (EasyPay) ሲጠቀሙ ክፍያው በቀጥታ ለቦቱ ይላካል።</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <span class="text-brand-green font-black">3.</span>
-                        <p>የቅጣት ስሌቱ በራስ-ሰር የሚሰራ ሲሆን ከቀን 1-5 ነፃ፣ ከ6-10 ቀን 20 ብር፣ ከ11 ቀን በላይ 50 ብር ነው።</p>
                     </div>
                 </div>
             </div>
@@ -415,13 +378,13 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global State Variables - Defined early for scoping
-        let paymentMode = 'manual';
-        let selectedGateway = 'chapa';
-        let currentUser = null;
+        // Global State - Set to window for HTML accessibility
+        window.paymentMode = 'manual';
+        window.selectedGateway = 'chapa';
+        window.currentUser = null;
         const MONTHLY_FEE = 100;
 
-        // UI Functions - Attached to window for HTML accessibility
+        // UI Logic attached to Window
         window.showTab = (t) => {
             ['payment', 'status', 'loan', 'help'].forEach(s => {
                 const sec = document.getElementById(s+'Section');
@@ -441,7 +404,7 @@
         };
 
         window.selectPaymentMode = (mode) => {
-            paymentMode = mode;
+            window.paymentMode = mode;
             document.getElementById('manualBtn').classList.toggle('selected', mode === 'manual');
             document.getElementById('easypayBtn').classList.toggle('selected', mode === 'easypay');
             document.getElementById('gatewaySelector').classList.toggle('hidden', mode === 'manual');
@@ -454,7 +417,7 @@
         };
 
         window.selectGateway = (gateway, el) => {
-            selectedGateway = gateway;
+            window.selectedGateway = gateway;
             document.querySelectorAll('.gateway-pill').forEach(p => p.classList.remove('selected'));
             el.classList.add('selected');
             
@@ -481,7 +444,7 @@
             }
         };
 
-        // Firebase & Telegram Initialization
+        // Firebase Setup
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -501,7 +464,7 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUser = user;
+                window.currentUser = user;
                 setupDataListeners(user.uid);
                 const u = tg.initDataUnsafe?.user;
                 if (u) {
@@ -528,21 +491,21 @@
         }
 
         async function initDigitalPayment(amount, purpose) {
-            if (!currentUser) {
+            if (!window.currentUser) {
                 tg.showPopup({ message: "እባክዎ መጀመሪያ በቴሌግራም ይግቡ" });
                 return;
             }
 
             if (tg.MainButton) {
-                tg.MainButton.setText(`ክፍያ በ${(selectedGateway || 'Gateway').toUpperCase()} በመጀመር ላይ...`);
+                tg.MainButton.setText(`ክፍያ በ${(window.selectedGateway || 'Gateway').toUpperCase()} በመጀመር ላይ...`);
                 tg.MainButton.show();
                 tg.MainButton.showProgress();
             }
 
-            const txRef = `TX-${Date.now()}-${currentUser.uid.slice(-4)}`;
+            const txRef = `TX-${Date.now()}-${window.currentUser.uid.slice(-4)}`;
             const payload = { 
                 type: 'payment_report', 
-                gateway: selectedGateway, 
+                gateway: window.selectedGateway, 
                 purpose: purpose, 
                 totalAmount: amount, 
                 isDigital: true, 
@@ -550,14 +513,11 @@
             };
 
             try {
-                // Register in Firestore History
-                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
+                await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), {
                     ...payload,
                     status: 'AWAIT_APPROVAL',
                     timestamp: serverTimestamp()
                 });
-                
-                // Send Data to Telegram Bot
                 tg.sendData(JSON.stringify(payload));
                 
                 setTimeout(() => {
@@ -658,7 +618,7 @@
         document.getElementById('paymentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            if (!currentUser) {
+            if (!window.currentUser) {
                 tg.showPopup({ message: "እባክዎ መጀመሪያ በቴሌግራም ይግቡ" });
                 return;
             }
@@ -669,7 +629,7 @@
             const pen = parseFloat(penVal);
             const purpose = `${document.getElementById('paymentType').value}: ${document.getElementById('month').value} ${document.getElementById('day').value}, ${document.getElementById('year').value}`;
 
-            if (paymentMode === 'easypay') {
+            if (window.paymentMode === 'easypay') {
                 await initDigitalPayment(amt + pen, purpose);
                 return;
             }
@@ -690,12 +650,10 @@
             };
 
             try {
-                if (currentUser) {
-                    await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
-                        ...payload,
-                        status: 'AWAIT_APPROVAL'
-                    });
-                }
+                await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), {
+                    ...payload,
+                    status: 'AWAIT_APPROVAL'
+                });
                 tg.sendData(JSON.stringify(payload));
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(() => tg.close(), 1000);
@@ -707,7 +665,7 @@
             }
         });
 
-        // Event Listeners for penalty calculation
+        // Event Listeners
         const daySelect = document.getElementById('day');
         const pTypeSelect = document.getElementById('paymentType');
         if (daySelect) daySelect.addEventListener('change', window.updatePenalty);
