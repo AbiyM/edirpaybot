@@ -197,7 +197,7 @@
                 </div>
             </div>
 
-            <!-- Enhanced Gateway Selector with Project Logos -->
+            <!-- Gateway Selector for Digital -->
             <div id="gatewaySelector" class="hidden section-card p-5 space-y-4">
                 <h3 class="text-[10px] font-black uppercase opacity-40 text-center tracking-widest">መተግበሪያ ይምረጡ</h3>
                 <div class="grid grid-cols-3 gap-3">
@@ -415,13 +415,13 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global State Variables - Moved to top for better scoping
+        // Global State Variables - Defined early for scoping
         let paymentMode = 'manual';
         let selectedGateway = 'chapa';
         let currentUser = null;
         const MONTHLY_FEE = 100;
 
-        // Global UI functions
+        // UI Functions - Attached to window for HTML accessibility
         window.showTab = (t) => {
             ['payment', 'status', 'loan', 'help'].forEach(s => {
                 const sec = document.getElementById(s+'Section');
@@ -481,7 +481,7 @@
             }
         };
 
-        // Firebase & Telegram Setup
+        // Firebase & Telegram Initialization
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -550,14 +550,14 @@
             };
 
             try {
-                // Save to Firestore History
+                // Register in Firestore History
                 await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
                     ...payload,
                     status: 'AWAIT_APPROVAL',
                     timestamp: serverTimestamp()
                 });
                 
-                // Send to Bot
+                // Send Data to Telegram Bot
                 tg.sendData(JSON.stringify(payload));
                 
                 setTimeout(() => {
@@ -690,10 +690,12 @@
             };
 
             try {
-                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
-                    ...payload,
-                    status: 'AWAIT_APPROVAL'
-                });
+                if (currentUser) {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
+                        ...payload,
+                        status: 'AWAIT_APPROVAL'
+                    });
+                }
                 tg.sendData(JSON.stringify(payload));
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(() => tg.close(), 1000);
@@ -705,7 +707,7 @@
             }
         });
 
-        // Static listeners
+        // Event Listeners for penalty calculation
         const daySelect = document.getElementById('day');
         const pTypeSelect = document.getElementById('paymentType');
         if (daySelect) daySelect.addEventListener('change', window.updatePenalty);
