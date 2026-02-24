@@ -54,18 +54,21 @@ const getAddisTime = () => {
 };
 
 /**
- * የአባልነት ደረጃን በክፍያ እና በተሳትፎ ብዛት ማዘመን
+ * የአባልነት ደረጃን በተሳትፎ ብዛት (በጸደቁ ክፍያዎች ብዛት) ብቻ ማዘመን
  */
 function updateMemberTier(userId) {
+    // የጸደቁ ክፍያዎችን ብዛት ብቻ መቁጠር
     const stats = db.prepare(`
-        SELECT COUNT(*) as count, SUM(total_amount) as total 
+        SELECT COUNT(*) as count 
         FROM payments WHERE user_id = ? AND status = 'APPROVED'
     `).get(userId);
 
     let newTier = 'መሠረታዊ';
-    if (stats.total > 5000 && stats.count >= 12) {
+    
+    // የደረጃ መስፈርቶች በተሳትፎ ብዛት
+    if (stats.count >= 12) {
         newTier = 'ልዩ (Elite)';
-    } else if (stats.total > 1500 && stats.count >= 5) {
+    } else if (stats.count >= 5) {
         newTier = 'ፕሮ (Pro)';
     }
 
