@@ -35,6 +35,7 @@ db.exec(`
         gateway TEXT,
         purpose TEXT,
         total_amount REAL,
+        file_id TEXT,
         status TEXT DEFAULT 'AWAIT_APPROVAL',
         timestamp TEXT
     );
@@ -78,7 +79,12 @@ bot.start((ctx) => {
     db.prepare('INSERT OR IGNORE INTO members (user_id, username, full_name) VALUES (?, ?, ?)').run(
         from.id, from.username || 'N/A', from.first_name
     );
-    ctx.replyWithMarkdown(`እንኳን ደህና መጡ! **እሁድን በፍቅር** ዲጂታል መተግበሪያን በመጠቀም መዋጮዎን ይክፈሉ እና ሁኔታዎን ይከታተሉ።`, getMemberKeyboard(from.id));
+    
+    const welcomeText = `እንኳን ወደ **እሁድን በፍቅር** (Sunday with Love) ዲጂታል መተግበሪያ በሰላም መጡ! 👋🌼\n\n` +
+        `ይህ መድረክ በየሳምንቱ እሁድ የምናደርገውን መዋጮ በቀላሉ ለመፈጸም እና የተሳትፎ ሁኔታዎን ለመከታተል ይረዳዎታል።\n\n` +
+        `ለመጀመር ከታች ያለውን ቁልፍ ይጫኑ።`;
+        
+    ctx.replyWithMarkdown(welcomeText, getMemberKeyboard(from.id));
 });
 
 bot.command('id', (ctx) => ctx.reply(`የዚህ ቻት መለያ (ID): ${ctx.chat.id}`));
@@ -99,24 +105,67 @@ bot.on('web_app_data', async (ctx) => {
         const data = JSON.parse(ctx.webAppData.data.json());
         if (data.type === 'payment_report') {
             const time = new Date().toLocaleString('en-GB', { timeZone: 'Africa/Addis_Ababa' });
-            const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, total_amount, timestamp) VALUES (?, ?, ?, ?, ?, ?)`)
-                .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.totalAmount, time);
+            
+            // ፎርሙ ተሞልቶ ሲመጣ በሴሽን (Session) ማስቀመጥ (ለፎቶ መጠበቂያ)
+            ctx.session.pendingPayment = { 
+                ...data, 
+                timestamp: time 
+            };
 
-            ctx.reply(`✅ የ${data.totalAmount} ብር ክፍያ መረጃ ተመዝግቧል። ለአስተዳዳሪ እንዲረጋገጥ ተልኳል።`);
-
-            // Notify all Admins
-            ADMIN_IDS.forEach(adminId => {
-                const kb = Markup.inlineKeyboard([
-                    [Markup.button.callback('✅ አጽድቅ', `p_app_${res.lastInsertRowid}_${ctx.from.id}`)],
-                    [Markup.button.callback('❌ ውድቅ አድርግ', `p_rej_${res.lastInsertRowid}_${ctx.from.id}`)]
-                ]);
-                bot.telegram.sendMessage(adminId, `🚨 **አዲስ የክፍያ ሪፖርት**\nአባል: @${ctx.from.username || 'N/A'}\nመጠን: ${data.totalAmount} ብር\nዓላማ: ${data.purpose}\nቀን: ${time}`, kb);
-            });
+            if (data.gateway === 'manual') {
+                await ctx.reply(`✅ የ${data.totalAmount} ብር ክፍያ መረጃ ተመዝግቧል።\n\n📷 አሁን የባንክ ደረሰኝዎን ፎቶ (Receipt Photo) እዚህ ይላኩ።`);
+            } else {
+                // ዲጂታል ክፍያ ከሆነ በቀጥታ ማስገባት
+                const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, total_amount, timestamp) VALUES (?, ?, ?, ?, ?, ?)`)
+                    .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.totalAmount, time);
+                
+                notifyAdmins(ctx, data, res.lastInsertRowid, null, time);
+                await ctx.reply(`🚀 ክፍያው ተመዝግቧል። ለአስተዳዳሪ እንዲረጋገጥ ተልኳል።`);
+            }
         }
     } catch (err) {
         console.error("Data Error:", err);
     }
 });
+
+// Handling Receipt Photo
+bot.on(['photo', 'document'], async (ctx) => {
+    const pending = ctx.session?.pendingPayment;
+    if (!pending) return;
+
+    const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
+    
+    // በዳታቤዝ መመዝገብ
+    const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, total_amount, file_id, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+        .run(ctx.from.id, ctx.from.username || 'N/A', pending.gateway, pending.purpose, pending.totalAmount, fileId, pending.timestamp);
+
+    notifyAdmins(ctx, pending, res.lastInsertRowid, fileId, pending.timestamp);
+    
+    ctx.session.pendingPayment = null; // ሴሽኑን ማጽዳት
+    await ctx.reply(`📩 ደረሰኝዎ ለገንዘብ ያዡ ተልኳል። ሲረጋገጥ መልእክት ይደርስዎታል። እናመሰግናለን!`);
+});
+
+// Admin Notification Function
+async function notifyAdmins(ctx, data, dbId, fileId, time) {
+    const adminCaption = `🚨 **አዲስ የክፍያ ሪፖርት**\n\n` +
+        `👤 አባል: @${ctx.from.username || 'N/A'}\n` +
+        `💰 መጠን: ${data.totalAmount} ብር\n` +
+        `🎯 ዓላማ: ${data.purpose}\n` +
+        `📅 ቀን: ${time}`;
+
+    const kb = Markup.inlineKeyboard([
+        [Markup.button.callback('✅ አጽድቅ', `p_app_${dbId}_${ctx.from.id}`)],
+        [Markup.button.callback('❌ ውድቅ አድርግ', `p_rej_${dbId}_${ctx.from.id}`)]
+    ]);
+
+    ADMIN_IDS.forEach(adminId => {
+        if (fileId) {
+            bot.telegram.sendPhoto(adminId, fileId, { caption: adminCaption, parse_mode: 'Markdown', ...kb });
+        } else {
+            bot.telegram.sendMessage(adminId, adminCaption, { parse_mode: 'Markdown', ...kb });
+        }
+    });
+}
 
 // Admin Approval Actions
 bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
@@ -129,9 +178,9 @@ bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
     let tier = 'መሠረታዊ';
     if (isApprove) {
         tier = updateMemberTier(targetUid);
-        // Notify Group if tier upgraded
         if (TEST_GROUP_ID && tier !== 'መሠረታዊ') {
-            bot.telegram.sendMessage(TEST_GROUP_ID, `🌟 **የደረጃ ዕድገት!**\nአባል @${(await ctx.telegram.getChatMember(targetUid, targetUid)).user.username || targetUid} አሁን የ**${tier}** ደረጃ ላይ ደርሰዋል። 🎉`);
+            const member = db.prepare('SELECT username FROM members WHERE user_id = ?').get(targetUid);
+            bot.telegram.sendMessage(TEST_GROUP_ID, `🌟 **የደረጃ ዕድገት!**\nአባል @${member?.username || targetUid} አሁን የ**${tier}** ደረጃ ላይ ደርሰዋል። 🎉`, { parse_mode: 'Markdown' });
         }
     }
 
@@ -139,11 +188,19 @@ bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
         ? `🎉 እንኳን ደስ አለዎት! ክፍያዎ ተረጋግጧል። የአሁኑ ደረጃዎ: **${tier}**` 
         : "⚠️ ይቅርታ፣ የላኩት የክፍያ መረጃ በአስተዳዳሪው ውድቅ ተደርጓል። እባክዎ መረጃውን በድጋሚ በትክክል ይላኩ።";
     
-    bot.telegram.sendMessage(targetUid, feedbackMsg, { parse_mode: 'Markdown' });
+    try {
+        await bot.telegram.sendMessage(targetUid, feedbackMsg, { parse_mode: 'Markdown' });
+    } catch (e) {
+        console.log("User notification blocked by user");
+    }
 
-    const currentMsg = ctx.callbackQuery.message.text;
-    ctx.editMessageText(`${currentMsg}\n\n🏁 ውጤት: ${isApprove ? 'ጸድቋል ✅' : 'ውድቅ ተደርጓል ❌'}`);
-    ctx.answerCbQuery(isApprove ? "ጸድቋል" : "ተሰርዟል");
+    const resultLabel = isApprove ? 'ጸድቋል ✅' : 'ውድቅ ተደርጓል ❌';
+    if (ctx.callbackQuery.message.photo) {
+        await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n\n🏁 ውጤት: ${resultLabel}`);
+    } else {
+        await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n🏁 ውጤት: ${resultLabel}`);
+    }
+    await ctx.answerCbQuery(isApprove ? "ጸድቋል" : "ተሰርዟል");
 });
 
 // Member Status Check
