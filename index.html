@@ -13,7 +13,6 @@
 
     <style>
         :root {
-            /* Telegram Theme Adaptive Colors */
             --tg-bg: var(--tg-theme-bg-color, #f8fafc);
             --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #0f172a);
@@ -35,6 +34,7 @@
             margin: 0; padding: 0; overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
             transition: background-color 0.3s ease;
+            font-size: 15px;
         }
 
         .glass-header {
@@ -47,14 +47,14 @@
             background-color: var(--brand-green);
             box-shadow: 0 10px 25px -5px rgba(21, 128, 61, 0.4);
             border-radius: 1.5rem;
-            padding: 5px;
+            padding: 6px;
         }
 
         .nav-btn {
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.7);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 800;
-            font-size: 11px;
+            font-size: 13px; /* Increased from 11px */
             border-radius: 1.1rem;
             text-transform: uppercase;
         }
@@ -92,7 +92,7 @@
             transition: all 0.2s ease;
             cursor: pointer;
             filter: grayscale(1);
-            opacity: 0.6;
+            opacity: 0.7;
             background-color: var(--tg-bg);
         }
 
@@ -108,143 +108,115 @@
             background-color: var(--tg-bg);
             border: 2px solid var(--card-border);
             border-radius: 1rem;
-            padding: 0.875rem 1rem;
+            padding: 1rem; /* Increased padding */
             width: 100%;
-            font-size: 15px;
+            font-size: 16px; /* Optimized for mobile input */
             color: var(--tg-text);
             transition: all 0.2s;
         }
 
         .input-style:disabled {
-            opacity: 0.7;
-            background-color: rgba(0,0,0,0.03);
-            cursor: not-allowed;
+            opacity: 0.8;
+            background-color: rgba(0,0,0,0.04);
         }
 
-        .verified-badge { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
         .status-pill { background-color: var(--tg-bg); border: 1px solid var(--card-border); }
         .animate-section { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        .loader {
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            width: 18px; height: 18px;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Tier Colors */
+        .tier-basic { color: #64748b; font-weight: 900; }
+        .tier-pro { color: #2563eb; font-weight: 900; }
+        .tier-elite { color: #d97706; font-weight: 900; }
 
-        /* Tier Specific Colors */
-        .tier-basic { color: #94a3b8; }
-        .tier-pro { color: #3b82f6; }
-        .tier-elite { color: #f59e0b; }
-
-        /* Loan UI Improvements */
-        .loan-glow {
-            box-shadow: 0 0 15px rgba(21, 128, 61, 0.1);
-        }
+        /* Locked Features UI */
         .locked-feature {
             position: relative;
             overflow: hidden;
         }
-        .locked-feature::after {
-            content: "በቅርቡ";
+        .locked-badge {
             position: absolute;
             top: 10px;
-            right: -25px;
+            right: -20px;
             background: #64748b;
             color: white;
-            font-size: 7px;
+            font-size: 9px;
             font-weight: 900;
-            padding: 2px 30px;
+            padding: 2px 25px;
             transform: rotate(45deg);
-            text-transform: uppercase;
         }
     </style>
 </head>
 <body class="select-none">
 
-    <header class="glass-header sticky top-0 z-50 px-5 py-4 flex items-center justify-between">
+    <header class="glass-header sticky top-0 z-50 px-5 py-5 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <img src="logo.jpg" class="w-11 h-11 rounded-2xl shadow-lg border-2 border-white/10 object-cover" onerror="this.style.display='none'">
+            <img src="logo.jpg" class="w-12 h-12 rounded-2xl shadow-lg border-2 border-white/10 object-cover" onerror="this.style.display='none'">
             <div>
-                <h1 class="text-sm font-black uppercase tracking-tight leading-none">እሁድን በፍቅር</h1>
-                <div class="flex items-center gap-1.5 mt-1.5">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
-                    <p class="text-[9px] text-green-600 font-extrabold uppercase">ሲስተሙ ክፍት ነው</p>
+                <h1 class="text-base font-black uppercase tracking-tight leading-none">እሁድን በፍቅር</h1>
+                <div class="flex items-center gap-1.5 mt-2">
+                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                    <p class="text-[11px] text-green-600 font-black uppercase tracking-wide">ሲስተሙ ክፍት ነው</p>
                 </div>
             </div>
         </div>
         <div class="text-right">
-            <span id="userName" class="text-xs font-black block truncate max-w-[110px]">አባል</span>
-            <div class="flex flex-col items-end">
-                <span id="headerLevel" class="text-[7px] font-black uppercase tracking-tighter tier-basic">መሠረታዊ</span>
-                <span id="memberId" class="text-[8px] font-bold opacity-50 uppercase tracking-widest">ID: #---</span>
+            <span id="userName" class="text-sm font-black block truncate max-w-[120px]">አባል</span>
+            <div class="flex flex-col items-end mt-1">
+                <span id="headerLevel" class="text-[10px] font-black uppercase tracking-tighter tier-basic">መሠረታዊ</span>
+                <span id="memberId" class="text-[10px] font-bold opacity-50 uppercase tracking-widest">ID: #---</span>
             </div>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-5 pb-24">
-        <nav class="nav-container grid grid-cols-4 mb-8">
-            <button onclick="showTab('payment')" id="paymentTab" class="nav-btn py-3.5 active-tab">ክፍያ</button>
-            <button onclick="showTab('status')" id="statusTab" class="nav-btn py-3.5">ሁኔታ</button>
-            <button onclick="showTab('loan')" id="loanTab" class="nav-btn py-3.5">ብድር</button>
-            <button onclick="showTab('help')" id="helpTab" class="nav-btn py-3.5">እርዳታ</button>
+        <nav class="nav-container grid grid-cols-4 mb-10">
+            <button onclick="showTab('payment')" id="paymentTab" class="nav-btn py-4 active-tab">ክፍያ</button>
+            <button onclick="showTab('status')" id="statusTab" class="nav-btn py-4">ሁኔታ</button>
+            <button onclick="showTab('loan')" id="loanTab" class="nav-btn py-4">ብድር</button>
+            <button onclick="showTab('help')" id="helpTab" class="nav-btn py-4">እርዳታ</button>
         </nav>
 
         <!-- 1. Payment Section -->
-        <section id="paymentSection" class="animate-section space-y-7">
+        <section id="paymentSection" class="animate-section space-y-8">
             <div class="space-y-4">
-                <h3 class="text-[10px] font-black uppercase opacity-50 tracking-[0.2em] ml-1">የክፍያ ምርጫ</h3>
+                <h3 class="text-xs font-black uppercase opacity-60 tracking-[0.2em] ml-1">የክፍያ ምርጫ</h3>
                 <div class="grid grid-cols-2 gap-4">
-                    <div id="manualBtn" class="method-card p-6 rounded-[2rem] flex flex-col items-center gap-3 selected" onclick="selectPaymentMode('manual')">
-                        <span class="text-3xl">🧾</span>
-                        <span class="text-[10px] font-black uppercase tracking-wider">በደረሰኝ</span>
+                    <div id="manualBtn" class="method-card p-7 rounded-[2rem] flex flex-col items-center gap-3 selected" onclick="selectPaymentMode('manual')">
+                        <span class="text-4xl">🧾</span>
+                        <span class="text-xs font-black uppercase tracking-wider">በደረሰኝ</span>
                     </div>
-                    <div id="easypayBtn" class="method-card p-6 rounded-[2rem] flex flex-col items-center gap-3" onclick="selectPaymentMode('easypay')">
-                        <span class="text-3xl">💳</span>
-                        <span class="text-[10px] font-black uppercase tracking-wider">ቀላል ክፍያ</span>
+                    <div id="easypayBtn" class="method-card p-7 rounded-[2rem] flex flex-col items-center gap-3" onclick="selectPaymentMode('easypay')">
+                        <span class="text-4xl">💳</span>
+                        <span class="text-xs font-black uppercase tracking-wider">ቀላል ክፍያ</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Gateway Selector for Digital -->
-            <div id="gatewaySelector" class="hidden section-card p-5 space-y-4">
-                <h3 class="text-[10px] font-black uppercase opacity-40 text-center tracking-widest">መተግበሪያ ይምረጡ</h3>
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center selected" onclick="selectGateway('chapa', this)">
-                        <img src="Chapa.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=C&background=000&color=fff'">
-                        <span class="text-[8px] font-black uppercase">Chapa</span>
+            <!-- Gateway Selector -->
+            <div id="gatewaySelector" class="hidden section-card p-6 space-y-5">
+                <h3 class="text-xs font-black uppercase opacity-50 text-center tracking-widest">መተግበሪያ ይምረጡ</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="gateway-pill p-4 rounded-2xl flex flex-col items-center selected" onclick="selectGateway('chapa', this)">
+                        <img src="Chapa.png" class="w-12 h-12 mb-2 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=C&background=000&color=fff'">
+                        <span class="text-[10px] font-black uppercase">Chapa</span>
                     </div>
-                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('telebirr', this)">
-                        <img src="Telebirr.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=T&background=0052cc&color=fff'">
-                        <span class="text-[8px] font-black uppercase">Telebirr</span>
+                    <div class="gateway-pill p-4 rounded-2xl flex flex-col items-center" onclick="selectGateway('telebirr', this)">
+                        <img src="Telebirr.png" class="w-12 h-12 mb-2 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=T&background=0052cc&color=fff'">
+                        <span class="text-[10px] font-black uppercase">Telebirr</span>
                     </div>
-                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('cbe', this)">
-                        <img src="Cbe.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=E&background=6a1b9a&color=fff'">
-                        <span class="text-[8px] font-black uppercase">CBE Birr</span>
-                    </div>
-                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('arifpay', this)">
-                        <img src="ArifPay.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=A&background=ff6d00&color=fff'">
-                        <span class="text-[8px] font-black uppercase">ArifPay</span>
-                    </div>
-                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('mpesa', this)">
-                        <img src="Safaricom.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=S&background=c62828&color=fff'">
-                        <span class="text-[8px] font-black uppercase">M-Pesa</span>
-                    </div>
-                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('starpay', this)">
-                        <img src="StarPay.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=St&background=1a237e&color=fff'">
-                        <span class="text-[8px] font-black uppercase">StarPay</span>
+                    <div class="gateway-pill p-4 rounded-2xl flex flex-col items-center" onclick="selectGateway('cbe', this)">
+                        <img src="Cbe.png" class="w-12 h-12 mb-2 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=E&background=6a1b9a&color=fff'">
+                        <span class="text-[10px] font-black uppercase">CBE Birr</span>
                     </div>
                 </div>
             </div>
 
             <form id="paymentForm" class="space-y-6">
-                <div class="section-card p-6 space-y-6">
+                <div class="section-card p-7 space-y-7">
                     <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase opacity-40 ml-1">የክፍያ ዓይነት</label>
-                        <select id="paymentType" class="input-style font-black text-sm" onchange="updatePenalty()">
+                        <label class="text-[11px] font-black uppercase opacity-50 ml-1">የክፍያ ዓይነት</label>
+                        <select id="paymentType" class="input-style font-black text-base" onchange="updatePenalty()">
                             <option value="መደበኛ መዋጮ">መደበኛ መዋጮ</option>
                             <option value="የብድር መመለሻ">የብድር መመለሻ</option>
                             <option value="የቅጣት ክፍያ">የቅጣት ክፍያ</option>
@@ -252,232 +224,175 @@
                         </select>
                     </div>
 
-                    <div id="dateSelectorRow" class="space-y-2">
-                        <label class="text-[9px] font-black uppercase opacity-40 ml-1">የክፍያ ቀን (ዛሬ - የማይቀየር)</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <select id="month" disabled class="input-style font-black text-[11px] px-2 bg-slate-100 border-none">
-                                <option value="መስከረም">መስከረም</option><option value="ጥቅምት">ጥቅምት</option><option value="ህዳር">ህዳር</option>
-                                <option value="ታህሳስ">ታህሳስ</option><option value="ጥር">ጥር</option><option value="የካቲት">የካቲት</option>
-                                <option value="መጋቢት">መጋቢት</option><option value="ሚያዝያ">ሚያዝያ</option><option value="ግንቦት">ግንቦት</option>
-                                <option value="ሰኔ">ሰኔ</option><option value="ሐምሌ">ሐምሌ</option><option value="ነሐሴ">ነሐሴ</option>
-                                <option value="ጳጉሜ">ጳጉሜ</option>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase opacity-50 ml-1">የክፍያ ቀን (ዛሬ - የማይቀየር)</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <select id="month" disabled class="input-style font-black text-xs px-2 bg-slate-100 border-none">
+                                <option value="የካቲት">የካቲት</option>
                             </select>
-                            <select id="day" disabled class="input-style font-black text-[11px] px-2 bg-slate-100 border-none">
-                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                                <option value="10">10</option><option value="11">11</option><option value="12">12</option>
-                                <option value="13">13</option><option value="14">14</option><option value="15">15</option>
-                                <option value="16">16</option><option value="17">17</option><option value="18">18</option>
-                                <option value="19">19</option><option value="20">20</option><option value="21">21</option>
-                                <option value="22">22</option><option value="23">23</option><option value="24">24</option>
-                                <option value="25">25</option><option value="26">26</option><option value="27">27</option>
-                                <option value="28">28</option><option value="29">29</option><option value="30">30</option>
+                            <select id="day" disabled class="input-style font-black text-xs px-2 bg-slate-100 border-none">
+                                <option value="17">17</option>
                             </select>
-                            <select id="year" disabled class="input-style font-black text-[11px] px-2 bg-slate-100 border-none">
-                                <option value="2017">2017</option><option value="2018">2018</option>
+                            <select id="year" disabled class="input-style font-black text-xs px-2 bg-slate-100 border-none">
+                                <option value="2018">2018</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="text-[9px] font-black uppercase opacity-40 ml-1">መጠን (Amount)</label>
+                            <label class="text-[11px] font-black uppercase opacity-50 ml-1">መጠን (ብር)</label>
                             <input type="number" id="amount" placeholder="0.00" required class="input-style font-black text-green-700">
                         </div>
                         <div class="space-y-2">
-                            <label class="text-[9px] font-black uppercase opacity-40 ml-1">ቅጣት (Penalty)</label>
+                            <label class="text-[11px] font-black uppercase opacity-50 ml-1">ቅጣት (ብር)</label>
                             <input type="number" id="penalty" value="0" readonly class="input-style font-black text-red-600 bg-slate-50">
                         </div>
                     </div>
                 </div>
 
-                <div id="receiptWrapper" class="section-card p-6 space-y-4">
-                    <label class="text-[9px] font-black uppercase opacity-40 ml-1">የደረሰኝ ፎቶ (Receipt)</label>
+                <div id="receiptWrapper" class="section-card p-7 space-y-4">
+                    <label class="text-[11px] font-black uppercase opacity-50 ml-1">የደረሰኝ ፎቶ (Receipt)</label>
                     <div class="relative w-full aspect-video bg-black/5 rounded-3xl border-2 border-dashed border-black/10 flex flex-col items-center justify-center overflow-hidden transition-all hover:bg-black/10" onclick="document.getElementById('receiptInput').click()">
                         <div id="uploadPlaceholder" class="text-center">
-                            <span class="text-3xl block mb-2">📸</span>
-                            <span class="text-[10px] font-black opacity-40 uppercase tracking-widest">ለመጫን ይንኩ</span>
+                            <span class="text-4xl block mb-3">📸</span>
+                            <span class="text-xs font-black opacity-50 uppercase tracking-widest">ለመጫን ይንኩ</span>
                         </div>
                         <input type="file" id="receiptInput" accept="image/*" class="hidden" onchange="handlePreview(this)">
                         <img id="receiptPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
                     </div>
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full py-5 bg-green-700 text-white rounded-[1.75rem] font-black text-xl shadow-2xl shadow-green-900/20 flex items-center justify-center gap-4 active:scale-95 transition-all">
+                <button type="submit" id="submitBtn" class="w-full py-6 bg-green-700 text-white rounded-[2rem] font-black text-xl shadow-2xl shadow-green-900/20 flex items-center justify-center gap-4 active:scale-95 transition-all">
                     <span id="btnText">መረጃውን ላክ</span>
                 </button>
             </form>
         </section>
 
         <!-- 2. Status Section -->
-        <section id="statusSection" class="hidden animate-section space-y-7">
+        <section id="statusSection" class="hidden animate-section space-y-8">
             <div class="bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-white">
-                <div class="absolute -right-10 -top-10 w-44 h-44 bg-green-500/10 rounded-full blur-3xl"></div>
-                <div class="space-y-1">
-                    <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">ጠቅላላ የተከፈለ ሂሳብ</p>
-                    <h2 class="text-5xl font-black tracking-tight"><span id="totalBalance">0.00</span> <span class="text-xs opacity-40 font-bold ml-1">ብር</span></h2>
+                <div class="absolute -right-10 -top-10 w-48 h-48 bg-green-500/10 rounded-full blur-3xl"></div>
+                <div class="space-y-2 text-center">
+                    <p class="text-[11px] font-black uppercase tracking-[0.3em] opacity-50">ጠቅላላ የተከፈለ ሂሳብ</p>
+                    <h2 class="text-6xl font-black tracking-tight"><span id="totalBalance">0.00</span> <span class="text-sm opacity-50 ml-1">ብር</span></h2>
                 </div>
-                <div class="mt-8 bg-white/5 p-5 rounded-[1.5rem] border border-white/10 flex justify-between items-center">
+                <div class="mt-10 bg-white/5 p-6 rounded-[1.75rem] border border-white/10 flex justify-between items-center">
                     <div>
-                        <p class="text-[10px] font-black uppercase opacity-50 mb-1">የቀረ ዕዳ (Remaining)</p>
-                        <h3 class="text-2xl font-black text-red-400"><span id="remainingBalance">0.00</span> ብር</h3>
+                        <p class="text-[11px] font-black uppercase opacity-60 mb-1">የቀረ ዕዳ</p>
+                        <h3 class="text-3xl font-black text-red-400"><span id="remainingBalance">0.00</span> <span class="text-xs opacity-50">ብር</span></h3>
                     </div>
                     <div class="text-right">
-                        <p class="text-[9px] font-black uppercase opacity-40">ደረጃ (Level)</p>
-                        <p id="memberLevelDisplay" class="text-xs font-black uppercase tier-basic">መሠረታዊ</p>
+                        <p class="text-[11px] font-black uppercase opacity-50 mb-1">ደረጃ</p>
+                        <p id="memberLevelDisplay" class="text-sm font-black uppercase tier-basic">መሠረታዊ</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Tier Progress Info -->
-            <div class="section-card p-6 space-y-4">
-                <h4 class="text-[10px] font-black uppercase opacity-40 tracking-widest text-center">የአባልነት ደረጃዎች መስፈርቶች</h4>
+            <!-- Tier Rules Info -->
+            <div class="section-card p-7 space-y-5">
+                <h4 class="text-xs font-black uppercase opacity-50 tracking-widest text-center">የአባልነት ደረጃዎች መስፈርቶች</h4>
                 <div class="space-y-4">
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="tier-basic font-black text-[10px] uppercase">መሠረታዊ (Basic)</span>
-                            <span class="text-[8px] font-bold opacity-60">አዲስ አባል</span>
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div>
+                            <span class="tier-basic text-xs uppercase block">መሠረታዊ</span>
+                            <span class="text-[10px] font-bold opacity-50">የመጀመሪያ ደረጃ</span>
                         </div>
-                        <p class="text-[8px] leading-tight opacity-50 font-bold">ሲመዘገቡ የሚሰጥ መደበኛ ደረጃ።</p>
+                        <span class="text-xs font-bold opacity-40">0 - 1.5k</span>
                     </div>
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="tier-pro font-black text-[10px] uppercase">ፕሮ (Pro)</span>
-                            <span class="text-[8px] font-bold text-blue-500">መስፈርት</span>
+                    <div class="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                        <div>
+                            <span class="tier-pro text-xs uppercase block">ፕሮ (Pro)</span>
+                            <span class="text-[10px] font-bold text-blue-600">1,500 ብር + 5 ተሳትፎ</span>
                         </div>
-                        <p class="text-[8px] leading-tight opacity-70 font-bold">ከ 1,500 ብር በላይ ክፍያ + ቢያንስ 5 የጸደቁ ክፍያዎች።</p>
+                        <span class="text-xs font-bold text-blue-400">1.5k - 5k</span>
                     </div>
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="tier-elite font-black text-[10px] uppercase">ልዩ (Elite)</span>
-                            <span class="text-[8px] font-bold text-amber-600">መስፈርት</span>
+                    <div class="flex items-center justify-between p-4 bg-amber-50/50 rounded-2xl border border-amber-100">
+                        <div>
+                            <span class="tier-elite text-xs uppercase block">ልዩ (Elite)</span>
+                            <span class="text-[10px] font-bold text-amber-600">5,000 ብር + 12 ተሳትፎ</span>
                         </div>
-                        <p class="text-[8px] leading-tight opacity-70 font-bold">ከ 5,000 ብር በላይ ክፍያ + ቢያንስ 12 የጸደቁ ክፍያዎች።</p>
+                        <span class="text-xs font-bold text-amber-400">5k+</span>
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-5">
-                <div class="section-card p-6 flex flex-col items-center">
-                    <span class="text-2xl block mb-3">📅</span>
-                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1 text-center">መደበኛ መዋጮ</p>
-                    <p class="text-xl font-black"><span id="sumMonthly">0.00</span> <span class="text-[9px] opacity-30">ብር</span></p>
+                <div class="section-card p-7 flex flex-col items-center">
+                    <span class="text-3xl block mb-3">📅</span>
+                    <p class="text-xs font-black opacity-50 uppercase tracking-widest mb-1">መዋጮ</p>
+                    <p class="text-2xl font-black"><span id="sumMonthly">0.00</span></p>
                 </div>
-                <div class="section-card p-6 flex flex-col items-center">
-                    <span class="text-2xl block mb-3">✅</span>
-                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1 text-center">የጸደቁ ክፍያዎች</p>
-                    <p class="text-xl font-black"><span id="approvedCount">0</span> <span class="text-[9px] opacity-30">ተሳትፎ</span></p>
-                </div>
-            </div>
-
-            <div id="pendingAlert" class="hidden bg-orange-500/10 border border-orange-500/20 p-5 rounded-[2rem] flex items-start gap-4 animate-pulse">
-                <div class="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-xl flex-shrink-0">🔔</div>
-                <div>
-                    <h5 class="text-[10px] font-black text-orange-700 uppercase tracking-wider">ማረጋገጫ በመጠባበቅ ላይ</h5>
-                    <p class="text-[9px] font-bold text-orange-600/80 mt-1">የላኩት ክፍያ በአስተዳዳሪው እንዲረጋገጥ እየተደረገ ነው።</p>
+                <div class="section-card p-7 flex flex-col items-center">
+                    <span class="text-3xl block mb-3">✅</span>
+                    <p class="text-xs font-black opacity-50 uppercase tracking-widest mb-1">ተሳትፎ</p>
+                    <p class="text-2xl font-black text-green-600"><span id="approvedCount">0</span></p>
                 </div>
             </div>
 
-            <div class="space-y-4">
-                <h4 class="text-[10px] font-black uppercase opacity-40 tracking-[0.3em] px-2">የቅርብ ጊዜ እንቅስቃሴዎች</h4>
-                <div id="transactionList" class="space-y-3 text-center py-5">
-                    <!-- Transactions go here -->
+            <div class="space-y-5">
+                <h4 class="text-xs font-black uppercase opacity-60 tracking-[0.3em] px-2">የቅርብ ጊዜ እንቅስቃሴዎች</h4>
+                <div id="transactionList" class="space-y-4">
+                    <!-- Transactions -->
                 </div>
             </div>
         </section>
 
-        <!-- 3. Loan Section (Enhanced Roadmap) -->
+        <!-- 3. Loan Section -->
         <section id="loanSection" class="hidden animate-section space-y-6">
-            <div class="section-card p-8 text-center bg-slate-900 text-white relative overflow-hidden loan-glow">
-                <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-brand-green/20 rounded-full blur-2xl"></div>
-                <div class="w-20 h-20 bg-brand-green rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-5 shadow-2xl">🏦</div>
-                <h3 class="text-2xl font-black uppercase tracking-tight">የብድር አገልግሎት</h3>
-                <div class="mt-4 flex items-center justify-center gap-2">
-                    <span class="w-2 h-2 bg-yellow-400 rounded-full animate-ping"></span>
-                    <p class="text-[10px] font-black uppercase tracking-widest text-yellow-400">በግንባታ ላይ (Under Development)</p>
+            <div class="section-card p-10 text-center bg-slate-900 text-white relative overflow-hidden loan-glow">
+                <div class="w-24 h-24 bg-brand-green rounded-[2.5rem] flex items-center justify-center text-5xl mx-auto mb-6 shadow-2xl">🏦</div>
+                <h3 class="text-2xl font-black uppercase">የብድር አገልግሎት</h3>
+                <div class="mt-5 flex items-center justify-center gap-2">
+                    <span class="w-3 h-3 bg-yellow-400 rounded-full animate-ping"></span>
+                    <p class="text-xs font-black uppercase text-yellow-400">በግንባታ ላይ</p>
                 </div>
-                <p class="text-[11px] font-bold text-slate-400 mt-4 leading-relaxed">የዲጂታል ብድር አሰራርን ይበልጥ ቀልጣፋ እና ፍትሃዊ ለማድረግ ሲስተሙ እየተዘጋጀ ይገኛል።</p>
+                <p class="text-xs font-bold text-slate-400 mt-5 leading-relaxed">አገልግሎቱ ሲጀምር የፕሮ እና የልዩ አባላት ቅድሚያ የማግኘት ዕድል ይኖራቸዋል።</p>
             </div>
-
+            
             <div class="grid grid-cols-2 gap-4">
-                <div class="section-card p-5 locked-feature bg-slate-50/50">
-                    <span class="text-2xl block mb-2">📈</span>
-                    <p class="text-[9px] font-black uppercase opacity-40">የብድር ማስያዣ</p>
-                    <p class="text-[11px] font-black mt-1">Guarantor System</p>
-                    <p class="text-[8px] font-bold opacity-40 mt-1">ሌላ አባል እንዲመሰክርልዎ የሚደረግበት።</p>
+                <div class="section-card p-6 bg-slate-50/50 locked-feature">
+                    <div class="locked-badge">በቅርቡ</div>
+                    <span class="text-3xl block mb-3">📉</span>
+                    <p class="text-xs font-black uppercase">ዝቅተኛ ወለድ</p>
                 </div>
-                <div class="section-card p-5 locked-feature bg-slate-50/50">
-                    <span class="text-2xl block mb-2">⚖️</span>
-                    <p class="text-[9px] font-black uppercase opacity-40">ዝቅተኛ ወለድ</p>
-                    <p class="text-[11px] font-black mt-1">Interest Rates</p>
-                    <p class="text-[8px] font-bold opacity-40 mt-1">ለአባላት ብቻ የሚሆን ዝቅተኛ ወለድ።</p>
+                <div class="section-card p-6 bg-slate-50/50 locked-feature">
+                    <div class="locked-badge">በቅርቡ</div>
+                    <span class="text-3xl block mb-3">🤝</span>
+                    <p class="text-xs font-black uppercase">ዋስትና</p>
                 </div>
-                <div class="section-card p-5 locked-feature bg-slate-50/50">
-                    <span class="text-2xl block mb-2">🗓️</span>
-                    <p class="text-[9px] font-black uppercase opacity-40">ክፍያ ጊዜ</p>
-                    <p class="text-[11px] font-black mt-1">Flexible Schedule</p>
-                    <p class="text-[8px] font-bold opacity-40 mt-1">እንደ ፍላጎትዎ የሚመቻች የክፍያ ጊዜ።</p>
-                </div>
-                <div class="section-card p-5 locked-feature bg-slate-50/50">
-                    <span class="text-2xl block mb-2">📜</span>
-                    <p class="text-[9px] font-black uppercase opacity-40">ዲጂታል ውል</p>
-                    <p class="text-[11px] font-black mt-1">E-Contract</p>
-                    <p class="text-[8px] font-bold opacity-40 mt-1">በቦቱ በኩል የሚፈረም የብድር ውል።</p>
-                </div>
-            </div>
-
-            <div class="section-card p-5 border-l-8 border-amber-500 bg-amber-50/50">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm">⭐</div>
-                    <div>
-                        <h4 class="text-xs font-black uppercase text-amber-900">የደረጃ ጥቅማጥቅም</h4>
-                        <p class="text-[10px] font-bold text-amber-700 leading-tight mt-1">የ"ፕሮ" እና "ልዩ" አባላት ቅድሚያ ብድር የማግኘት እና የወለድ ቅናሽ ይኖራቸዋል።</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 text-center">
-                <button disabled class="w-full py-4 bg-slate-200 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest">
-                    አገልግሎቱ ሲጀምር አሳውቀኝ 🔔
-                </button>
-                <p class="text-[9px] font-bold opacity-30 mt-3 uppercase tracking-tighter">Powered by Skymark Solution • v3.6</p>
             </div>
         </section>
 
         <!-- 4. Help Section -->
         <section id="helpSection" class="hidden animate-section py-5 space-y-6">
-            <div class="section-card p-6 space-y-4">
-                <h4 class="text-sm font-black uppercase border-b border-black/5 pb-3 tracking-widest">መመሪያዎች</h4>
-                <div class="space-y-4 text-xs font-semibold text-slate-600 leading-relaxed">
-                    <div class="flex gap-3">
-                        <span class="text-brand-green font-black">1.</span>
-                        <p>ክፍያ በደረሰኝ ሲፈጽሙ የደረሰኙን ፎቶ በትክክል መጫንዎን ያረጋግጡ።</p>
+            <div class="section-card p-8 space-y-6">
+                <h4 class="text-base font-black uppercase border-b border-black/5 pb-4">መመሪያዎች</h4>
+                <div class="space-y-5 text-sm font-semibold text-slate-600 leading-relaxed">
+                    <div class="flex gap-4">
+                        <span class="w-8 h-8 bg-green-100 text-green-700 rounded-lg flex items-center justify-center font-black flex-shrink-0">1</span>
+                        <p>በመጀመሪያ የክፍያ ገጽ ላይ በመግባት የክፍያዎን መረጃ በትክክል ይሙሉ::</p>
                     </div>
-                    <div class="flex gap-3">
-                        <span class="text-brand-green font-black">2.</span>
-                        <p>የዲጂታል ክፍያ (EasyPay) ሲጠቀሙ ክፍያው በቀጥታ ለቦቱ ይላካል።</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <span class="text-brand-green font-black">3.</span>
-                        <p>የቅጣት ስሌቱ በራስ-ሰር የሚሰራ ሲሆን ከቀን 1-5 ነፃ፣ ከ6-10 ቀን 20 ብር፣ ከ11 ቀን በላይ 50 ብር ነው።</p>
+                    <div class="flex gap-4">
+                        <span class="w-8 h-8 bg-green-100 text-green-700 rounded-lg flex items-center justify-center font-black flex-shrink-0">2</span>
+                        <p>በደረሰኝ ክፍያ ሲፈጽሙ የባንክ ደረሰኙን ፎቶ በትክክል መጫንዎን ያረጋግጡ::</p>
                     </div>
                 </div>
             </div>
-            <a href="https://t.me/Abiym" target="_blank" class="block bg-blue-600/10 border border-blue-600/20 p-6 rounded-[2rem] flex items-center justify-between group active:scale-95 transition-all">
-                <div class="flex items-center gap-5">
-                    <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl">💬</div>
+            <a href="https://t.me/Abiym" target="_blank" class="block bg-blue-600/10 border border-blue-600/20 p-8 rounded-[2.5rem] flex items-center justify-between active:scale-95 transition-all">
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-xl">💬</div>
                     <div>
-                        <h4 class="text-xs font-black text-blue-900 uppercase tracking-tight">እርዳታ ይፈልጋሉ?</h4>
-                        <p class="text-[10px] font-bold text-blue-700/60">አስተዳዳሪውን ያነጋግሩ</p>
+                        <h4 class="text-sm font-black text-blue-900 uppercase">እርዳታ ይፈልጋሉ?</h4>
+                        <p class="text-xs font-bold text-blue-700/60 mt-1">አስተዳዳሪውን ያነጋግሩ</p>
                     </div>
                 </div>
-                <span class="text-blue-600 group-hover:translate-x-2 transition-transform font-black">→</span>
+                <span class="text-blue-600 text-xl font-black">→</span>
             </a>
         </section>
 
-        <footer class="mt-12 text-center opacity-10">
-            <p class="text-[9px] font-black uppercase tracking-[0.4em]">Edir Digital v3.6 • SkyMark</p>
+        <footer class="mt-12 text-center opacity-20">
+            <p class="text-[10px] font-black uppercase tracking-[0.4em]">Edir Digital v3.6 • SkyMark</p>
         </footer>
     </main>
 
@@ -486,7 +401,7 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global State - Scoped to window for HTML access
+        // Global State
         window.paymentMode = 'manual';
         window.selectedGateway = 'chapa';
         window.currentUser = null;
@@ -495,19 +410,12 @@
         // UI Logic
         window.showTab = (t) => {
             ['payment', 'status', 'loan', 'help'].forEach(s => {
-                const sec = document.getElementById(s+'Section');
-                const btn = document.getElementById(s+'Tab');
-                if(sec) sec.classList.add('hidden');
-                if(btn) btn.classList.remove('active-tab');
+                document.getElementById(s+'Section')?.classList.add('hidden');
+                document.getElementById(s+'Tab')?.classList.remove('active-tab');
             });
-            const activeSec = document.getElementById(t+'Section');
-            const activeTab = document.getElementById(t+'Tab');
-            if(activeSec) activeSec.classList.remove('hidden');
-            if(activeTab) activeTab.classList.add('active-tab');
-            
-            if (window.Telegram?.WebApp?.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            }
+            document.getElementById(t+'Section')?.classList.remove('hidden');
+            document.getElementById(t+'Tab')?.classList.add('active-tab');
+            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
@@ -518,46 +426,33 @@
             document.getElementById('gatewaySelector').classList.toggle('hidden', mode === 'manual');
             document.getElementById('receiptWrapper').classList.toggle('hidden', mode === 'easypay');
             document.getElementById('btnText').innerText = mode === 'manual' ? 'መረጃውን ላክ' : 'ለመክፈል ቀጥል';
-            
-            if (window.Telegram?.WebApp?.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.selectionChanged();
-            }
+            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.selectionChanged();
         };
 
         window.selectGateway = (gateway, el) => {
             window.selectedGateway = gateway;
             document.querySelectorAll('.gateway-pill').forEach(p => p.classList.remove('selected'));
             el.classList.add('selected');
-            
-            if (window.Telegram?.WebApp?.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.selectionChanged();
-            }
+            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.selectionChanged();
         };
 
         window.updatePenalty = () => {
-            const dayEl = document.getElementById('day');
-            const typeEl = document.getElementById('paymentType');
+            const day = 17; // Mocked today day
+            const type = document.getElementById('paymentType').value;
             const penaltyInput = document.getElementById('penalty');
-            if (!dayEl || !typeEl || !penaltyInput) return;
-
-            const day = parseInt(dayEl.value);
-            const type = typeEl.value;
-            
             if (type === 'መደበኛ መዋጮ') {
                 if (day >= 1 && day <= 5) penaltyInput.value = 0;
                 else if (day >= 6 && day <= 10) penaltyInput.value = 20;
-                else if (day >= 11) penaltyInput.value = 50;
-            } else {
-                penaltyInput.value = 0;
-            }
+                else penaltyInput.value = 50;
+            } else penaltyInput.value = 0;
         };
 
-        // Firebase Initialization
+        // Firebase Setup
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'edir-digital-v3';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'edir-pro-v3';
 
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
@@ -576,97 +471,25 @@
                 setupDataListeners(user.uid);
                 const u = tg.initDataUnsafe?.user;
                 if (u) {
-                    const nameStr = [u.first_name, u.last_name].filter(Boolean).join(' ');
-                    const nameEl = document.getElementById('userName');
-                    if (nameEl) nameEl.innerText = nameStr || "አባል";
+                    document.getElementById('userName').innerText = [u.first_name, u.last_name].filter(Boolean).join(' ') || "አባል";
+                    document.getElementById('memberId').innerText = `ID: #${u.id.toString().slice(-4)}`;
                 }
-                setEthiopianDate();
                 window.updatePenalty();
             }
         });
 
         initAuth();
 
-        function setEthiopianDate() {
-            const monthEl = document.getElementById('month');
-            const dayEl = document.getElementById('day');
-            const yearEl = document.getElementById('year');
-            if (monthEl && dayEl && yearEl) {
-                monthEl.value = "የካቲት"; 
-                dayEl.value = "17"; 
-                yearEl.value = "2018";
-            }
-        }
-
-        async function initDigitalPayment(amount, purpose) {
-            if (!window.currentUser) {
-                tg.showPopup({ message: "እባክዎ መጀመሪያ በቴሌግራም ይግቡ" });
-                return;
-            }
-
-            if (tg.MainButton) {
-                tg.MainButton.setText(`ክፍያ በ${(window.selectedGateway || 'Gateway').toUpperCase()} በመጀመር ላይ...`);
-                tg.MainButton.show();
-                tg.MainButton.showProgress();
-            }
-
-            const txRef = `TX-${Date.now()}-${window.currentUser.uid.slice(-4)}`;
-            const payload = { 
-                type: 'payment_report', 
-                gateway: window.selectedGateway, 
-                purpose: purpose, 
-                totalAmount: amount, 
-                isDigital: true, 
-                tx_ref: txRef 
-            };
-
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), {
-                    ...payload,
-                    status: 'AWAIT_APPROVAL',
-                    timestamp: serverTimestamp()
-                });
-                tg.sendData(JSON.stringify(payload));
-                
-                setTimeout(() => {
-                    if (tg.MainButton) {
-                        tg.MainButton.hideProgress();
-                        tg.MainButton.setText("ክፍያው ተመዝግቧል ✅");
-                    }
-                    setTimeout(() => tg.close(), 1500);
-                }, 1500);
-            } catch (err) {
-                if (tg.MainButton) {
-                    tg.MainButton.hideProgress();
-                    tg.MainButton.setText("ስህተት ተፈጥሯል ❌");
-                }
-            }
-        }
-
-        function updateMembershipLevel(totalPaid, approvedCount) {
+        function updateTierUI(total, count) {
             let level = "መሠረታዊ";
-            let tierClass = "tier-basic";
+            let cls = "tier-basic";
+            if (total > 5000 && count >= 12) { level = "ልዩ (Elite)"; cls = "tier-elite"; }
+            else if (total > 1500 && count >= 5) { level = "ፕሮ (Pro)"; cls = "tier-pro"; }
             
-            if (totalPaid > 5000 && approvedCount >= 12) {
-                level = "ልዩ (Elite)";
-                tierClass = "tier-elite";
-            } 
-            else if (totalPaid > 1500 && approvedCount >= 5) {
-                level = "ፕሮ (Pro)";
-                tierClass = "tier-pro";
-            }
-
-            const headerLevelEl = document.getElementById('headerLevel');
-            const statusLevelEl = document.getElementById('memberLevelDisplay');
-            
-            if (headerLevelEl) {
-                headerLevelEl.innerText = level;
-                headerLevelEl.className = `text-[7px] font-black uppercase tracking-tighter ${tierClass}`;
-            }
-            if (statusLevelEl) {
-                statusLevelEl.innerText = level;
-                statusLevelEl.className = `text-xs font-black uppercase ${tierClass}`;
-            }
+            const hl = document.getElementById('headerLevel');
+            const ml = document.getElementById('memberLevelDisplay');
+            if(hl) { hl.innerText = level; hl.className = `text-[10px] font-black uppercase tracking-tighter ${cls}`; }
+            if(ml) { ml.innerText = level; ml.className = `text-sm font-black uppercase ${cls}`; }
         }
 
         function setupDataListeners(uid) {
@@ -674,75 +497,65 @@
                 const list = document.getElementById('transactionList');
                 if (!list) return;
 
-                const mockExampleHtml = `
-                    <div class="status-pill p-5 rounded-3xl flex items-center justify-between border-2 border-dashed border-green-200 bg-green-50/50">
+                const mockExample = `
+                    <div class="status-pill p-6 rounded-3xl flex items-center justify-between border-2 border-dashed border-green-200 bg-green-50/30">
                         <div class="flex items-center gap-4">
-                            <div class="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-xl shadow-sm">📅</div>
-                            <div class="text-left">
-                                <p class="text-xs font-black text-slate-800">ምሳሌ፦ መደበኛ መዋጮ</p>
-                                <p class="text-[9px] font-bold text-green-600 uppercase tracking-tighter">CHAPA • ዛሬ (ምሳሌ)</p>
+                            <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm">📅</div>
+                            <div>
+                                <p class="text-sm font-black text-slate-800">ምሳሌ፦ መደበኛ መዋጮ</p>
+                                <p class="text-[11px] font-bold text-green-600 uppercase mt-0.5">ቀላል ክፍያ • የካቲት 17</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-sm font-black">100 ብር</p>
-                            <span class="text-[8px] font-black px-2.5 py-1 rounded-full text-green-600 bg-green-100 border border-green-200">ጸድቋል ✅</span>
+                            <p class="text-base font-black">100 ብር</p>
+                            <span class="text-[10px] font-black px-3 py-1 rounded-full text-green-600 bg-green-100 border border-green-200">ጸድቋል ✅</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
 
                 if (snap.empty) {
-                    list.innerHTML = `
-                        <div class="opacity-20 text-[9px] font-black uppercase tracking-widest mb-3">መረጃ ስለሌለ የምሳሌ ታሪክ ይታያል</div>
-                        ${mockExampleHtml}
-                    `;
-                    if (document.getElementById('remainingBalance')) document.getElementById('remainingBalance').innerText = (6 * MONTHLY_FEE).toLocaleString();
-                    updateMembershipLevel(0, 0);
+                    list.innerHTML = `<p class="text-[11px] font-bold opacity-30 uppercase tracking-widest text-center mb-4">ምንም መረጃ የለም (ምሳሌ ታሪክ)</p>${mockExample}`;
+                    document.getElementById('remainingBalance').innerText = "100.00";
+                    updateTierUI(0, 0);
                     return;
                 }
 
-                let h = '', m = 0, p = 0, t = 0, approvedCount = 0, pend = false;
-                const sortedDocs = snap.docs.map(d => ({id: d.id, ...d.data()}))
-                                           .sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-
-                sortedDocs.forEach(tx => {
-                    const status = tx.status || 'AWAIT_APPROVAL';
-                    if (status === 'AWAIT_APPROVAL') pend = true;
-                    if (status === 'APPROVED') {
-                        approvedCount++;
-                        t += (tx.totalAmount || 0);
-                        if (tx.purpose && tx.purpose.includes('መዋጮ')) m += (tx.baseAmount || tx.totalAmount || 0);
-                        p += (tx.penaltyAmount || 0);
-                    }
-
-                    const clr = status === 'APPROVED' ? 'text-green-600 bg-green-50' : (status === 'REJECTED' ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50');
-                    const icon = (tx.purpose && tx.purpose.includes('መዋጮ')) ? '📅' : '💰';
-                    const gw = tx.gateway ? tx.gateway.toUpperCase() : 'UNKNOWN';
-
-                    h += `
-                        <div class="status-pill p-5 rounded-3xl flex items-center justify-between shadow-sm border border-slate-100 bg-white">
-                            <div class="flex items-center gap-4">
-                                <div class="w-11 h-11 bg-black/5 rounded-2xl flex items-center justify-center text-xl shadow-inner">${icon}</div>
-                                <div class="text-left">
-                                    <p class="text-xs font-black">${tx.purpose || 'ክፍያ'}</p>
-                                    <p class="text-[9px] font-bold opacity-30 uppercase tracking-tighter">${gw} • ${new Date((tx.timestamp?.seconds||0)*1000).toLocaleDateString()}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-black">${tx.totalAmount || 0} ብር</p>
-                                <span class="text-[8px] font-black px-2.5 py-1 rounded-full ${clr}">${status==='APPROVED'?'ጸድቋል':(status==='REJECTED'?'ውድቅ':'በመጠባበቅ')}</span>
-                            </div>
-                        </div>`;
-                });
+                let h = '', m = 0, p = 0, t = 0, count = 0, pend = false;
+                snap.docs.map(d => ({id: d.id, ...d.data()}))
+                         .sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0))
+                         .forEach(tx => {
+                            const status = tx.status || 'AWAIT_APPROVAL';
+                            if (status === 'AWAIT_APPROVAL') pend = true;
+                            if (status === 'APPROVED') {
+                                count++;
+                                t += (tx.totalAmount || 0);
+                                if (tx.purpose?.includes('መዋጮ')) m += (tx.baseAmount || tx.totalAmount || 0);
+                                p += (tx.penaltyAmount || 0);
+                            }
+                            const clr = status === 'APPROVED' ? 'text-green-600 bg-green-50' : (status === 'REJECTED' ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50');
+                            const icon = tx.purpose?.includes('መዋጮ') ? '📅' : '💰';
+                            h += `
+                                <div class="status-pill p-6 rounded-3xl flex items-center justify-between shadow-sm bg-white border border-slate-100">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">${icon}</div>
+                                        <div>
+                                            <p class="text-sm font-black text-slate-800">${tx.purpose || 'ክፍያ'}</p>
+                                            <p class="text-[11px] font-bold opacity-40 uppercase mt-0.5">${tx.gateway?.toUpperCase() || 'MANUAL'} • ${new Date((tx.timestamp?.seconds||0)*1000).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-base font-black">${tx.totalAmount || 0} ብር</p>
+                                        <span class="text-[10px] font-black px-3 py-1 rounded-full ${clr}">${status === 'APPROVED' ? 'ጸድቋል' : (status === 'REJECTED' ? 'ውድቅ' : 'በመጠባበቅ')}</span>
+                                    </div>
+                                </div>`;
+                         });
 
                 list.innerHTML = h;
-                if (document.getElementById('sumMonthly')) document.getElementById('sumMonthly').innerText = m.toLocaleString();
-                if (document.getElementById('sumPenalty')) document.getElementById('sumPenalty').innerText = p.toLocaleString();
-                if (document.getElementById('totalBalance')) document.getElementById('totalBalance').innerText = t.toLocaleString();
-                if (document.getElementById('approvedCount')) document.getElementById('approvedCount').innerText = approvedCount;
-                if (document.getElementById('remainingBalance')) document.getElementById('remainingBalance').innerText = Math.max(0, (6 * MONTHLY_FEE) - m).toLocaleString();
-                if (document.getElementById('pendingAlert')) document.getElementById('pendingAlert').classList.toggle('hidden', !pend);
-
-                updateMembershipLevel(t, approvedCount);
+                document.getElementById('sumMonthly').innerText = m.toLocaleString();
+                document.getElementById('approvedCount').innerText = count;
+                document.getElementById('totalBalance').innerText = t.toLocaleString();
+                document.getElementById('remainingBalance').innerText = Math.max(0, MONTHLY_FEE - m).toLocaleString();
+                document.getElementById('pendingAlert')?.classList.toggle('hidden', !pend);
+                updateTierUI(t, count);
             });
         }
 
@@ -761,61 +574,30 @@
 
         document.getElementById('paymentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!window.currentUser) {
-                tg.showPopup({ message: "እባክዎ መጀመሪያ በቴሌግራም ይግቡ" });
-                return;
-            }
-
-            const amtVal = document.getElementById('amount')?.value || 0;
-            const penVal = document.getElementById('penalty')?.value || 0;
-            const amt = parseFloat(amtVal);
-            const pen = parseFloat(penVal);
-            const purpose = `${document.getElementById('paymentType').value}: ${document.getElementById('month').value} ${document.getElementById('day').value}, ${document.getElementById('year').value}`;
+            if (!window.currentUser) return;
+            const amt = parseFloat(document.getElementById('amount').value) || 0;
+            const pen = parseFloat(document.getElementById('penalty').value) || 0;
+            const purpose = `${document.getElementById('paymentType').value}: የካቲት 17, 2018`;
 
             if (window.paymentMode === 'easypay') {
-                await initDigitalPayment(amt + pen, purpose);
+                if (tg.MainButton) { tg.MainButton.setText("ክፍያ በመጀመር ላይ..."); tg.MainButton.show(); tg.MainButton.showProgress(); }
+                const payload = { type: 'payment_report', gateway: window.selectedGateway, purpose: purpose, totalAmount: amt + pen, isDigital: true, tx_ref: `TX-${Date.now()}` };
+                await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), { ...payload, status: 'AWAIT_APPROVAL', timestamp: serverTimestamp() });
+                tg.sendData(JSON.stringify(payload));
+                setTimeout(() => tg.close(), 2000);
                 return;
             }
 
             const btn = document.getElementById('submitBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<div class="loader"></div>';
-            btn.disabled = true;
-            
-            const payload = {
-                type: 'payment_report',
-                gateway: 'manual',
-                purpose: purpose,
-                baseAmount: amt,
-                penaltyAmount: pen,
-                totalAmount: amt + pen,
-                timestamp: serverTimestamp()
-            };
-
+            btn.innerHTML = '<div class="loader"></div>'; btn.disabled = true;
+            const payload = { type: 'payment_report', gateway: 'manual', purpose: purpose, baseAmount: amt, penaltyAmount: pen, totalAmount: amt + pen, timestamp: serverTimestamp() };
             try {
-                if (window.currentUser) {
-                    await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), {
-                        ...payload,
-                        status: 'AWAIT_APPROVAL'
-                    });
-                }
+                await addDoc(collection(db, 'artifacts', appId, 'users', window.currentUser.uid, 'payments'), { ...payload, status: 'AWAIT_APPROVAL' });
                 tg.sendData(JSON.stringify(payload));
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(() => tg.close(), 1000);
-            } catch (err) {
-                console.error(err);
-                btn.innerHTML = 'ስህተት ተፈጥሯል';
-                btn.disabled = false;
-                setTimeout(() => btn.innerHTML = originalText, 2000);
-            }
+            } catch (err) { btn.innerHTML = 'ስህተት ተፈጥሯል'; btn.disabled = false; }
         });
-
-        // Event Listeners
-        const daySelect = document.getElementById('day');
-        const pTypeSelect = document.getElementById('paymentType');
-        if (daySelect) daySelect.addEventListener('change', window.updatePenalty);
-        if (pTypeSelect) pTypeSelect.addEventListener('change', window.updatePenalty);
     </script>
 </body>
 </html>
