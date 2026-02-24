@@ -389,7 +389,6 @@
 
         <!-- 3. Loan Section (Enhanced Roadmap) -->
         <section id="loanSection" class="hidden animate-section space-y-6">
-            <!-- Header Construction Banner -->
             <div class="section-card p-8 text-center bg-slate-900 text-white relative overflow-hidden loan-glow">
                 <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-brand-green/20 rounded-full blur-2xl"></div>
                 <div class="w-20 h-20 bg-brand-green rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-5 shadow-2xl">🏦</div>
@@ -401,7 +400,6 @@
                 <p class="text-[11px] font-bold text-slate-400 mt-4 leading-relaxed">የዲጂታል ብድር አሰራርን ይበልጥ ቀልጣፋ እና ፍትሃዊ ለማድረግ ሲስተሙ እየተዘጋጀ ይገኛል።</p>
             </div>
 
-            <!-- Planned Features Grid -->
             <div class="grid grid-cols-2 gap-4">
                 <div class="section-card p-5 locked-feature bg-slate-50/50">
                     <span class="text-2xl block mb-2">📈</span>
@@ -429,7 +427,6 @@
                 </div>
             </div>
 
-            <!-- Tier Perks Alert -->
             <div class="section-card p-5 border-l-8 border-amber-500 bg-amber-50/50">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm">⭐</div>
@@ -440,7 +437,6 @@
                 </div>
             </div>
 
-            <!-- Coming Soon Notice -->
             <div class="p-6 text-center">
                 <button disabled class="w-full py-4 bg-slate-200 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest">
                     አገልግሎቱ ሲጀምር አሳውቀኝ 🔔
@@ -490,7 +486,7 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global State
+        // Global State - Scoped to window for HTML access
         window.paymentMode = 'manual';
         window.selectedGateway = 'chapa';
         window.currentUser = null;
@@ -556,7 +552,7 @@
             }
         };
 
-        // Firebase Setup
+        // Firebase Initialization
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -678,7 +674,6 @@
                 const list = document.getElementById('transactionList');
                 if (!list) return;
 
-                // --- MOCK EXAMPLE FOR DEVELOPMENT ---
                 const mockExampleHtml = `
                     <div class="status-pill p-5 rounded-3xl flex items-center justify-between border-2 border-dashed border-green-200 bg-green-50/50">
                         <div class="flex items-center gap-4">
