@@ -13,7 +13,6 @@
 
     <style>
         :root {
-            /* Telegram Theme Adaptive Colors */
             --tg-bg: var(--tg-theme-bg-color, #f8fafc);
             --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #0f172a);
@@ -92,7 +91,8 @@
             transition: all 0.2s ease;
             cursor: pointer;
             filter: grayscale(1);
-            opacity: 0.6;
+            opacity: 0.7;
+            background-color: var(--tg-bg);
         }
 
         .gateway-pill.selected {
@@ -117,7 +117,6 @@
         .input-style:disabled {
             opacity: 0.7;
             background-color: rgba(0,0,0,0.03);
-            cursor: not-allowed;
         }
 
         .verified-badge { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
@@ -133,31 +132,13 @@
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Loan Specific Styling */
-        .feature-locked {
-            opacity: 0.5;
-            filter: grayscale(0.8);
-            position: relative;
-        }
-        .lock-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #64748b;
-            color: white;
-            font-size: 8px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: 900;
-        }
     </style>
 </head>
 <body class="select-none">
 
     <header class="glass-header sticky top-0 z-50 px-5 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <div class="w-11 h-11 bg-green-700 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg border-2 border-white/10">እ</div>
+            <img src="logo.jpg" class="w-11 h-11 rounded-2xl shadow-lg border-2 border-white/10 object-cover" onerror="this.style.display='none'">
             <div>
                 <h1 class="text-sm font-black uppercase tracking-tight leading-none">እሁድን በፍቅር</h1>
                 <div class="flex items-center gap-1.5 mt-1.5">
@@ -196,21 +177,39 @@
                 </div>
             </div>
 
-            <!-- Gateway Selector for Digital -->
+            <!-- Enhanced Gateway Selector with Project Logos -->
             <div id="gatewaySelector" class="hidden section-card p-5 space-y-4">
                 <h3 class="text-[10px] font-black uppercase opacity-40 text-center tracking-widest">መተግበሪያ ይምረጡ</h3>
                 <div class="grid grid-cols-3 gap-3">
+                    <!-- Chapa -->
                     <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center selected" onclick="selectGateway('chapa', this)">
-                        <span class="text-2xl mb-1">🏦</span>
+                        <img src="Chapa.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=C&background=000&color=fff'">
                         <span class="text-[8px] font-black uppercase">Chapa</span>
                     </div>
+                    <!-- Telebirr -->
                     <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('telebirr', this)">
-                        <span class="text-2xl mb-1">📱</span>
+                        <img src="Telebirr.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=T&background=0052cc&color=fff'">
                         <span class="text-[8px] font-black uppercase">Telebirr</span>
                     </div>
+                    <!-- CBE Birr -->
                     <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('cbe', this)">
-                        <span class="text-2xl mb-1">🏛️</span>
+                        <img src="Cbe.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=E&background=6a1b9a&color=fff'">
                         <span class="text-[8px] font-black uppercase">CBE Birr</span>
+                    </div>
+                    <!-- ArifPay -->
+                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('arifpay', this)">
+                        <img src="ArifPay.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=A&background=ff6d00&color=fff'">
+                        <span class="text-[8px] font-black uppercase">ArifPay</span>
+                    </div>
+                    <!-- M-Pesa (Safaricom) -->
+                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('mpesa', this)">
+                        <img src="Safaricom.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=S&background=c62828&color=fff'">
+                        <span class="text-[8px] font-black uppercase">M-Pesa</span>
+                    </div>
+                    <!-- StarPay -->
+                    <div class="gateway-pill p-3 rounded-2xl flex flex-col items-center" onclick="selectGateway('starpay', this)">
+                        <img src="StarPay.png" class="w-10 h-10 mb-1 rounded-lg object-contain" onerror="this.src='https://ui-avatars.com/api/?name=St&background=1a237e&color=fff'">
+                        <span class="text-[8px] font-black uppercase">StarPay</span>
                     </div>
                 </div>
             </div>
@@ -341,7 +340,7 @@
                 <h3 class="text-xl font-black uppercase text-slate-800 tracking-tight">የብድር አገልግሎት</h3>
                 <p class="text-[11px] font-bold text-slate-500 mt-2 leading-relaxed">የዲጂታል ብድር አገልግሎት በቅርቡ ይጀምራል። አባላት ያሉባቸውን መዋጮዎች በማጠናቀቅ ለብድር ዝግጁ መሆን ይችላሉ።</p>
                 <div class="mt-6 py-2 px-5 bg-slate-200 rounded-full inline-block text-[10px] font-black uppercase text-slate-600 animate-pulse">
-                    🚧 በግንባታ ላይ (Under Construction)
+                    🚧 በግንባታ ላይ
                 </div>
             </div>
 
@@ -359,17 +358,6 @@
                     <p class="text-xs font-bold">የቆዩ ብድሮች</p>
                 </div>
             </div>
-
-            <div class="section-card p-6 feature-locked">
-                <span class="lock-badge">COMING</span>
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-2xl">⚖️</div>
-                    <div>
-                        <h4 class="text-xs font-black uppercase tracking-tight">የብድር ደንቦች እና መመሪያዎች</h4>
-                        <p class="text-[10px] font-bold opacity-50">ብድር ለመውሰድ የሚያስፈልጉ መስፈርቶች</p>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- 4. Help Section -->
@@ -384,10 +372,6 @@
                     <div class="flex gap-3">
                         <span class="text-brand-green font-black">2.</span>
                         <p>የዲጂታል ክፍያ (EasyPay) ሲጠቀሙ ክፍያው በቀጥታ ለቦቱ ይላካል።</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <span class="text-brand-green font-black">3.</span>
-                        <p>የቅጣት ስሌቱ በራስ-ሰር የሚሰራ ሲሆን ከቀን 1-5 ነፃ፣ ከ6-10 ቀን 20 ብር፣ ከ11 ቀን በላይ 50 ብር ነው።</p>
                     </div>
                 </div>
             </div>
@@ -413,6 +397,67 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Global UI functions
+        window.showTab = (t) => {
+            ['payment', 'status', 'loan', 'help'].forEach(s => {
+                const sec = document.getElementById(s+'Section');
+                const btn = document.getElementById(s+'Tab');
+                if(sec) sec.classList.add('hidden');
+                if(btn) btn.classList.remove('active-tab');
+            });
+            const activeSec = document.getElementById(t+'Section');
+            const activeTab = document.getElementById(t+'Tab');
+            if(activeSec) activeSec.classList.remove('hidden');
+            if(activeTab) activeTab.classList.add('active-tab');
+            
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        };
+
+        window.selectPaymentMode = (mode) => {
+            paymentMode = mode;
+            document.getElementById('manualBtn').classList.toggle('selected', mode === 'manual');
+            document.getElementById('easypayBtn').classList.toggle('selected', mode === 'easypay');
+            document.getElementById('gatewaySelector').classList.toggle('hidden', mode === 'manual');
+            document.getElementById('receiptWrapper').classList.toggle('hidden', mode === 'easypay');
+            document.getElementById('btnText').innerText = mode === 'manual' ? 'መረጃውን ላክ' : 'ለመክፈል ቀጥል';
+            
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.selectionChanged();
+            }
+        };
+
+        window.selectGateway = (gateway, el) => {
+            selectedGateway = gateway;
+            document.querySelectorAll('.gateway-pill').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.selectionChanged();
+            }
+        };
+
+        window.updatePenalty = () => {
+            const dayEl = document.getElementById('day');
+            const typeEl = document.getElementById('paymentType');
+            const penaltyInput = document.getElementById('penalty');
+            if (!dayEl || !typeEl || !penaltyInput) return;
+
+            const day = parseInt(dayEl.value);
+            const type = typeEl.value;
+            
+            if (type === 'መደበኛ መዋጮ') {
+                if (day >= 1 && day <= 5) penaltyInput.value = 0;
+                else if (day >= 6 && day <= 10) penaltyInput.value = 20;
+                else if (day >= 11) penaltyInput.value = 50;
+            } else {
+                penaltyInput.value = 0;
+            }
+        };
+
+        // Firebase & Telegram Setup
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -427,20 +472,6 @@
         let selectedGateway = 'chapa';
         const MONTHLY_FEE = 100;
 
-        // --- Date Helpers (Fixed Date) ---
-        function setEthiopianDate() {
-            // Simplified logic for current Ethiopian date (approximate for demo)
-            // Ideally use a library like ethiopian-calendar
-            const monthEl = document.getElementById('month');
-            const dayEl = document.getElementById('day');
-            const yearEl = document.getElementById('year');
-            
-            // For example: Setting to current month context
-            monthEl.value = "የካቲት"; 
-            dayEl.value = "17"; 
-            yearEl.value = "2018";
-        }
-
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
@@ -448,55 +479,41 @@
                 await signInAnonymously(auth);
             }
         };
-        initAuth();
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 setupDataListeners(user.uid);
                 const u = tg.initDataUnsafe?.user;
-                if (u) document.getElementById('userName').innerText = [u.first_name, u.last_name].filter(Boolean).join(' ') || "አባል";
+                if (u) {
+                    const nameStr = [u.first_name, u.last_name].filter(Boolean).join(' ');
+                    const nameEl = document.getElementById('userName');
+                    if (nameEl) nameEl.innerText = nameStr || "አባል";
+                }
                 setEthiopianDate();
-                updatePenalty();
+                window.updatePenalty();
             }
         });
 
-        // --- UI & Logic Functions ---
+        initAuth();
 
-        window.updatePenalty = () => {
-            const day = parseInt(document.getElementById('day').value);
-            const type = document.getElementById('paymentType').value;
-            const penaltyInput = document.getElementById('penalty');
-            if (type === 'መደበኛ መዋጮ') {
-                if (day >= 1 && day <= 5) penaltyInput.value = 0;
-                else if (day >= 6 && day <= 10) penaltyInput.value = 20;
-                else if (day >= 11) penaltyInput.value = 50;
-            } else {
-                penaltyInput.value = 0;
+        function setEthiopianDate() {
+            const monthEl = document.getElementById('month');
+            const dayEl = document.getElementById('day');
+            const yearEl = document.getElementById('year');
+            if (monthEl && dayEl && yearEl) {
+                monthEl.value = "የካቲት"; 
+                dayEl.value = "17"; 
+                yearEl.value = "2018";
             }
-        };
-
-        window.selectPaymentMode = (mode) => {
-            paymentMode = mode;
-            document.getElementById('manualBtn').classList.toggle('selected', mode === 'manual');
-            document.getElementById('easypayBtn').classList.toggle('selected', mode === 'easypay');
-            document.getElementById('gatewaySelector').classList.toggle('hidden', mode === 'manual');
-            document.getElementById('receiptWrapper').classList.toggle('hidden', mode === 'easypay');
-            document.getElementById('btnText').innerText = mode === 'manual' ? 'መረጃውን ላክ' : 'ለመክፈል ቀጥል';
-            tg.HapticFeedback.selectionChanged();
-        };
-
-        window.selectGateway = (gateway, el) => {
-            selectedGateway = gateway;
-            document.querySelectorAll('.gateway-pill').forEach(p => p.classList.remove('selected'));
-            el.classList.add('selected');
-            tg.HapticFeedback.selectionChanged();
-        };
+        }
 
         async function initDigitalPayment(amount, purpose) {
-            tg.MainButton.setText(`ክፍያ በ${selectedGateway.toUpperCase()} በመጀመር ላይ...`);
-            tg.MainButton.show();
-            tg.MainButton.showProgress();
+            if (tg.MainButton) {
+                tg.MainButton.setText(`ክፍያ በ${selectedGateway.toUpperCase()} በመጀመር ላይ...`);
+                tg.MainButton.show();
+                tg.MainButton.showProgress();
+            }
 
             const txRef = `TX-${Date.now()}-${currentUser.uid.slice(-4)}`;
             const payload = { 
@@ -508,7 +525,6 @@
                 tx_ref: txRef 
             };
 
-            // Register in Firestore & Send to Bot
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
                     ...payload,
@@ -518,30 +534,36 @@
                 tg.sendData(JSON.stringify(payload));
                 
                 setTimeout(() => {
-                    tg.MainButton.hideProgress();
-                    tg.MainButton.setText("ክፍያው ተመዝግቧል ✅");
+                    if (tg.MainButton) {
+                        tg.MainButton.hideProgress();
+                        tg.MainButton.setText("ክፍያው ተመዝግቧል ✅");
+                    }
                     setTimeout(() => tg.close(), 1500);
                 }, 1500);
             } catch (err) {
-                tg.MainButton.hideProgress();
-                tg.MainButton.setText("ስህተት ተፈጥሯል ❌");
+                if (tg.MainButton) {
+                    tg.MainButton.hideProgress();
+                    tg.MainButton.setText("ስህተት ተፈጥሯል ❌");
+                }
             }
         }
 
         function setupDataListeners(uid) {
-            // Profile Data (Status/Balance)
             onSnapshot(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'), (ds) => {
-                if (ds.exists()) {
-                    document.getElementById('memberStatus').innerText = ds.data().isVerified ? 'የተረጋገጠ አባል' : 'ያልተረጋገጠ';
+                const statusEl = document.getElementById('memberStatus');
+                if (ds.exists() && statusEl) {
+                    statusEl.innerText = ds.data().isVerified ? 'የተረጋገጠ አባል' : 'ያልተረጋገጠ';
                 }
             });
 
-            // Payments History
             onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'payments'), (snap) => {
                 const list = document.getElementById('transactionList');
+                if (!list) return;
+
                 if (snap.empty) {
                     list.innerHTML = '<div class="opacity-20 text-xs font-black uppercase tracking-widest">ምንም እንቅስቃሴ የለም</div>';
-                    document.getElementById('remainingBalance').innerText = (6 * MONTHLY_FEE).toLocaleString(); // Mock 6 months
+                    const remEl = document.getElementById('remainingBalance');
+                    if (remEl) remEl.innerText = (6 * MONTHLY_FEE).toLocaleString();
                     return;
                 }
 
@@ -553,51 +575,45 @@
                     const status = tx.status || 'AWAIT_APPROVAL';
                     if (status === 'AWAIT_APPROVAL') pend = true;
                     if (status === 'APPROVED') {
-                        t += tx.totalAmount;
-                        if (tx.purpose.includes('መዋጮ')) m += tx.baseAmount || tx.totalAmount;
-                        p += tx.penaltyAmount || 0;
+                        t += (tx.totalAmount || 0);
+                        if (tx.purpose && tx.purpose.includes('መዋጮ')) m += (tx.baseAmount || tx.totalAmount || 0);
+                        p += (tx.penaltyAmount || 0);
                     }
 
                     const clr = status === 'APPROVED' ? 'text-green-600 bg-green-50' : (status === 'REJECTED' ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50');
-                    const icon = tx.purpose.includes('መዋጮ') ? '📅' : '💰';
+                    const icon = (tx.purpose && tx.purpose.includes('መዋጮ')) ? '📅' : '💰';
+                    const gw = tx.gateway ? tx.gateway.toUpperCase() : 'UNKNOWN';
 
                     h += `
                         <div class="status-pill p-5 rounded-3xl flex items-center justify-between shadow-sm">
                             <div class="flex items-center gap-4">
                                 <div class="w-11 h-11 bg-black/5 rounded-2xl flex items-center justify-center text-xl shadow-inner">${icon}</div>
                                 <div class="text-left">
-                                    <p class="text-xs font-black">${tx.purpose}</p>
-                                    <p class="text-[9px] font-bold opacity-30 uppercase tracking-tighter">${tx.gateway.toUpperCase()} • ${new Date((tx.timestamp?.seconds||0)*1000).toLocaleDateString()}</p>
+                                    <p class="text-xs font-black">${tx.purpose || 'ክፍያ'}</p>
+                                    <p class="text-[9px] font-bold opacity-30 uppercase tracking-tighter">${gw} • ${new Date((tx.timestamp?.seconds||0)*1000).toLocaleDateString()}</p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm font-black">${tx.totalAmount} ብር</p>
+                                <p class="text-sm font-black">${tx.totalAmount || 0} ብር</p>
                                 <span class="text-[8px] font-black px-2.5 py-1 rounded-full ${clr}">${status==='APPROVED'?'ጸድቋል':(status==='REJECTED'?'ውድቅ':'በመጠባበቅ')}</span>
                             </div>
                         </div>`;
                 });
 
                 list.innerHTML = h;
-                document.getElementById('sumMonthly').innerText = m.toLocaleString();
-                document.getElementById('sumPenalty').innerText = p.toLocaleString();
-                document.getElementById('totalBalance').innerText = t.toLocaleString();
-                
-                // Remaining logic: (Example: 6 months expected - actual monthly contributions)
-                document.getElementById('remainingBalance').innerText = Math.max(0, (6 * MONTHLY_FEE) - m).toLocaleString();
-                document.getElementById('pendingAlert').classList.toggle('hidden', !pend);
+                const sumMEl = document.getElementById('sumMonthly');
+                const sumPEl = document.getElementById('sumPenalty');
+                const totalBEl = document.getElementById('totalBalance');
+                const remBEl = document.getElementById('remainingBalance');
+                const pAlertEl = document.getElementById('pendingAlert');
+
+                if (sumMEl) sumMEl.innerText = m.toLocaleString();
+                if (sumPEl) sumPEl.innerText = p.toLocaleString();
+                if (totalBEl) totalBEl.innerText = t.toLocaleString();
+                if (remBEl) remBEl.innerText = Math.max(0, (6 * MONTHLY_FEE) - m).toLocaleString();
+                if (pAlertEl) pAlertEl.classList.toggle('hidden', !pend);
             });
         }
-
-        window.showTab = (t) => {
-            ['payment', 'status', 'loan', 'help'].forEach(s => {
-                document.getElementById(s+'Section')?.classList.add('hidden');
-                document.getElementById(s+'Tab')?.classList.remove('active-tab');
-            });
-            document.getElementById(t+'Section')?.classList.remove('hidden');
-            document.getElementById(t+'Tab')?.classList.add('active-tab');
-            tg.HapticFeedback.impactOccurred('light');
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        };
 
         window.handlePreview = (i) => {
             if (i.files[0]) {
@@ -614,8 +630,10 @@
 
         document.getElementById('paymentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const amt = parseFloat(document.getElementById('amount').value) || 0;
-            const pen = parseFloat(document.getElementById('penalty').value) || 0;
+            const amtVal = document.getElementById('amount')?.value || 0;
+            const penVal = document.getElementById('penalty')?.value || 0;
+            const amt = parseFloat(amtVal);
+            const pen = parseFloat(penVal);
             const purpose = `${document.getElementById('paymentType').value}: ${document.getElementById('month').value} ${document.getElementById('day').value}, ${document.getElementById('year').value}`;
 
             if (paymentMode === 'easypay') {
@@ -639,12 +657,14 @@
             };
 
             try {
-                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
-                    ...payload,
-                    status: 'AWAIT_APPROVAL'
-                });
+                if (currentUser) {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
+                        ...payload,
+                        status: 'AWAIT_APPROVAL'
+                    });
+                }
                 tg.sendData(JSON.stringify(payload));
-                tg.HapticFeedback.notificationOccurred('success');
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(() => tg.close(), 1000);
             } catch (err) {
                 console.error(err);
@@ -653,6 +673,12 @@
                 setTimeout(() => btn.innerHTML = originalText, 2000);
             }
         });
+
+        // Static listeners
+        const daySelect = document.getElementById('day');
+        const pTypeSelect = document.getElementById('paymentType');
+        if (daySelect) daySelect.addEventListener('change', window.updatePenalty);
+        if (pTypeSelect) pTypeSelect.addEventListener('change', window.updatePenalty);
     </script>
 </body>
 </html>
