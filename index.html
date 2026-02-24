@@ -13,6 +13,7 @@
 
     <style>
         :root {
+            /* Telegram Theme Adaptive Colors */
             --tg-bg: var(--tg-theme-bg-color, #f8fafc);
             --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #0f172a);
@@ -114,11 +115,13 @@
         }
 
         .input-style:disabled {
-            opacity: 0.6;
-            background-color: rgba(0,0,0,0.02);
+            opacity: 0.7;
+            background-color: rgba(0,0,0,0.03);
+            cursor: not-allowed;
         }
 
         .verified-badge { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
+        .status-pill { background-color: var(--tg-bg); border: 1px solid var(--card-border); }
         .animate-section { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -131,7 +134,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Loan Specific Inactive Styling */
+        /* Loan Specific Styling */
         .feature-locked {
             opacity: 0.5;
             filter: grayscale(0.8);
@@ -158,7 +161,7 @@
             <div>
                 <h1 class="text-sm font-black uppercase tracking-tight leading-none">እሁድን በፍቅር</h1>
                 <div class="flex items-center gap-1.5 mt-1.5">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
                     <p class="text-[9px] text-green-600 font-extrabold uppercase">ክፍያ ክፍት ነው</p>
                 </div>
             </div>
@@ -177,7 +180,7 @@
             <button onclick="showTab('help')" id="helpTab" class="nav-btn py-3.5">እርዳታ</button>
         </nav>
 
-        <!-- Payment Section -->
+        <!-- 1. Payment Section -->
         <section id="paymentSection" class="animate-section space-y-7">
             <div class="space-y-4">
                 <h3 class="text-[10px] font-black uppercase opacity-50 tracking-[0.2em] ml-1">የክፍያ ምርጫ</h3>
@@ -193,7 +196,7 @@
                 </div>
             </div>
 
-            <!-- Digital Gateway Selector -->
+            <!-- Gateway Selector for Digital -->
             <div id="gatewaySelector" class="hidden section-card p-5 space-y-4">
                 <h3 class="text-[10px] font-black uppercase opacity-40 text-center tracking-widest">መተግበሪያ ይምረጡ</h3>
                 <div class="grid grid-cols-3 gap-3">
@@ -225,16 +228,16 @@
                     </div>
 
                     <div id="dateSelectorRow" class="space-y-2">
-                        <label class="text-[9px] font-black uppercase opacity-40 ml-1">የክፍያ ቀን (ዛሬ)</label>
-                        <div class="grid grid-cols-3 gap-2 pointer-events-none">
-                            <select id="month" disabled class="input-style font-black text-[11px] px-2 bg-slate-100">
+                        <label class="text-[9px] font-black uppercase opacity-40 ml-1">የክፍያ ቀን (ዛሬ - የማይቀየር)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="month" disabled class="input-style font-black text-[11px] px-2 bg-slate-100 border-none">
                                 <option value="መስከረም">መስከረም</option><option value="ጥቅምት">ጥቅምት</option><option value="ህዳር">ህዳር</option>
                                 <option value="ታህሳስ">ታህሳስ</option><option value="ጥር">ጥር</option><option value="የካቲት">የካቲት</option>
                                 <option value="መጋቢት">መጋቢት</option><option value="ሚያዝያ">ሚያዝያ</option><option value="ግንቦት">ግንቦት</option>
                                 <option value="ሰኔ">ሰኔ</option><option value="ሐምሌ">ሐምሌ</option><option value="ነሐሴ">ነሐሴ</option>
                                 <option value="ጳጉሜ">ጳጉሜ</option>
                             </select>
-                            <select id="day" disabled class="input-style font-black text-[11px] px-2 bg-slate-100">
+                            <select id="day" disabled class="input-style font-black text-[11px] px-2 bg-slate-100 border-none">
                                 <option value="1">1</option><option value="2">2</option><option value="3">3</option>
                                 <option value="4">4</option><option value="5">5</option><option value="6">6</option>
                                 <option value="7">7</option><option value="8">8</option><option value="9">9</option>
@@ -246,9 +249,8 @@
                                 <option value="25">25</option><option value="26">26</option><option value="27">27</option>
                                 <option value="28">28</option><option value="29">29</option><option value="30">30</option>
                             </select>
-                            <select id="year" disabled class="input-style font-black text-[11px] px-2 bg-slate-100">
-                                <option value="2017">2017</option>
-                                <option value="2018">2018</option>
+                            <select id="year" disabled class="input-style font-black text-[11px] px-2 bg-slate-100 border-none">
+                                <option value="2017">2017</option><option value="2018">2018</option>
                             </select>
                         </div>
                     </div>
@@ -267,7 +269,7 @@
 
                 <div id="receiptWrapper" class="section-card p-6 space-y-4">
                     <label class="text-[9px] font-black uppercase opacity-40 ml-1">የደረሰኝ ፎቶ (Receipt)</label>
-                    <div class="relative w-full aspect-video bg-black/5 rounded-3xl border-2 border-dashed border-black/10 flex flex-col items-center justify-center overflow-hidden" onclick="document.getElementById('receiptInput').click()">
+                    <div class="relative w-full aspect-video bg-black/5 rounded-3xl border-2 border-dashed border-black/10 flex flex-col items-center justify-center overflow-hidden transition-all hover:bg-black/10" onclick="document.getElementById('receiptInput').click()">
                         <div id="uploadPlaceholder" class="text-center">
                             <span class="text-3xl block mb-2">📸</span>
                             <span class="text-[10px] font-black opacity-40 uppercase tracking-widest">ለመጫን ይንኩ</span>
@@ -283,7 +285,7 @@
             </form>
         </section>
 
-        <!-- Status Section -->
+        <!-- 2. Status Section -->
         <section id="statusSection" class="hidden animate-section space-y-7">
             <div class="bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-white">
                 <div class="absolute -right-10 -top-10 w-44 h-44 bg-green-500/10 rounded-full blur-3xl"></div>
@@ -291,21 +293,27 @@
                     <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">ጠቅላላ የተከፈለ ሂሳብ</p>
                     <h2 class="text-5xl font-black tracking-tight"><span id="totalBalance">0.00</span> <span class="text-xs opacity-40 font-bold ml-1">ETB</span></h2>
                 </div>
-                <div class="mt-8 bg-white/5 p-4 rounded-2xl border border-white/10">
-                    <p class="text-[10px] font-black uppercase opacity-50 mb-1">የቀረ ዕዳ (Remaining Fee)</p>
-                    <h3 class="text-2xl font-black text-red-400"><span id="remainingBalance">0.00</span> ETB</h3>
+                <div class="mt-8 bg-white/5 p-5 rounded-[1.5rem] border border-white/10 flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-black uppercase opacity-50 mb-1">የቀረ ዕዳ (Remaining)</p>
+                        <h3 class="text-2xl font-black text-red-400"><span id="remainingBalance">0.00</span> ETB</h3>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] font-black uppercase opacity-40">ሁኔታ</p>
+                        <p id="memberStatus" class="text-xs font-black uppercase text-green-400">ያልታወቀ</p>
+                    </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-5">
                 <div class="section-card p-6 flex flex-col items-center">
                     <span class="text-2xl block mb-3">📅</span>
-                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1">መዋጮ</p>
+                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1 text-center">መደበኛ መዋጮ</p>
                     <p class="text-xl font-black"><span id="sumMonthly">0.00</span> <span class="text-[9px] opacity-30">ETB</span></p>
                 </div>
                 <div class="section-card p-6 flex flex-col items-center">
                     <span class="text-2xl block mb-3">⚠️</span>
-                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1">ቅጣት</p>
+                    <p class="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1 text-center">የቅጣት ክፍያ</p>
                     <p class="text-xl font-black text-red-600"><span id="sumPenalty">0.00</span> <span class="text-[9px] opacity-30">ETB</span></p>
                 </div>
             </div>
@@ -314,25 +322,25 @@
                 <div class="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-xl flex-shrink-0">🔔</div>
                 <div>
                     <h5 class="text-[10px] font-black text-orange-700 uppercase tracking-wider">ማረጋገጫ በመጠባበቅ ላይ</h5>
-                    <p class="text-[9px] font-bold text-orange-600/80 mt-1">ክፍያዎ በአስተዳዳሪው እንዲረጋገጥ እየተደረገ ነው።</p>
+                    <p class="text-[9px] font-bold text-orange-600/80 mt-1">የላኩት ክፍያ በአስተዳዳሪው እንዲረጋገጥ እየተደረገ ነው።</p>
                 </div>
             </div>
 
             <div class="space-y-4">
                 <h4 class="text-[10px] font-black uppercase opacity-40 tracking-[0.3em] px-2">የቅርብ ጊዜ እንቅስቃሴዎች</h4>
-                <div id="transactionList" class="space-y-3">
-                    <div class="text-center py-10 opacity-20 text-xs font-black uppercase tracking-widest">ምንም እንቅስቃሴ የለም</div>
+                <div id="transactionList" class="space-y-3 text-center py-5">
+                    <div class="opacity-20 text-xs font-black uppercase tracking-widest">ምንም እንቅስቃሴ የለም</div>
                 </div>
             </div>
         </section>
 
-        <!-- Loan Section (Enhanced Coming Soon) -->
+        <!-- 3. Loan Section -->
         <section id="loanSection" class="hidden animate-section space-y-6">
             <div class="section-card p-8 text-center bg-slate-50 border-dashed border-2">
                 <div class="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">🏦</div>
-                <h3 class="text-xl font-black uppercase text-slate-800">የብድር አገልግሎት</h3>
-                <p class="text-[11px] font-bold text-slate-500 mt-2">የዲጂታል ብድር አገልግሎት በቅርቡ ይጀምራል። አባላት ያሉባቸውን መዋጮዎች በማጠናቀቅ ለብድር ዝግጁ መሆን ይችላሉ።</p>
-                <div class="mt-6 py-2 px-4 bg-slate-200 rounded-full inline-block text-[10px] font-black uppercase text-slate-600 animate-pulse">
+                <h3 class="text-xl font-black uppercase text-slate-800 tracking-tight">የብድር አገልግሎት</h3>
+                <p class="text-[11px] font-bold text-slate-500 mt-2 leading-relaxed">የዲጂታል ብድር አገልግሎት በቅርቡ ይጀምራል። አባላት ያሉባቸውን መዋጮዎች በማጠናቀቅ ለብድር ዝግጁ መሆን ይችላሉ።</p>
+                <div class="mt-6 py-2 px-5 bg-slate-200 rounded-full inline-block text-[10px] font-black uppercase text-slate-600 animate-pulse">
                     🚧 በግንባታ ላይ (Under Construction)
                 </div>
             </div>
@@ -357,21 +365,42 @@
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-2xl">⚖️</div>
                     <div>
-                        <h4 class="text-xs font-black uppercase">የብድር ደንቦች እና መመሪያዎች</h4>
+                        <h4 class="text-xs font-black uppercase tracking-tight">የብድር ደንቦች እና መመሪያዎች</h4>
                         <p class="text-[10px] font-bold opacity-50">ብድር ለመውሰድ የሚያስፈልጉ መስፈርቶች</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Help Section -->
-        <section id="helpSection" class="hidden animate-section py-10">
-            <div class="section-card p-6">
-                <h4 class="text-sm font-black uppercase border-b border-black/5 pb-3 mb-4 tracking-widest">ስለ ቀላል ክፍያ</h4>
-                <p class="text-xs font-semibold opacity-70 leading-relaxed">
-                    ዲጂታል ክፍያን ሲጠቀሙ መረጃው በቀጥታ ይረጋገጣል:: ቻፓን ወይም ቴሌብርን በመጠቀም ክፍያውን በጥቂት ሰከንዶች ውስጥ መፈጸም ይችላሉ::
-                </p>
+        <!-- 4. Help Section -->
+        <section id="helpSection" class="hidden animate-section py-5 space-y-6">
+            <div class="section-card p-6 space-y-4">
+                <h4 class="text-sm font-black uppercase border-b border-black/5 pb-3 tracking-widest">መመሪያዎች</h4>
+                <div class="space-y-4 text-xs font-semibold text-slate-600 leading-relaxed">
+                    <div class="flex gap-3">
+                        <span class="text-brand-green font-black">1.</span>
+                        <p>ክፍያ በደረሰኝ ሲፈጽሙ የደረሰኙን ፎቶ በትክክል መጫንዎን ያረጋግጡ።</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="text-brand-green font-black">2.</span>
+                        <p>የዲጂታል ክፍያ (EasyPay) ሲጠቀሙ ክፍያው በቀጥታ ለቦቱ ይላካል።</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="text-brand-green font-black">3.</span>
+                        <p>የቅጣት ስሌቱ በራስ-ሰር የሚሰራ ሲሆን ከቀን 1-5 ነፃ፣ ከ6-10 ቀን 20 ብር፣ ከ11 ቀን በላይ 50 ብር ነው።</p>
+                    </div>
+                </div>
             </div>
+            <a href="https://t.me/Abiym" target="_blank" class="block bg-blue-600/10 border border-blue-600/20 p-6 rounded-[2rem] flex items-center justify-between group active:scale-95 transition-all">
+                <div class="flex items-center gap-5">
+                    <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl">💬</div>
+                    <div>
+                        <h4 class="text-xs font-black text-blue-900 uppercase tracking-tight">እርዳታ ይፈልጋሉ?</h4>
+                        <p class="text-[10px] font-bold text-blue-700/60">አስተዳዳሪውን ያነጋግሩ</p>
+                    </div>
+                </div>
+                <span class="text-blue-600 group-hover:translate-x-2 transition-transform font-black">→</span>
+            </a>
         </section>
 
         <footer class="mt-12 text-center opacity-10">
@@ -398,10 +427,18 @@
         let selectedGateway = 'chapa';
         const MONTHLY_FEE = 100;
 
+        // --- Date Helpers (Fixed Date) ---
         function setEthiopianDate() {
-            document.getElementById('month').value = "የካቲት";
-            document.getElementById('day').value = "17";
-            document.getElementById('year').value = "2018";
+            // Simplified logic for current Ethiopian date (approximate for demo)
+            // Ideally use a library like ethiopian-calendar
+            const monthEl = document.getElementById('month');
+            const dayEl = document.getElementById('day');
+            const yearEl = document.getElementById('year');
+            
+            // For example: Setting to current month context
+            monthEl.value = "የካቲት"; 
+            dayEl.value = "17"; 
+            yearEl.value = "2018";
         }
 
         const initAuth = async () => {
@@ -418,11 +455,13 @@
                 currentUser = user;
                 setupDataListeners(user.uid);
                 const u = tg.initDataUnsafe?.user;
-                if (u) document.getElementById('userName').innerText = [u.first_name, u.last_name].filter(Boolean).join(' ');
+                if (u) document.getElementById('userName').innerText = [u.first_name, u.last_name].filter(Boolean).join(' ') || "አባል";
                 setEthiopianDate();
                 updatePenalty();
             }
         });
+
+        // --- UI & Logic Functions ---
 
         window.updatePenalty = () => {
             const day = parseInt(document.getElementById('day').value);
@@ -432,7 +471,9 @@
                 if (day >= 1 && day <= 5) penaltyInput.value = 0;
                 else if (day >= 6 && day <= 10) penaltyInput.value = 20;
                 else if (day >= 11) penaltyInput.value = 50;
-            } else { penaltyInput.value = 0; }
+            } else {
+                penaltyInput.value = 0;
+            }
         };
 
         window.selectPaymentMode = (mode) => {
@@ -442,36 +483,73 @@
             document.getElementById('gatewaySelector').classList.toggle('hidden', mode === 'manual');
             document.getElementById('receiptWrapper').classList.toggle('hidden', mode === 'easypay');
             document.getElementById('btnText').innerText = mode === 'manual' ? 'መረጃውን ላክ' : 'ለመክፈል ቀጥል';
+            tg.HapticFeedback.selectionChanged();
         };
 
         window.selectGateway = (gateway, el) => {
             selectedGateway = gateway;
             document.querySelectorAll('.gateway-pill').forEach(p => p.classList.remove('selected'));
             el.classList.add('selected');
+            tg.HapticFeedback.selectionChanged();
         };
 
-        async function initChapaPayment(amount, purpose) {
+        async function initDigitalPayment(amount, purpose) {
             tg.MainButton.setText(`ክፍያ በ${selectedGateway.toUpperCase()} በመጀመር ላይ...`);
             tg.MainButton.show();
             tg.MainButton.showProgress();
+
             const txRef = `TX-${Date.now()}-${currentUser.uid.slice(-4)}`;
-            const payload = { type: 'payment_report', gateway: selectedGateway, purpose: purpose, totalAmount: amount, isDigital: true, tx_ref: txRef };
-            tg.sendData(JSON.stringify(payload));
-            await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), { ...payload, status: 'AWAIT_APPROVAL', timestamp: serverTimestamp() });
-            setTimeout(() => { tg.MainButton.hideProgress(); tg.MainButton.setText("ክፍያው ተጠናቋል ✅"); setTimeout(() => tg.close(), 1500); }, 2000);
+            const payload = { 
+                type: 'payment_report', 
+                gateway: selectedGateway, 
+                purpose: purpose, 
+                totalAmount: amount, 
+                isDigital: true, 
+                tx_ref: txRef 
+            };
+
+            // Register in Firestore & Send to Bot
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
+                    ...payload,
+                    status: 'AWAIT_APPROVAL',
+                    timestamp: serverTimestamp()
+                });
+                tg.sendData(JSON.stringify(payload));
+                
+                setTimeout(() => {
+                    tg.MainButton.hideProgress();
+                    tg.MainButton.setText("ክፍያው ተመዝግቧል ✅");
+                    setTimeout(() => tg.close(), 1500);
+                }, 1500);
+            } catch (err) {
+                tg.MainButton.hideProgress();
+                tg.MainButton.setText("ስህተት ተፈጥሯል ❌");
+            }
         }
 
         function setupDataListeners(uid) {
+            // Profile Data (Status/Balance)
+            onSnapshot(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'), (ds) => {
+                if (ds.exists()) {
+                    document.getElementById('memberStatus').innerText = ds.data().isVerified ? 'የተረጋገጠ አባል' : 'ያልተረጋገጠ';
+                }
+            });
+
+            // Payments History
             onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'payments'), (snap) => {
                 const list = document.getElementById('transactionList');
                 if (snap.empty) {
-                    list.innerHTML = '<div class="text-center py-10 opacity-20 text-xs font-black uppercase tracking-widest">ምንም እንቅስቃሴ የለም</div>';
-                    document.getElementById('remainingBalance').innerText = (6 * MONTHLY_FEE).toLocaleString();
+                    list.innerHTML = '<div class="opacity-20 text-xs font-black uppercase tracking-widest">ምንም እንቅስቃሴ የለም</div>';
+                    document.getElementById('remainingBalance').innerText = (6 * MONTHLY_FEE).toLocaleString(); // Mock 6 months
                     return;
                 }
+
                 let h = '', m = 0, p = 0, t = 0, pend = false;
-                snap.docs.forEach(doc => {
-                    const tx = doc.data();
+                const sortedDocs = snap.docs.map(d => ({id: d.id, ...d.data()}))
+                                           .sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+                sortedDocs.forEach(tx => {
                     const status = tx.status || 'AWAIT_APPROVAL';
                     if (status === 'AWAIT_APPROVAL') pend = true;
                     if (status === 'APPROVED') {
@@ -479,19 +557,32 @@
                         if (tx.purpose.includes('መዋጮ')) m += tx.baseAmount || tx.totalAmount;
                         p += tx.penaltyAmount || 0;
                     }
+
                     const clr = status === 'APPROVED' ? 'text-green-600 bg-green-50' : (status === 'REJECTED' ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50');
-                    h += `<div class="status-pill p-5 rounded-3xl flex items-center justify-between">
+                    const icon = tx.purpose.includes('መዋጮ') ? '📅' : '💰';
+
+                    h += `
+                        <div class="status-pill p-5 rounded-3xl flex items-center justify-between shadow-sm">
                             <div class="flex items-center gap-4">
-                                <div class="w-11 h-11 bg-black/5 rounded-2xl flex items-center justify-center text-xl">${tx.gateway === 'manual' ? '🧾' : '💳'}</div>
-                                <div><p class="text-xs font-black">${tx.purpose}</p><p class="text-[9px] font-bold opacity-30">${tx.gateway.toUpperCase()}</p></div>
+                                <div class="w-11 h-11 bg-black/5 rounded-2xl flex items-center justify-center text-xl shadow-inner">${icon}</div>
+                                <div class="text-left">
+                                    <p class="text-xs font-black">${tx.purpose}</p>
+                                    <p class="text-[9px] font-bold opacity-30 uppercase tracking-tighter">${tx.gateway.toUpperCase()} • ${new Date((tx.timestamp?.seconds||0)*1000).toLocaleDateString()}</p>
+                                </div>
                             </div>
-                            <div class="text-right"><p class="text-sm font-black">${tx.totalAmount} ብር</p><span class="text-[8px] font-black px-2 py-1 rounded-full ${clr}">${status === 'APPROVED' ? 'ጸድቋል' : (status === 'REJECTED' ? 'ውድቅ' : 'በመጠባበቅ')}</span></div>
+                            <div class="text-right">
+                                <p class="text-sm font-black">${tx.totalAmount} ብር</p>
+                                <span class="text-[8px] font-black px-2.5 py-1 rounded-full ${clr}">${status==='APPROVED'?'ጸድቋል':(status==='REJECTED'?'ውድቅ':'በመጠባበቅ')}</span>
+                            </div>
                         </div>`;
                 });
+
                 list.innerHTML = h;
                 document.getElementById('sumMonthly').innerText = m.toLocaleString();
                 document.getElementById('sumPenalty').innerText = p.toLocaleString();
                 document.getElementById('totalBalance').innerText = t.toLocaleString();
+                
+                // Remaining logic: (Example: 6 months expected - actual monthly contributions)
                 document.getElementById('remainingBalance').innerText = Math.max(0, (6 * MONTHLY_FEE) - m).toLocaleString();
                 document.getElementById('pendingAlert').classList.toggle('hidden', !pend);
             });
@@ -499,15 +590,13 @@
 
         window.showTab = (t) => {
             ['payment', 'status', 'loan', 'help'].forEach(s => {
-                const sec = document.getElementById(s+'Section');
-                const btn = document.getElementById(s+'Tab');
-                if(sec) sec.classList.add('hidden');
-                if(btn) btn.classList.remove('active-tab');
+                document.getElementById(s+'Section')?.classList.add('hidden');
+                document.getElementById(s+'Tab')?.classList.remove('active-tab');
             });
-            const activeSec = document.getElementById(t+'Section');
-            const activeTab = document.getElementById(t+'Tab');
-            if(activeSec) activeSec.classList.remove('hidden');
-            if(activeTab) activeTab.classList.add('active-tab');
+            document.getElementById(t+'Section')?.classList.remove('hidden');
+            document.getElementById(t+'Tab')?.classList.add('active-tab');
+            tg.HapticFeedback.impactOccurred('light');
+            window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
         window.handlePreview = (i) => {
@@ -525,19 +614,44 @@
 
         document.getElementById('paymentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
             const amt = parseFloat(document.getElementById('amount').value) || 0;
             const pen = parseFloat(document.getElementById('penalty').value) || 0;
-            const purpose = `${document.getElementById('paymentType').value}: ${document.getElementById('month').value} ${document.getElementById('day').value}`;
-            if (paymentMode === 'easypay') { await initChapaPayment(amt + pen, purpose); return; }
+            const purpose = `${document.getElementById('paymentType').value}: ${document.getElementById('month').value} ${document.getElementById('day').value}, ${document.getElementById('year').value}`;
+
+            if (paymentMode === 'easypay') {
+                await initDigitalPayment(amt + pen, purpose);
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '<div class="loader"></div>';
             btn.disabled = true;
-            const payload = { type: 'payment_report', gateway: 'manual', purpose: purpose, baseAmount: amt, penaltyAmount: pen, totalAmount: amt + pen, timestamp: serverTimestamp() };
+            
+            const payload = {
+                type: 'payment_report',
+                gateway: 'manual',
+                purpose: purpose,
+                baseAmount: amt,
+                penaltyAmount: pen,
+                totalAmount: amt + pen,
+                timestamp: serverTimestamp()
+            };
+
             try {
-                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), { ...payload, status: 'AWAIT_APPROVAL' });
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'payments'), {
+                    ...payload,
+                    status: 'AWAIT_APPROVAL'
+                });
                 tg.sendData(JSON.stringify(payload));
+                tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(() => tg.close(), 1000);
-            } catch (err) { console.error(err); btn.innerHTML = 'ስህተት ተፈጥሯል'; btn.disabled = false; }
+            } catch (err) {
+                console.error(err);
+                btn.innerHTML = 'ስህተት ተፈጥሯል';
+                btn.disabled = false;
+                setTimeout(() => btn.innerHTML = originalText, 2000);
+            }
         });
     </script>
 </body>
