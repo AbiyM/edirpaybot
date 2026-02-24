@@ -72,8 +72,8 @@ bot.start((ctx) => {
     
     return ctx.replyWithMarkdown(welcomeMsg, 
         Markup.keyboard([
-            [Markup.button.webApp("🚀 ክፍያ ፈጽም", MINI_APP_URL)],
-            ["📊 የክፍያ ሁኔታ", "❓ እርዳታ"]
+            [Markup.button.webApp("📱 ሚኒ አፑን ተጠቀም", MINI_APP_URL)],
+            ["❓ እርዳታ"]
         ]).resize()
     );
 });
