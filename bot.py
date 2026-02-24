@@ -1,26 +1,32 @@
+/**
+ * Edir Digital Pro v3.6 - Backend System
+ * Powered by Telegraf, SQLite & Node.js
+ */
+
 require('dotenv').config();
 const { Telegraf, session, Markup } = require('telegraf');
 const Database = require('better-sqlite3');
 const http = require('http');
 
-// --- CONFIGURATION ---
+// --- ኮንፊገሬሽን ---
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : null;
 const MINI_APP_URL = process.env.MINI_APP_URL;
-const EDIR_GROUP_ID = process.env.EDIR_GROUP_ID; 
 
 if (!BOT_TOKEN) {
-    console.error("❌ ERROR: BOT_TOKEN is missing!");
+    console.error("❌ ስህተት: BOT_TOKEN አልተገኘም!");
     process.exit(1);
 }
 
-const db = new Database('members.db');
+// ዳታቤዝ ዝግጅት
+const db = new Database('edir_pro.db');
 
-// --- DATABASE SCHEMA ---
+// የዳታቤዝ ሰንጠረዦች (Schema)
 db.exec(`
     CREATE TABLE IF NOT EXISTS members (
         user_id INTEGER PRIMARY KEY,
         username TEXT,
+        full_name TEXT,
         status TEXT DEFAULT 'PENDING'
     );
     CREATE TABLE IF NOT EXISTS payments (
@@ -29,203 +35,190 @@ db.exec(`
         username TEXT,
         gateway TEXT,
         purpose TEXT,
-        location TEXT,
-        base_amount REAL,
-        penalty_amount REAL,
+        base_amount REAL DEFAULT 0,
+        penalty_amount REAL DEFAULT 0,
         total_amount REAL,
+        tx_ref TEXT,
         file_id TEXT,
         status TEXT DEFAULT 'AWAIT_APPROVAL',
-        timestamp TEXT
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 `);
 
 const bot = new Telegraf(BOT_TOKEN);
 bot.use(session());
 
-// --- MIDDLEWARE: GROUP ACCESS CHECK ---
-const checkGroupMembership = async (ctx, next) => {
-    if (!EDIR_GROUP_ID || EDIR_GROUP_ID.includes("123456789")) return next();
-    if (ctx.from && ctx.chat.type === 'private') {
-        try {
-            const member = await ctx.telegram.getChatMember(EDIR_GROUP_ID, ctx.from.id);
-            const allowed = ['member', 'administrator', 'creator'];
-            if (!allowed.includes(member.status)) {
-                return ctx.reply("❌ ይቅርታ! ይህን ቦት ለመጠቀም መጀመሪያ የ'እሁድን በፍቅር' የቴሌግራም ግሩፕ አባል መሆን አለብዎት።");
-            }
-        } catch (error) {
-            return next();
-        }
-    }
-    return next();
-};
-
-// --- USER COMMANDS ---
-
-bot.start(checkGroupMembership, (ctx) => {
-    db.prepare('INSERT OR IGNORE INTO members (user_id, username) VALUES (?, ?)').run(ctx.from.id, ctx.from.username || 'N/A');
+// --- የጅማሬ መልእክት ---
+bot.start((ctx) => {
+    const from = ctx.from;
+    db.prepare('INSERT OR IGNORE INTO members (user_id, username, full_name) VALUES (?, ?, ?)').run(
+        from.id, 
+        from.username || 'N/A', 
+        from.first_name + (from.last_name ? ' ' + from.last_name : '')
+    );
     
-    const welcomeMsg = `እንኳን ወደ **እሁድን በፍቅር** የክፍያ ቦት በሰላም መጡ! 👋\n\n` +
-        `መዋጮን፣ ቅጣትን እና ብድርን እዚህ በቀላሉ መክፈል እና ሁኔታውን መከታተል ይችላሉ።\n\n` +
-        `ለመጀመር ከታች ያለውን ሰማያዊ ቁልፍ ይጠቀሙ።`;
+    const welcome = `እንኳን ወደ **እሁድን በፍቅር** ዲጂታል መተግበሪያ በሰላም መጡ! 👋\n\n` +
+        `እዚህ መዋጮዎን መክፈል፣ የክፍያ ሁኔታዎን ማየት እና የብድር አገልግሎቶችን ማግኘት ይችላሉ።\n\n` +
+        `ለመጀመር '🚀 ክፍያ ፈጽም' የሚለውን ይጫኑ።`;
     
-    return ctx.replyWithMarkdown(welcomeMsg, 
+    return ctx.replyWithMarkdown(welcome, 
         Markup.keyboard([
-            [Markup.button.webApp("🚀 ክፍያ ያስገቡ", MINI_APP_URL)],
-            ["📊 የጥያቄዬ ሁኔታ", "❓ እርዳታ"]
+            [Markup.button.webApp("🚀 ክፍያ ፈጽም", MINI_APP_URL)],
+            ["📊 የክፍያ ሁኔታ", "❓ እርዳታ"]
         ]).resize()
     );
 });
 
-bot.hears("📊 የጥያቄዬ ሁኔታ", (ctx) => {
-    const member = db.prepare('SELECT status FROM members WHERE user_id = ?').get(ctx.from.id);
-    const pendingCount = db.prepare("SELECT COUNT(*) as count FROM payments WHERE user_id = ? AND status = 'AWAIT_APPROVAL'").get(ctx.from.id).count;
-    
-    let msg = `የአባልነት ሁኔታዎ: **${member?.status === 'APPROVED' ? "✅ የጸደቀ" : "⏳ በመጠባበቅ ላይ"}**\n`;
-    if (pendingCount > 0) {
-        msg += `\n⚠️ ማረጋገጫ የሚጠብቁ **${pendingCount}** ክፍያዎች አሉዎት።`;
-    }
-    ctx.replyWithMarkdown(msg);
-});
-
-bot.hears("❓ እርዳታ", (ctx) => {
-    const helpMsg = `📖 **አጭር መመሪያ**\n\n` +
-        `1. '🚀 ክፍያ ያስገቡ' የሚለውን ይጫኑ።\n` +
-        `2. ፎርሙን ሞልተው ሲጨርሱ 'ላክ' ይበሉ።\n` +
-        `3. ሚኒ አፑ ሲዘጋ የደረሰኝ ፎቶ (Screenshot) እዚህ ይላኩ።\n\n` +
-        `የከፈሉት ክፍያ በአስተዳዳሪው ሲረጋገጥ መልእክት ይደርስዎታል።`;
-    ctx.replyWithMarkdown(helpMsg);
-});
-
-// --- WEB APP DATA HANDLER ---
-
+// --- ከሚኒ አፑ መረጃ መቀበያ (Web App Data Handlers) ---
 bot.on('web_app_data', async (ctx) => {
     try {
         const data = JSON.parse(ctx.webAppData.data.json());
         
         if (data.type === 'payment_report') {
+            const isDigital = data.isDigital === true;
+            const gatewayName = data.gateway.toUpperCase();
+            
+            // ለጊዜው በሴሽን ውስጥ መረጃውን ማስቀመጥ (ለፎቶ መጠበቂያ)
             ctx.session.pendingPayment = { 
                 ...data, 
                 userId: ctx.from.id, 
                 username: ctx.from.username || 'N/A' 
             };
 
-            const isAuto = data.isAutomatic === 'YES';
-            const gatewayDisplay = data.gateway === 'manual' ? 'በደረሰኝ (Manual)' : `${data.gateway.toUpperCase()} (ዲጂታል)`;
+            let msg = `✅ **የ${data.purpose}** መረጃ ተመዝግቧል!\n\n`;
+            msg += `💳 የክፍያ መንገድ፦ ${gatewayName}\n`;
+            msg += `💰 ጠቅላላ መጠን፦ **${data.totalAmount} ETB**\n`;
 
-            let replyMsg = `✅ **የ${data.purpose}** መረጃ ተመዝግቧል!\n`;
-            replyMsg += `💳 መንገድ፦ ${gatewayDisplay}\n`;
-            replyMsg += `💰 ድምር፡ **${data.totalAmount} ብር**\n\n`;
-            
-            if (isAuto) {
-                replyMsg += `🚀 በዲጂታል መተግበሪያው ክፍያውን ከጨረሱ በኋላ የማረጋገጫ ደረሰኝ (Screenshot) እዚህ ይላኩ።`;
+            if (isDigital) {
+                msg += `🔢 TX Ref: \`${data.tx_ref}\` \n\n`;
+                msg += `🚀 የዲጂታል ክፍያ መረጃዎ ለገንዘብ ያዡ ተልኳል። ሲረጋገጥ እናሳውቅዎታለን።`;
+                
+                // ዲጂታል ከሆነ በቀጥታ ዳታቤዝ ውስጥ መመዝገብ
+                const res = db.prepare(`
+                    INSERT INTO payments (user_id, username, gateway, purpose, total_amount, tx_ref, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, 'AWAIT_APPROVAL')
+                `).run(ctx.from.id, ctx.from.username, data.gateway, data.purpose, data.totalAmount, data.tx_ref);
+
+                // ለአስተዳዳሪ ማሳወቅ
+                sendAdminNotification(ctx, data, res.lastInsertRowid, null);
             } else {
-                replyMsg += `📷 አሁን የባንክ ደረሰኝዎን ፎቶ እዚህ ይላኩ።`;
+                msg += `\n📷 አሁን የባንክ ደረሰኝዎን (Receipt) ፎቶ ወይም ስክሪንሾት እዚህ ይላኩ።`;
             }
 
-            await ctx.replyWithMarkdown(replyMsg);
+            await ctx.replyWithMarkdown(msg);
         }
     } catch (e) {
         console.error("Web App Data Error:", e);
-        ctx.reply("❌ መረጃውን በማስተናገድ ላይ ስህተት አጋጥሟል። እባክዎ ደግመው ይሞክሩ።");
+        ctx.reply("❌ መረጃውን በማስተናገድ ላይ ስህተት አጋጥሟል።");
     }
 });
 
-// --- RECEIPT HANDLER (Photo/Document) ---
-
+// --- የደረሰኝ ፎቶ መቀበያ ---
 bot.on(['photo', 'document'], async (ctx) => {
     const pending = ctx.session?.pendingPayment;
-    if (!pending) return ctx.reply("እባክዎ መጀመሪያ '🚀 ክፍያ ያስገቡ' የሚለውን ቁልፍ ተጠቅመው ፎርሙን ይሙሉ::");
+    
+    if (!pending || pending.gateway !== 'manual') {
+        return ctx.reply("እባክዎ መጀመሪያ በሚኒ አፑ በኩል የክፍያ ፎርሙን ይሙሉ::");
+    }
 
     const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
     
+    // ዳታቤዝ ውስጥ መመዝገብ
     const res = db.prepare(`
-        INSERT INTO payments (user_id, username, gateway, purpose, location, base_amount, penalty_amount, total_amount, file_id, timestamp) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO payments (user_id, username, gateway, purpose, base_amount, penalty_amount, total_amount, file_id) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-        pending.userId, pending.username, pending.gateway, pending.purpose, pending.location, 
-        pending.baseAmount, pending.penaltyAmount, pending.totalAmount, fileId, new Date().toLocaleString()
+        pending.userId, pending.username, 'MANUAL', pending.purpose, 
+        pending.baseAmount, pending.penaltyAmount, pending.totalAmount, fileId
     );
 
-    ctx.session.pendingPayment = null; 
+    ctx.session.pendingPayment = null; // ሴሽኑን ማፅዳት
 
-    if (ADMIN_ID) {
-        const adminKb = Markup.inlineKeyboard([
-            [Markup.button.callback('✅ አጽድቅ', `papp_${res.lastInsertRowid}_${ctx.from.id}`), 
-             Markup.button.callback('❌ ሰርዝ', `prej_${res.lastInsertRowid}_${ctx.from.id}`)]
-        ]);
+    // ለአስተዳዳሪ ማሳወቅ
+    sendAdminNotification(ctx, pending, res.lastInsertRowid, fileId);
 
-        const adminCaption = `🚨 **አዲስ የክፍያ ሪፖርት**\n\n` +
-            `👤 አባል፦ @${pending.username}\n` +
-            `🎯 ዓላማ፦ ${pending.purpose}\n` +
-            `💳 መንገድ፦ ${pending.gateway.toUpperCase()}\n` +
-            `💵 መጠን፦ ${pending.totalAmount} ብር\n` +
-            `📍 ቦታ፦ ${pending.location}`;
-
-        await ctx.telegram.sendPhoto(ADMIN_ID, fileId, { 
-            caption: adminCaption,
-            parse_mode: 'Markdown',
-            ...adminKb 
-        });
-    }
-
-    await ctx.reply("📩 ደረሰኝዎ ለገንዘብ ያዡ ተልኳል። ሲረጋገጥ እናሳውቅዎታለን። እናመሰግናለን!");
+    await ctx.reply("📩 ደረሰኝዎ ለገንዘብ ያዡ ተልኳል። ሲረጋገጥ መልእክት ይደርስዎታል። እናመሰግናለን!");
 });
 
-// --- ADMIN ACTIONS ---
+// --- ለአስተዳዳሪ (ገንዘብ ያዥ) ማሳወቂያ መላኪያ ---
+async function sendAdminNotification(ctx, data, dbId, fileId) {
+    if (!ADMIN_ID) return;
 
-bot.action(/^(papp|prej)_(\d+)_(\d+)$/, async (ctx) => {
-    if (ctx.from.id !== ADMIN_ID) return ctx.answerCbQuery("አልተፈቀደልዎትም!");
+    const adminKb = Markup.inlineKeyboard([
+        [Markup.button.callback('✅ አጽድቅ (Approve)', `approve_${dbId}_${ctx.from.id}`)],
+        [Markup.button.callback('❌ ሰርዝ (Reject)', `reject_${dbId}_${ctx.from.id}`)]
+    ]);
 
-    const [action, id, targetId] = [ctx.match[1], ctx.match[2], parseInt(ctx.match[3])];
-    const isApprove = action.includes('app');
+    const adminMsg = `🚨 **አዲስ የክፍያ ሪፖርት**\n\n` +
+        `👤 አባል፦ @${ctx.from.username || 'N/A'} (${ctx.from.id})\n` +
+        `🎯 ዓላማ፦ ${data.purpose}\n` +
+        `💳 መንገድ፦ ${data.gateway.toUpperCase()}\n` +
+        `💵 መጠን፦ ${data.totalAmount} ETB\n` +
+        (data.tx_ref ? `🔢 TX Ref: \`${data.tx_ref}\`` : `📷 ደረሰኝ ከታች ተያይዟል`);
 
-    db.prepare(`UPDATE payments SET status = ? WHERE id = ?`).run(isApprove ? 'APPROVED' : 'REJECTED', id);
+    if (fileId) {
+        await ctx.telegram.sendPhoto(ADMIN_ID, fileId, { caption: adminMsg, parse_mode: 'Markdown', ...adminKb });
+    } else {
+        await ctx.telegram.sendMessage(ADMIN_ID, adminMsg, { parse_mode: 'Markdown', ...adminKb });
+    }
+}
 
+// --- የአስተዳዳሪ ውሳኔዎች (Approval Actions) ---
+bot.action(/^(approve|reject)_(\d+)_(\d+)$/, async (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return ctx.answerCbQuery("ፈቃድ የለዎትም!");
+
+    const [action, dbId, targetUserId] = [ctx.match[1], ctx.match[2], parseInt(ctx.match[3])];
+    const isApprove = action === 'approve';
+
+    // ዳታቤዝ ማዘመን
+    db.prepare(`UPDATE payments SET status = ? WHERE id = ?`).run(isApprove ? 'APPROVED' : 'REJECTED', dbId);
+    
     if (isApprove) {
-        db.prepare("UPDATE members SET status = 'APPROVED' WHERE user_id = ?").run(targetId);
+        db.prepare("UPDATE members SET status = 'APPROVED' WHERE user_id = ?").run(targetUserId);
     }
 
-    const resultMsg = isApprove ? "🎉 ክፍያዎ በአስተዳዳሪው ጸድቋል! እናመሰግናለን።" : "⚠️ ይቅርታ፣ የላኩት ክፍያ በአስተዳዳሪው ውድቅ ተደርጓል። እባክዎ ትክክለኛውን ደረሰኝ በድጋሚ ይላኩ።";
-    
+    // ለአባሉ መልእክት መላክ
+    const notifyMsg = isApprove 
+        ? "🎉 እንኳን ደስ አለዎት! ክፍያዎ በአስተዳዳሪው ጸድቋል። በሁኔታ (Status) ገጽ ላይ ማየት ይችላሉ።" 
+        : "⚠️ ይቅርታ፣ የላኩት የክፍያ መረጃ በአስተዳዳሪው ውድቅ ተደርጓል። እባክዎ መረጃውን በድጋሚ በትክክል ይላኩ።";
+
     try {
-        await ctx.telegram.sendMessage(targetId, resultMsg);
-    } catch (err) {
-        console.error("Notification Error:", err);
+        await ctx.telegram.sendMessage(targetUserId, notifyMsg);
+    } catch (e) {
+        console.error("Notification failed", e);
     }
-    
-    await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n\n🏁 ውጤት: ${isApprove ? 'APPROVED ✅' : 'REJECTED ❌'}`);
+
+    await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n\n🏁 ውጤት፦ ${isApprove ? 'ጸድቋል ✅' : 'ተሰርዟል ❌'}`);
     await ctx.answerCbQuery(isApprove ? "ጸድቋል" : "ተሰርዟል");
 });
 
-// --- STATS COMMAND (Admin Only) ---
-
-bot.command('stats', (ctx) => {
-    if (ctx.from.id !== ADMIN_ID) return;
-    
+// --- የገንዘብ ሪፖርት ማጠቃለያ (Stats) ---
+bot.hears("📊 የክፍያ ሁኔታ", (ctx) => {
     const stats = db.prepare(`
-        SELECT 
-            SUM(CASE WHEN purpose LIKE 'የመዋጮ:%' THEN base_amount ELSE 0 END) as contributions,
-            SUM(CASE WHEN purpose = 'Loan Payment' OR purpose = 'የብድር መመለሻ' THEN base_amount ELSE 0 END) as loans,
-            SUM(penalty_amount) as penalties,
-            SUM(total_amount) as grand_total
-        FROM payments WHERE status = 'APPROVED'
-    `).get();
+        SELECT COUNT(*) as count, SUM(total_amount) as total 
+        FROM payments WHERE user_id = ? AND status = 'APPROVED'
+    `).get(ctx.from.id);
 
-    const report = `💰 **የፋይናንስ ማጠቃለያ (Financial Stats)**\n\n` +
-        `📅 ጠቅላላ መዋጮ፦ **${stats.contributions || 0} ብር**\n` +
-        `🏦 የተመለሰ ብድር፦ **${stats.loans || 0} ብር**\n` +
-        `⚠️ የቅጣት ገቢ፦ **${stats.penalties || 0} ብር**\n` +
-        `------------------------\n` +
-        `📢 **ጠቅላላ በካዝና፦ ${stats.grand_total || 0} ብር**\n\n` +
-        `_Powered by Skymark System Solution_`;
+    const pending = db.prepare(`SELECT COUNT(*) as count FROM payments WHERE user_id = ? AND status = 'AWAIT_APPROVAL'`).get(ctx.from.id);
 
-    ctx.replyWithMarkdown(report);
+    let msg = `📋 **የእርስዎ የክፍያ ማጠቃለያ**\n\n`;
+    msg += `✅ የጸደቁ ክፍያዎች፦ ${stats.count || 0}\n`;
+    msg += `💰 ጠቅላላ የተከፈለ፦ **${stats.total || 0} ETB**\n`;
+    if (pending.count > 0) {
+        msg += `⏳ ማረጋገጫ የሚጠብቁ፦ ${pending.count} ክፍያዎች\n`;
+    }
+
+    ctx.replyWithMarkdown(msg);
 });
 
-// Health check for Render / Deployment
-http.createServer((req, res) => {
-    res.writeHead(200);
-    res.end('Bot is Active');
-}).listen(process.env.PORT || 3000);
+// Admin Stats Command
+bot.command('stats', (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    const allStats = db.prepare(`SELECT SUM(total_amount) as grandTotal FROM payments WHERE status = 'APPROVED'`).get();
+    ctx.replyWithMarkdown(`💰 **ጠቅላላ የኢድር ካዝና፦ ${allStats.grandTotal || 0} ETB**`);
+});
 
-bot.launch().then(() => console.log('🚀 Ehuden Befikir Bot is active and running...'));
+// Health check server
+http.createServer((req, res) => { res.writeHead(200); res.end('Backend Active'); }).listen(process.env.PORT || 3000);
+
+bot.launch().then(() => console.log('🚀 Edir Digital Pro Backend is running...'));
