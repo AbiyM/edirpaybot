@@ -83,12 +83,16 @@ function updateMemberTier(userId) {
 // --- 5. የፋይናንስ ኦፊሰር ማሳወቂያ ---
 async function notifyFinance(ctx, data, dbId, fileId, time) {
     const payerName = data.payFor === 'self' ? "ለራሱ (Self)" : `ለአባል: ${data.payFor}`;
+    // የክፍያ መንገዱን ስም ማስተካከያ (e.g. telebirr -> Telebirr)
+    const gatewayName = data.gateway.charAt(0).toUpperCase() + data.gateway.slice(1);
+    
     const caption = `🚨 **አዲስ የክፍያ ሪፖርት**\n\n` +
                 `👤 የከፋይ: @${ctx.from.username}\n` +
                 `🎯 ለማን: **${payerName}**\n` +
                 `📅 ጊዜ: ${data.period}\n` +
                 `💰 መጠን: ${data.amount} ብር\n` +
                 `⚠️ ቅጣት: ${data.penalty || 0} ብር\n` +
+                `💳 መንገድ: **${gatewayName}**\n` +
                 `📝 ዓላማ: ${data.purpose}`;
     
     const kb = Markup.inlineKeyboard([
@@ -162,13 +166,15 @@ bot.on('web_app_data', async (ctx) => {
             const time = new Date().toLocaleString();
             ctx.session.pendingPayment = { ...data, timestamp: time };
 
+            // በደረሰኝ ከሆነ ፎቶ እንዲልክ ይጠይቃል
             if (data.gateway === 'manual') {
-                await ctx.reply(`✅ የ${data.amount} ብር ክፍያ መረጃ ተመዝግቧል። 📷 አሁን ደረሰኝ ይላኩ።`);
+                await ctx.reply(`✅ የ${data.amount} ብር ክፍያ መረጃ ተመዝግቧል። 📷 አሁን የባንክ ደረሰኝዎን ፎቶ እዚህ ይላኩ።`);
             } else {
+                // በዲጂታል ከሆነ ወዲያውኑ ይመዘገባል
                 const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
                     .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.period, data.amount, data.penalty, data.payFor, time);
                 notifyFinance(ctx, data, res.lastInsertRowid, null, time);
-                await ctx.reply(`🚀 ክፍያው ተመዝግቧል። ለፋይናንስ ኦፊሰር ተልኳል።`);
+                await ctx.reply(`🚀 የ${data.gateway} ክፍያዎ ተመዝግቧል። ለፋይናንስ ኦፊሰር እንዲረጋገጥ ተልኳል።`);
             }
         }
     } catch (e) { console.error("Data error:", e); }
@@ -184,7 +190,7 @@ bot.on(['photo', 'document'], async (ctx) => {
     
     notifyFinance(ctx, pending, res.lastInsertRowid, fileId, pending.timestamp);
     ctx.session.pendingPayment = null; 
-    await ctx.reply(`📩 ደረሰኝዎ ተልኳል። እናመሰግናለን!`);
+    await ctx.reply(`📩 ደረሰኝዎ ለፋይናንስ ኦፊሰር ተልኳል። እናመሰግናለን!`);
 });
 
 bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
