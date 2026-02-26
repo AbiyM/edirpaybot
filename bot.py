@@ -83,8 +83,7 @@ function updateMemberTier(userId) {
 // --- 5. የፋይናንስ ኦፊሰር ማሳወቂያ ---
 async function notifyFinance(ctx, data, dbId, fileId, time) {
     const payerName = data.payFor === 'self' ? "ለራሱ (Self)" : `ለአባል: ${data.payFor}`;
-    // የክፍያ መንገዱን ስም ማስተካከያ (e.g. telebirr -> Telebirr)
-    const gatewayName = data.gateway.charAt(0).toUpperCase() + data.gateway.slice(1);
+    const gatewayName = data.gateway === 'manual' ? "በደረሰኝ (Receipt)" : data.gateway.charAt(0).toUpperCase() + data.gateway.slice(1);
     
     const caption = `🚨 **አዲስ የክፍያ ሪፖርት**\n\n` +
                 `👤 የከፋይ: @${ctx.from.username}\n` +
@@ -166,11 +165,9 @@ bot.on('web_app_data', async (ctx) => {
             const time = new Date().toLocaleString();
             ctx.session.pendingPayment = { ...data, timestamp: time };
 
-            // በደረሰኝ ከሆነ ፎቶ እንዲልክ ይጠይቃል
             if (data.gateway === 'manual') {
                 await ctx.reply(`✅ የ${data.amount} ብር ክፍያ መረጃ ተመዝግቧል። 📷 አሁን የባንክ ደረሰኝዎን ፎቶ እዚህ ይላኩ።`);
             } else {
-                // በዲጂታል ከሆነ ወዲያውኑ ይመዘገባል
                 const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
                     .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.period, data.amount, data.penalty, data.payFor, time);
                 notifyFinance(ctx, data, res.lastInsertRowid, null, time);
