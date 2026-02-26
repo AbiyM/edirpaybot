@@ -1,7 +1,7 @@
 /**
  * እሁድን በፍቅር ዲጂታል ፕሮ v3.6 - የኋላ ደንብ (Backend Bot)
- * ይህ ቦት የአባላትን ምዝገባ፣ የክፍያ ሪፖርቶችን መቀበል፣ ደረጃ ማሳደግ እና 
- * የፋይናንስ ኦፊሰሮች ክፍያ እንዲያጸድቁ መፍቀድን ይቆጣጠራል።
+ * ይህ ቦት የአባላትን ምዝገባ፣ የክፍያ ሪፖርቶችን መቀበል (ለራስም ሆነ ለሌላ ሰው)፣ 
+ * ደረጃ ማሳደግ እና የፋይናንስ ኦፊሰሮች ክፍያ እንዲያጸድቁ መፍቀድን ይቆጣጠራል።
  */
 
 require('dotenv').config();
@@ -70,11 +70,6 @@ bot.use(session());
 const isAdmin = (id) => ADMIN_IDS.includes(id);
 
 // --- 4. የአባላት ደረጃ ማሳደጊያ ሎጂክ ---
-/**
- * የጸደቁ (APPROVED) ክፍያዎችን በመቁጠር የአባሉን ደረጃ ያሳድጋል
- * - 5+ ክፍያዎች: ፕሮ (Pro)
- * - 12+ ክፍያዎች: ልዩ (Elite)
- */
 function updateMemberTier(userId) {
     const stats = db.prepare(`SELECT COUNT(*) as count FROM payments WHERE user_id = ? AND status = 'APPROVED'`).get(userId);
     let newTier = 'መሠረታዊ';
@@ -86,9 +81,6 @@ function updateMemberTier(userId) {
 }
 
 // --- 5. የፋይናንስ ኦፊሰር ማሳወቂያ ---
-/**
- * አዲስ ክፍያ ሲመጣ በግሩፕ ውስጥ ላሉ ፋይናንስ ኦፊሰሮች ያሳውቃል
- */
 async function notifyFinance(ctx, data, dbId, fileId, time) {
     const payerName = data.payFor === 'self' ? "ለራሱ (Self)" : `ለአባል: ${data.payFor}`;
     const caption = `🚨 **አዲስ የክፍያ ሪፖርት**\n\n` +
@@ -115,7 +107,6 @@ async function notifyFinance(ctx, data, dbId, fileId, time) {
 
 // --- 6. የቦቱ ዋና ተግባራት ---
 
-// ቦቱ ሲጀመር
 bot.start((ctx) => {
     db.prepare('INSERT OR IGNORE INTO members (user_id, username, full_name) VALUES (?, ?, ?)').run(
         ctx.from.id, 
@@ -128,14 +119,12 @@ bot.start((ctx) => {
     ctx.replyWithMarkdown(`እንኳን ወደ **እሁድን በፍቅር** መጡ! 👋\nአሁን ለራስዎ ወይም ለሌላ አባል መክፈል ይችላሉ።`, Markup.keyboard(kb).resize());
 });
 
-// አድሚን መሆኑን ማረጋገጫ ትዕዛዝ
 bot.command('checkme', (ctx) => {
     const id = ctx.from.id;
     const status = isAdmin(id) ? "✅ የፋይናንስ ኦፊሰር ነዎት" : "❌ ተራ አባል ነዎት";
     ctx.replyWithMarkdown(`🆔 የእርስዎ ID: \`${id}\`\n🛡 ሁኔታ: ${status}`);
 });
 
-// አስተዳዳሪ ሁነታ መግቢያ
 bot.hears("⚙️ የአስተዳዳሪ ሁነታ (Admin Mode)", (ctx) => {
     if (isAdmin(ctx.from.id)) {
         const adminKb = [
@@ -146,13 +135,11 @@ bot.hears("⚙️ የአስተዳዳሪ ሁነታ (Admin Mode)", (ctx) => {
     }
 });
 
-// ወደ ተራ አባልነት መመለሻ
 bot.hears("👤 ወደ አባልነት ተመለስ", (ctx) => {
     const kb = [[Markup.button.webApp("📱 ሚኒ አፑን ተጠቀም", MINI_APP_URL)], ["📊 ሁኔታዬን እይ", "❓ እርዳታ"]];
     ctx.reply("👤 ወደ አባልነት ሁነታ ተመልሰዋል::", Markup.keyboard(kb).resize());
 });
 
-// የሚጠባበቁ ክፍያዎችን ማየት
 bot.hears("📑 የሚጠባበቁ", (ctx) => {
     if (!isAdmin(ctx.from.id)) return;
     const pending = db.prepare(`SELECT * FROM payments WHERE status = 'AWAIT_APPROVAL' ORDER BY id DESC`).all();
@@ -168,25 +155,25 @@ bot.hears("📑 የሚጠባበቁ", (ctx) => {
 
 // --- 7. የክፍያ ሂደት ---
 
-// ሚኒ አፑ ዳታ ሲልክ
 bot.on('web_app_data', async (ctx) => {
-    const data = JSON.parse(ctx.webAppData.data.json());
-    if (data.type === 'payment_report') {
-        const time = new Date().toLocaleString();
-        ctx.session.pendingPayment = { ...data, timestamp: time };
+    try {
+        const data = JSON.parse(ctx.webAppData.data.json());
+        if (data.type === 'payment_report') {
+            const time = new Date().toLocaleString();
+            ctx.session.pendingPayment = { ...data, timestamp: time };
 
-        if (data.gateway === 'manual') {
-            await ctx.reply(`✅ የ${data.amount} ብር ክፍያ መረጃ ተመዝግቧል። 📷 አሁን ደረሰኝ ይላኩ።`);
-        } else {
-            const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-                .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.period, data.amount, data.penalty, data.payFor, time);
-            notifyFinance(ctx, data, res.lastInsertRowid, null, time);
-            await ctx.reply(`🚀 ክፍያው ተመዝግቧል። ለፋይናንስ ኦፊሰር ተልኳል።`);
+            if (data.gateway === 'manual') {
+                await ctx.reply(`✅ የ${data.amount} ብር ክፍያ መረጃ ተመዝግቧል። 📷 አሁን ደረሰኝ ይላኩ።`);
+            } else {
+                const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+                    .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.period, data.amount, data.penalty, data.payFor, time);
+                notifyFinance(ctx, data, res.lastInsertRowid, null, time);
+                await ctx.reply(`🚀 ክፍያው ተመዝግቧል። ለፋይናንስ ኦፊሰር ተልኳል።`);
+            }
         }
-    }
+    } catch (e) { console.error("Data error:", e); }
 });
 
-// ፎቶ ሲላክ
 bot.on(['photo', 'document'], async (ctx) => {
     const pending = ctx.session?.pendingPayment;
     if (!pending) return;
@@ -200,7 +187,6 @@ bot.on(['photo', 'document'], async (ctx) => {
     await ctx.reply(`📩 ደረሰኝዎ ተልኳል። እናመሰግናለን!`);
 });
 
-// ማጽደቂያ ወይም ውድቅ ማድረጊያ በተኖች ሲጫኑ
 bot.action(/^(p_app|p_rej)_(\d+)_(\d+)$/, async (ctx) => {
     if (!isAdmin(ctx.from.id)) return ctx.answerCbQuery("Authorized Only!");
     
