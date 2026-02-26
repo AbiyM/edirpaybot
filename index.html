@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>እሁድን በፍቅር - Edir Digital Pro</title>
-    <!-- SDK-wwan barbaachisoo -->
+    <!-- SDKs -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,95 +35,96 @@
             color: var(--tg-text);
             font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif;
             margin: 0; padding: 0;
-            overflow-x: hidden;
+            overflow: hidden;
         }
+
+        /* --- LOADING ANIMATION --- */
+        #appLoader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, var(--tg-secondary-bg) 0%, var(--tg-bg) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+        }
+
+        .loader-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader-ring {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--brand-green);
+            border-bottom-color: var(--brand-green);
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .loader-logo {
+            width: 100px; height: 100px; border-radius: 2.5rem;
+            background: white; padding: 5px; shadow: 0 15px 35px rgba(0,0,0,0.1);
+            z-index: 10; animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+        .loader-info { margin-top: 40px; text-align: center; }
+        .progress-track { width: 180px; height: 4px; background: var(--card-border); border-radius: 10px; overflow: hidden; position: relative; }
+        .progress-fill { position: absolute; height: 100%; width: 40%; background: var(--brand-green); animation: loading-progress 2s infinite ease-in-out; }
+        @keyframes loading-progress { 0% { left: -40%; width: 30%; } 50% { width: 60%; } 100% { left: 110%; width: 30%; } }
+
+        /* --- MAIN CONTENT --- */
+        #mainContent { opacity: 0; transform: translateY(20px); transition: all 0.6s ease-out; }
+        #mainContent.visible { opacity: 1; transform: translateY(0); }
 
         .section-card {
             background-color: var(--tg-secondary-bg);
             border: 1px solid var(--card-border);
-            border-radius: 2rem;
-            padding: 1.5rem;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
         }
 
         .input-style {
             background-color: var(--tg-bg);
             border: 2px solid var(--card-border);
-            border-radius: 1.25rem;
-            padding: 0.875rem 1rem;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
             width: 100%;
-            font-size: 14px;
+            font-size: 15px;
             color: var(--tg-text);
             outline: none;
+            transition: all 0.2s;
         }
+        .input-style:focus { border-color: var(--brand-green); }
 
         .method-card {
             border: 2px solid var(--card-border);
-            border-radius: 1.5rem;
-            padding: 1.25rem 1rem;
+            border-radius: 1.25rem;
+            padding: 1rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
             background-color: var(--tg-secondary-bg);
         }
+        .method-card.selected { border-color: var(--brand-green); background-color: var(--brand-light); }
 
-        .method-card.selected {
-            border-color: var(--brand-green);
-            background-color: var(--brand-light);
-            transform: scale(0.98);
-        }
+        .tab-btn { padding: 12px 4px; border-radius: 0.75rem; font-weight: 700; font-size: 11px; opacity: 0.6; transition: 0.3s; }
+        .active-tab { color: var(--brand-green) !important; background: var(--tg-secondary-bg) !important; opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        .method-card.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
-            filter: grayscale(1);
-        }
-
-        .gateway-pill {
-            border: 2px solid var(--card-border);
-            border-radius: 1.25rem;
-            padding: 0.75rem 0.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background-color: var(--tg-bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .gateway-pill.selected {
-            border-color: var(--brand-green);
-            background-color: var(--brand-light);
-            box-shadow: 0 4px 10px rgba(21, 128, 61, 0.1);
-        }
-
-        .gateway-logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        .upload-box {
-            border: 2px dashed var(--card-border);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            background-color: var(--tg-bg);
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn { padding: 10px 4px; border-radius: 1rem; font-weight: 700; font-size: 12px; color: var(--tg-text); opacity: 0.6; }
-        .active-tab { color: var(--brand-green) !important; background: var(--tg-secondary-bg); opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-
-        .animate-section { animation: slideUp 0.4s ease-out forwards; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Notification Center Styles */
         #notificationCenter {
             position: fixed;
             top: 0; right: -100%;
@@ -131,248 +132,166 @@
             background: var(--tg-secondary-bg);
             z-index: 1000;
             box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.4s ease;
             padding: 1.5rem;
         }
         #notificationCenter.open { right: 0; }
-        .notif-card {
-            padding: 1rem;
-            border-radius: 1.25rem;
-            margin-bottom: 0.75rem;
-            border-left: 4px solid #ddd;
-            background: var(--tg-bg);
-        }
-        .notif-success { border-left-color: #22c55e; }
-        .notif-warning { border-left-color: #eab308; }
-        .notif-info { border-left-color: #3b82f6; }
 
-        .badge-dot {
-            position: absolute;
-            top: -2px; right: -2px;
-            width: 8px; height: 8px;
-            background: #ef4444;
-            border-radius: 50%;
-            border: 2px solid var(--tg-bg);
-        }
+        .gateway-pill { border: 1px solid var(--card-border); border-radius: 0.75rem; padding: 0.5rem; text-align: center; cursor: pointer; transition: 0.2s; }
+        .gateway-pill.selected { border-color: var(--brand-green); background: var(--brand-light); }
+        .gateway-logo { width: 30px; height: 30px; border-radius: 6px; margin: 0 auto 4px; }
 
-        /* Stepper & Ledger */
-        .step-circle { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; border: 2px solid var(--card-border); background: var(--tg-secondary-bg); z-index: 10; }
-        .step-active { border-color: var(--brand-green); background: var(--brand-green); color: white; }
-        .step-line { position: absolute; top: 12px; left: 24px; right: 10px; height: 2px; background: var(--card-border); z-index: 1; }
-        
-        .ledger-row { border-bottom: 1px solid var(--card-border); padding: 1rem 0; display: flex; align-items: center; justify-content: space-between; }
-        .ledger-row:last-child { border-bottom: none; }
-        .status-badge { font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 50px; text-transform: uppercase; }
+        .animate-section { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="p-5 pb-10">
+<body class="p-4 pb-10">
 
-    <header class="flex items-center justify-between mb-8">
-        <div class="flex items-center gap-4">
-            <div class="w-14 h-14 bg-green-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <img src="https://ui-avatars.com/api/?name=EP&background=15803d&color=fff&size=128" class="w-full h-full object-cover rounded-2xl">
-            </div>
-            <div>
-                <h1 class="text-lg font-black leading-tight">እሁድን በፍቅር</h1>
-                <p class="text-[10px] font-bold opacity-40 uppercase tracking-widest">@Abiymersha</p>
-            </div>
+    <!-- LOADING SCREEN -->
+    <div id="appLoader">
+        <div class="loader-wrapper">
+            <div class="loader-ring"></div>
+            <img src="logo.PNG" alt="Logo" class="loader-logo" onerror="this.src='https://ui-avatars.com/api/?name=EP&background=15803d&color=fff&size=128'">
         </div>
-        
-        <button onclick="toggleNotif()" class="relative w-10 h-10 bg-black/5 rounded-full flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <div id="notifBadge" class="badge-dot"></div>
-        </button>
-    </header>
-
-    <!-- Notification Side Panel -->
-    <div id="notificationCenter">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-black">ማሳወቂያዎች</h2>
-            <button onclick="toggleNotif()" class="text-xs font-bold opacity-50 uppercase">ዝጋ</button>
-        </div>
-        <div id="notifList" class="overflow-y-auto h-[85vh]">
-            <div class="notif-card notif-success">
-                <h4 class="text-xs font-black uppercase text-green-700 mb-1">እንኳን ደህና መጡ</h4>
-                <p class="text-[11px] font-medium opacity-70">በእሁድን በፍቅር ዲጂታል መተግበሪያ ላይ ሁሉንም የዕድር አገልግሎቶች ማግኘት ይችላሉ።</p>
-            </div>
+        <div class="loader-info">
+            <div class="loader-text">እሁድን በፍቅር...</div>
+            <div class="progress-track"><div class="progress-fill"></div></div>
         </div>
     </div>
 
-    <nav id="mainNav" class="bg-black/5 p-1 rounded-2xl grid grid-cols-4 gap-1 mb-8">
-        <button onclick="showTab('payment')" id="payTab" class="tab-btn active-tab">ክፍያ</button>
-        <button onclick="showTab('status')" id="statTab" class="tab-btn">ሁኔታ</button>
-        <button onclick="showTab('loan')" id="loanTab" class="tab-btn">ብድር</button>
-        <button onclick="showTab('help')" id="helpTab" class="tab-btn">እርዳታ</button>
-    </nav>
-
-    <!-- Payment Section -->
-    <div id="paymentSection" class="animate-section space-y-6">
-        <form id="paymentForm" class="space-y-6">
-            <!-- Payer Toggle -->
-            <div class="section-card space-y-5">
-                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest px-1">ክፍያው ለማን ነው?</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div id="selfPay" class="method-card selected" onclick="togglePayer('self')">
-                        <span class="text-3xl block mb-2">🙋‍♂️</span>
-                        <span class="text-xs font-black uppercase">ለእኔ</span>
-                    </div>
-                    <div id="otherPay" class="method-card" onclick="togglePayer('other')">
-                        <span class="text-3xl block mb-2">👥</span>
-                        <span class="text-xs font-black uppercase">ለሌላ ሰው</span>
-                    </div>
+    <!-- MAIN CONTENT -->
+    <div id="mainContent">
+        <header class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-green-700 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
+                    <img src="logo.PNG" alt="Logo" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=EP&background=15803d&color=fff&size=64'">
                 </div>
-                <div id="otherMemberBox" class="hidden mt-4">
-                    <label class="text-[11px] font-bold uppercase opacity-50 mb-2 block ml-2">የአባሉ ስም/Username</label>
-                    <input type="text" id="targetMember" placeholder="@username ወይም ሙሉ ስም" class="input-style">
+                <div>
+                    <h1 id="userFullName" class="text-lg font-black leading-tight">እሁድን በፍቅር</h1>
+                    <p class="text-[9px] font-bold opacity-40 uppercase">@Abiymersha</p>
                 </div>
             </div>
+            <button onclick="toggleNotif()" class="relative w-10 h-10 bg-black/5 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <div id="notifBadge" class="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+            </button>
+        </header>
 
-            <!-- Payment Type & Date -->
-            <div class="section-card space-y-6">
-                <div class="space-y-2">
-                    <label class="text-[11px] font-bold uppercase opacity-50 ml-2">የክፍያ ዓይነት</label>
-                    <select id="purpose" class="input-style" onchange="handleTypeChange(); autoCalculatePenalty();">
-                        <option value="መደበኛ መዋጮ">መደበኛ መዋጮ</option>
-                        <option value="የብድር መመለሻ">የብድር መመለሻ</option>
-                        <option value="የቅጣት ክፍያ">የቅጣት ክፍያ</option>
-                        <option value="ሌላ ክፍያ">ሌላ ክፍያ</option>
-                    </select>
-                </div>
+        <!-- NAVIGATION -->
+        <nav id="mainNav" class="bg-black/5 p-1 rounded-2xl grid grid-cols-4 gap-1 mb-6 shadow-sm">
+            <button onclick="showTab('payment')" id="payTab" class="tab-btn active-tab">ክፍያ</button>
+            <button onclick="showTab('status')" id="statTab" class="tab-btn">ሁኔታ</button>
+            <button onclick="showTab('loan')" id="loanTab" class="tab-btn">ብድር</button>
+            <button onclick="showTab('help')" id="helpTab" class="tab-btn">እርዳታ</button>
+        </nav>
 
-                <div class="space-y-2">
-                    <label id="periodLabel" class="text-[11px] font-bold uppercase opacity-50 ml-2">የክፍያ ወር/ጊዜ (Month/Day/Year)</label>
-                    <div id="dateGrid" class="grid grid-cols-3 gap-2">
-                        <select id="periodMonth" class="input-style text-xs" onchange="autoCalculatePenalty()"></select>
-                        <select id="periodDay" class="input-style text-xs" onchange="autoCalculatePenalty()"></select>
-                        <select id="periodYear" class="input-style text-xs"></select>
+        <!-- SECTION: PAYMENT (RESTORED) -->
+        <div id="paymentSection" class="animate-section space-y-5">
+            <form id="paymentForm" class="space-y-5">
+                <div class="section-card space-y-4">
+                    <h3 class="text-[10px] font-black uppercase opacity-40 px-1">ክፍያው ለማን ነው?</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div id="selfPay" class="method-card selected" onclick="togglePayer('self')">🙋‍♂️ <span class="text-[11px] font-black uppercase block mt-1">ለእኔ</span></div>
+                        <div id="otherPay" class="method-card" onclick="togglePayer('other')">👥 <span class="text-[11px] font-black uppercase block mt-1">ለሌላ</span></div>
                     </div>
-                    <select id="periodOther" class="input-style hidden" onchange="checkPaymentRestrictions()">
-                        <option value="ወደ ዕድር አካውንት">ወደ ዕድር አካውንት</option>
-                        <option value="ወደ ሌላ አባል አካውንት">ወደ ሌላ አባል አካውንት</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-bold uppercase opacity-50 ml-2">መጠን (ብር)</label>
-                        <input type="number" id="amount" placeholder="0.00" required class="input-style text-green-700 font-black">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-bold uppercase opacity-50 ml-2">ቅጣት (ብር)</label>
-                        <input type="number" id="penalty" value="0" class="input-style text-red-600 font-black">
-                        <p id="penaltyHint" class="text-[8px] text-red-500 font-bold mt-1 ml-2"></p>
+                    <div id="otherMemberBox" class="hidden mt-2">
+                        <input type="text" id="targetMember" placeholder="@username ወይም ሙሉ ስም" class="input-style text-sm">
                     </div>
                 </div>
-            </div>
 
-            <!-- Payment Method -->
-            <div class="section-card space-y-5">
-                <div class="flex items-center justify-between px-1">
-                    <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest">የክፍያ መንገድ</h3>
-                    <p id="restrictionNote" class="text-[9px] text-red-500 font-bold hidden">ለአባል በደረሰኝ ብቻ!</p>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div id="mManual" class="method-card selected py-4" onclick="setMode('manual')">🧾 <span class="text-[11px] font-black uppercase">በደረሰኝ</span></div>
-                    <div id="mEasy" class="method-card py-4" onclick="setMode('easypay')">💳 <span class="text-[11px] font-black uppercase">ዲጂታል</span></div>
+                <div class="section-card space-y-5">
+                    <div>
+                        <label class="text-[10px] font-black uppercase opacity-40 ml-1">የክፍያ ዓይነት</label>
+                        <select id="purpose" class="input-style mt-1 text-sm font-bold" onchange="handleTypeChange(); autoCalculatePenalty();">
+                            <option value="መደበኛ መዋጮ">መደበኛ መዋጮ</option>
+                            <option value="የብድር መመለሻ">የብድር መመለሻ</option>
+                            <option value="የቅጣት ክፍያ">የቅጣት ክፍያ</option>
+                            <option value="ሌላ ክፍያ">ሌላ ክፍያ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label id="periodLabel" class="text-[10px] font-black uppercase opacity-40 ml-1">የክፍያ ጊዜ</label>
+                        <div id="dateGrid" class="grid grid-cols-3 gap-2 mt-1">
+                            <select id="periodMonth" class="input-style text-xs font-bold" onchange="autoCalculatePenalty()"></select>
+                            <select id="periodDay" class="input-style text-xs font-bold" onchange="autoCalculatePenalty()"></select>
+                            <select id="periodYear" class="input-style text-xs font-bold"></select>
+                        </div>
+                        <select id="periodOther" class="input-style mt-1 text-sm hidden">
+                            <option value="ወደ ዕድር አካውንት">ወደ ዕድር አካውንት</option>
+                            <option value="ወደ ሌላ አባል አካውንት">ወደ ሌላ አባል አካውንት</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] font-black uppercase opacity-40 ml-1">መጠን (ብር)</label>
+                            <input type="number" id="amount" placeholder="0.00" required class="input-style mt-1 text-lg font-black text-green-700">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase opacity-40 ml-1">ቅጣት</label>
+                            <input type="number" id="penalty" value="0" class="input-style mt-1 text-lg font-black text-red-600">
+                            <p id="penaltyHint" class="text-[8px] font-bold text-red-500 mt-1 ml-1"></p>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="digitalGateways" class="hidden animate-section mt-4 pt-4 border-t border-black/5 space-y-4">
-                    <div class="grid grid-cols-3 gap-3">
+                <div class="section-card space-y-4">
+                    <div class="flex justify-between items-center px-1">
+                        <h3 class="text-[10px] font-black uppercase opacity-40">የክፍያ መንገድ</h3>
+                        <p id="restrictionNote" class="text-[8px] font-black text-red-500 hidden">ለአባል በደረሰኝ ብቻ!</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div id="mManual" class="method-card selected py-4" onclick="setMode('manual')">🧾 በደረሰኝ</div>
+                        <div id="mEasy" class="method-card py-4" onclick="setMode('easypay')">💳 ዲጂታል</div>
+                    </div>
+
+                    <div id="digitalGateways" class="hidden grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-black/5">
                         <div class="gateway-pill selected" onclick="selectGateway('chapa', this)">
                             <img src="https://ui-avatars.com/api/?name=C&background=15803d&color=fff" class="gateway-logo">
-                            <span class="text-[9px] font-black uppercase">Chapa</span>
+                            <span class="text-[9px] font-black">Chapa</span>
                         </div>
                         <div class="gateway-pill" onclick="selectGateway('telebirr', this)">
                             <img src="https://ui-avatars.com/api/?name=T&background=0052cc&color=fff" class="gateway-logo">
-                            <span class="text-[9px] font-black uppercase">Telebirr</span>
+                            <span class="text-[9px] font-black">Telebirr</span>
                         </div>
                         <div class="gateway-pill" onclick="selectGateway('cbe', this)">
                             <img src="https://ui-avatars.com/api/?name=B&background=6a1b9a&color=fff" class="gateway-logo">
-                            <span class="text-[9px] font-black uppercase">CBE Birr</span>
+                            <span class="text-[9px] font-black">CBE Birr</span>
                         </div>
                     </div>
-                </div>
 
-                <div id="receiptUploadArea" class="animate-section mt-4 pt-4 border-t border-black/5 space-y-3">
-                    <div class="upload-box" onclick="document.getElementById('receiptFile').click()">
-                        <div id="uploadPlaceholder">📸 <span class="text-[10px] font-black uppercase opacity-60">ደረሰኝ ለመጫን እዚህ ይንኩ</span></div>
-                        <img id="previewImage" class="hidden mx-auto max-h-48 rounded-xl" alt="Preview">
+                    <div id="receiptUploadArea" class="mt-2 pt-2 border-t border-black/5 text-center">
+                        <div class="bg-black/5 border-dashed border-2 border-slate-300 p-6 rounded-2xl" onclick="document.getElementById('receiptFile').click()">
+                            <div id="uploadPlaceholder">📸 <span class="text-[10px] font-black uppercase opacity-60">ደረሰኝ ይጫኑ</span></div>
+                            <img id="previewImage" class="hidden mx-auto max-h-40 rounded-lg shadow-md mt-2">
+                        </div>
+                        <input type="file" id="receiptFile" class="hidden" accept="image/*" onchange="previewReceipt(this)">
                     </div>
-                    <input type="file" id="receiptFile" class="hidden" accept="image/*" onchange="previewReceipt(this)">
                 </div>
-            </div>
 
-            <button type="submit" class="w-full py-5 bg-green-700 text-white rounded-[1.5rem] font-black text-lg shadow-xl active:scale-[0.97] transition-all">መረጃውን ላክ</button>
-        </form>
-    </div>
+                <button type="submit" class="w-full py-4 bg-green-700 text-white rounded-2xl font-black shadow-lg hover:bg-green-800 active:scale-95 transition-all">መረጃውን ላክ</button>
+            </form>
+        </div>
 
-    <!-- Status Section (Bookkeeping) -->
-    <div id="statusSection" class="hidden animate-section space-y-6">
-        <div class="section-card bg-slate-900 text-white border-none p-6 shadow-2xl relative overflow-hidden">
-            <div class="absolute -right-10 -top-10 w-40 h-40 bg-green-500/20 rounded-full blur-3xl"></div>
-            <p class="text-[10px] font-bold uppercase opacity-50 tracking-widest mb-1 text-green-400">አጠቃላይ ቁጠባ</p>
-            <div class="flex items-baseline gap-2">
-                <span class="text-5xl font-black">2,450.00</span>
-                <span class="text-sm font-bold opacity-60">ብር</span>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-white/10">
-                <div><p class="text-[9px] uppercase opacity-40 mb-1">ያልተከፈለ ቅጣት</p><p class="text-lg font-black text-red-400">0.00</p></div>
-                <div class="text-right"><p class="text-[9px] uppercase opacity-40 mb-1">ደረጃ</p><p class="text-lg font-black text-green-400">ፕሮ (Pro)</p></div>
+        <div id="statusSection" class="hidden animate-section space-y-5">
+            <div class="section-card bg-slate-900 text-white p-6 relative overflow-hidden">
+                <p class="text-[10px] font-bold uppercase opacity-50 text-green-400">ጠቅላላ ቁጠባ</p>
+                <h2 class="text-4xl font-black">2,450.00 ብር</h2>
             </div>
         </div>
 
-        <div class="section-card space-y-4">
-            <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest">የክፍያ መዝገብ (Passbook)</h3>
-            <div class="space-y-1">
-                <div class="ledger-row">
-                    <div><p class="text-sm font-black">መደበኛ መዋጮ (ጥር)</p><p class="text-[10px] opacity-40">ጥር 12, 2017</p></div>
-                    <div class="text-right"><p class="text-sm font-black">+100.00</p><span class="status-badge bg-green-100 text-green-700">የጸደቀ</span></div>
+        <!-- Notification Drawer -->
+        <div id="notificationCenter">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-black">ማሳወቂያዎች</h2>
+                <button onclick="toggleNotif()" class="text-xs font-bold opacity-50 uppercase">ዝጋ</button>
+            </div>
+            <div id="notifList" class="space-y-3">
+                <div class="p-4 rounded-xl bg-green-50 border-l-4 border-green-500">
+                    <p class="text-[11px] font-bold text-green-800 uppercase mb-1">እንኳን ደህና መጡ</p>
+                    <p class="text-[10px] opacity-70">መተግበሪያውን መጠቀም ስለጀመሩ እናመሰግናለን።</p>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loan Section -->
-    <div id="loanSection" class="hidden animate-section space-y-6">
-        <div class="section-card p-6 bg-slate-50 border-none">
-            <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest mb-6 text-center">የብድር ሂደት (Progress)</h3>
-            <div class="relative flex justify-between items-start">
-                <div class="step-line"></div>
-                <div class="flex flex-col items-center gap-2 relative z-10"><div class="step-circle step-active">1</div><span class="text-[8px] font-black uppercase">ጥያቄ</span></div>
-                <div class="flex flex-col items-center gap-2 relative z-10"><div class="step-circle">2</div><span class="text-[8px] font-black uppercase opacity-40">ምርመራ</span></div>
-                <div class="flex flex-col items-center gap-2 relative z-10"><div class="step-circle">3</div><span class="text-[8px] font-black uppercase opacity-40">ውሳኔ</span></div>
-                <div class="flex flex-col items-center gap-2 relative z-10"><div class="step-circle">4</div><span class="text-[8px] font-black uppercase opacity-40">ርክክብ</span></div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4">
-            <div class="section-card p-5 border-l-4 border-l-slate-400 flex justify-between items-center">
-                <div><h4 class="text-[10px] font-black opacity-50 uppercase">መሠረታዊ አባል</h4><p class="text-xl font-black">5,000 ብር</p></div>
-                <div class="text-[9px] font-black bg-slate-100 px-3 py-1 rounded-full">ደረጃ 1</div>
-            </div>
-            <div class="section-card p-5 border-l-4 border-l-green-600 flex justify-between items-center bg-green-50/30">
-                <div><h4 class="text-[10px] font-black text-green-700 uppercase">ፕሮ አባል (Pro)</h4><p class="text-xl font-black text-green-800">15,000 ብር</p></div>
-                <div class="text-[9px] font-black bg-green-100 text-green-700 px-3 py-1 rounded-full">ደረጃ 2</div>
-            </div>
-        </div>
-        <button disabled class="w-full py-4 bg-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase cursor-not-allowed">የብድር አገልግሎት በቅርቡ ይከፈታል</button>
-    </div>
-
-    <!-- Help Section -->
-    <div id="helpSection" class="hidden animate-section p-4">
-        <div class="section-card space-y-6">
-            <h2 class="text-xl font-black">እርዳታ እና ደጋፍ</h2>
-            <div class="space-y-4">
-                <div class="p-4 bg-black/5 rounded-2xl">
-                    <p class="text-xs font-black text-green-700 uppercase mb-1">መደበኛ መዋጮ</p>
-                    <p class="text-sm font-bold leading-relaxed">ከቀን 1-5 መደበኛ ክፍያ። ከቀን 6-10 ቅጣት 20 ብር። ከቀን 11 በኋላ 50 ብር ቅጣት ይታሰባል።</p>
-                </div>
-            </div>
-            <div class="pt-4 border-t border-black/5 text-center">
-                <p class="text-[10px] font-bold opacity-40 uppercase mb-3">አስተዳዳሪውን ያነጋግሩ</p>
-                <a href="https://t.me/Abiymersha" class="block w-full py-4 bg-green-700 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95">@Abiymersha</a>
             </div>
         </div>
     </div>
@@ -387,12 +306,24 @@
         let digitalGateway = 'chapa';
 
         const months = ["መስከረም", "ጥቅምት", "ህዳር", "ታህሳስ", "ጥር", "የካቲት", "መጋቢት", "ሚያዝያ", "ግንቦት", "ሰኔ", "ሐምሌ", "ነሐሴ"];
-        const currentYear = 2017; 
+        const currentYear = 2017;
+
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('appLoader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('appLoader').style.display = 'none';
+                    document.getElementById('mainContent').classList.add('visible');
+                    document.body.style.overflow = 'auto';
+                }, 800);
+            }, 2000);
+        };
 
         function populateDateSelectors() {
             const mSelect = document.getElementById('periodMonth');
             const dSelect = document.getElementById('periodDay');
             const ySelect = document.getElementById('periodYear');
+            if(!mSelect || !dSelect || !ySelect) return;
             mSelect.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
             let days = "";
             for(let i=1; i<=30; i++) days += `<option value="${i}">${i}</option>`;
@@ -400,68 +331,19 @@
             ySelect.innerHTML = `<option value="${currentYear-1}">${currentYear-1}</option><option value="${currentYear}" selected>${currentYear}</option><option value="${currentYear+1}">${currentYear+1}</option>`;
         }
 
-        function autoCalculatePenalty() {
-            const purpose = document.getElementById('purpose').value;
-            const day = parseInt(document.getElementById('periodDay').value);
-            const penaltyInput = document.getElementById('penalty');
-            const hint = document.getElementById('penaltyHint');
-            let p = 0;
-            let note = "";
-
-            if (purpose === "መደበኛ መዋጮ") {
-                if (day >= 6 && day <= 10) { p = 20; note = "የቀን 6-10 ቅጣት (20 ብር)"; }
-                else if (day >= 11) { p = 50; note = "ከቀን 11 በኋላ ቅጣት (50 ብር)"; }
-                else { note = "መደበኛ ጊዜ (ቅጣት የለም)"; }
-            }
-            penaltyInput.value = p;
-            hint.innerText = note;
-        }
-
-        function checkPaymentRestrictions() {
-            const purpose = document.getElementById('purpose').value;
-            const periodOther = document.getElementById('periodOther').value;
-            const mEasy = document.getElementById('mEasy');
-            const note = document.getElementById('restrictionNote');
-            if (purpose === "ሌላ ክፍያ" && periodOther === "ወደ ሌላ አባል አካውንት") {
-                setMode('manual');
-                mEasy.classList.add('disabled');
-                note.classList.remove('hidden');
-            } else {
-                mEasy.classList.remove('disabled');
-                note.classList.add('hidden');
-            }
-        }
-
-        function handleTypeChange() {
-            const purpose = document.getElementById('purpose').value;
-            const label = document.getElementById('periodLabel');
-            const dateGrid = document.getElementById('dateGrid');
-            const periodOther = document.getElementById('periodOther');
-            if (purpose === "ሌላ ክፍያ") {
-                label.innerText = "የክፍያ ዓላማ (Purpose)";
-                dateGrid.classList.add('hidden');
-                periodOther.classList.remove('hidden');
-            } else {
-                label.innerText = "የክፍያ ወር/ጊዜ (Month/Day/Year)";
-                dateGrid.classList.remove('hidden');
-                periodOther.classList.add('hidden');
-            }
-            checkPaymentRestrictions();
-        }
-
         window.showTab = (tabName) => {
             ['payment', 'status', 'loan', 'help'].forEach(s => {
-                document.getElementById(s + 'Section')?.classList.toggle('hidden', s !== tabName);
-                document.getElementById(s + 'Tab')?.classList.toggle('active-tab', s === tabName);
+                const sec = document.getElementById(s + 'Section');
+                const tab = document.getElementById(s + 'Tab');
+                if(sec) sec.classList.toggle('hidden', s !== tabName);
+                if(tab) tab.classList.toggle('active-tab', s === tabName);
             });
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            tg.HapticFeedback.impactOccurred('light');
         };
 
         window.toggleNotif = () => {
             document.getElementById('notificationCenter').classList.toggle('open');
             document.getElementById('notifBadge').classList.add('hidden');
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         };
 
         window.togglePayer = (mode) => {
@@ -472,9 +354,10 @@
         };
 
         window.setMode = (m) => {
-            const purpose = document.getElementById('purpose').value;
-            const periodOther = document.getElementById('periodOther').value;
-            if (m === 'easypay' && purpose === "ሌላ ክፍያ" && periodOther === "ወደ ሌላ አባል አካውንት") return;
+            if (m === 'easypay' && payerMode === 'other') {
+                tg.showAlert("ለሌላ አባል በደረሰኝ ብቻ ነው መክፈል የሚቻለው!");
+                return;
+            }
             payMode = m;
             document.getElementById('mManual').classList.toggle('selected', m === 'manual');
             document.getElementById('mEasy').classList.toggle('selected', m === 'easypay');
@@ -494,29 +377,57 @@
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    preview.src = e.target.result; preview.style.display = 'block'; placeholder.style.display = 'none';
+                    if(preview) { preview.src = e.target.result; preview.classList.remove('hidden'); }
+                    if(placeholder) placeholder.classList.add('hidden');
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         };
 
-        document.getElementById('paymentForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const purpose = document.getElementById('purpose').value;
-            let finalPeriod = "";
+        function handleTypeChange() {
+            const purpose = document.getElementById('purpose')?.value;
+            const dateGrid = document.getElementById('dateGrid');
+            const periodOther = document.getElementById('periodOther');
+            const label = document.getElementById('periodLabel');
+            if(!dateGrid || !periodOther) return;
             if (purpose === "ሌላ ክፍያ") {
-                finalPeriod = document.getElementById('periodOther').value;
+                dateGrid.classList.add('hidden');
+                periodOther.classList.remove('hidden');
+                if(label) label.innerText = "የክፍያ ዓላማ (Purpose)";
             } else {
-                finalPeriod = `${document.getElementById('periodMonth').value} ${document.getElementById('periodDay').value}, ${document.getElementById('periodYear').value}`;
+                dateGrid.classList.remove('hidden');
+                periodOther.classList.add('hidden');
+                if(label) label.innerText = "የክፍያ ጊዜ";
             }
+        }
+
+        function autoCalculatePenalty() {
+            const purpose = document.getElementById('purpose')?.value;
+            const day = parseInt(document.getElementById('periodDay')?.value || "1");
+            let p = 0; let note = "";
+            if (purpose === "መደበኛ መዋጮ") {
+                if (day >= 6 && day <= 10) { p = 20; note = "የቀን 6-10 ቅጣት (20 ብር)"; }
+                else if (day >= 11) { p = 50; note = "ከቀን 11 በኋላ ቅጣት (50 ብር)"; }
+            }
+            if(document.getElementById('penalty')) document.getElementById('penalty').value = p;
+            if(document.getElementById('penaltyHint')) document.getElementById('penaltyHint').innerText = note;
+        }
+
+        document.getElementById('paymentForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const purpose = document.getElementById('purpose')?.value;
+            let finalPeriod = (purpose === "ሌላ ክፍያ") ? 
+                document.getElementById('periodOther')?.value : 
+                `${document.getElementById('periodMonth')?.value} ${document.getElementById('periodDay')?.value}, ${document.getElementById('periodYear')?.value}`;
+
             const payload = {
                 type: 'payment_report',
                 gateway: (payMode === 'manual') ? 'manual' : digitalGateway,
                 purpose: purpose,
                 period: finalPeriod,
-                amount: document.getElementById('amount').value,
-                penalty: document.getElementById('penalty').value,
-                payFor: payerMode === 'self' ? 'self' : document.getElementById('targetMember').value
+                amount: document.getElementById('amount')?.value,
+                penalty: document.getElementById('penalty')?.value,
+                payFor: payerMode === 'self' ? 'self' : document.getElementById('targetMember')?.value
             };
             tg.sendData(JSON.stringify(payload));
             tg.close();
@@ -524,7 +435,9 @@
 
         populateDateSelectors();
         handleTypeChange();
-        if(tg.initDataUnsafe?.user) document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name;
+        if(tg.initDataUnsafe?.user) {
+            document.getElementById('userFullName').innerText = `ሰላም ${tg.initDataUnsafe.user.first_name}!`;
+        }
     </script>
 </body>
 </html>
