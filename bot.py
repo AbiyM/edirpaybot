@@ -83,16 +83,27 @@ function updateMemberTier(userId) {
 // --- 5. የፋይናንስ ኦፊሰር ማሳወቂያ ---
 async function notifyFinance(ctx, data, dbId, fileId, time) {
     const payerName = data.payFor === 'self' ? "ለራሱ (Self)" : `ለአባል: ${data.payFor}`;
-    const gatewayName = data.gateway === 'manual' ? "በደረሰኝ (Receipt)" : data.gateway.charAt(0).toUpperCase() + data.gateway.slice(1);
     
+    // የክፍያ መንገዱን ስም ለንባብ እንዲመች ማስተካከል
+    const gatewayMap = {
+        'manual': 'በደረሰኝ (Receipt)',
+        'chapa': 'Chapa',
+        'telebirr': 'Telebirr',
+        'cbe': 'CBE Birr'
+    };
+    const gatewayName = gatewayMap[data.gateway] || data.gateway.toUpperCase();
+    
+    // የጊዜ መግለጫ (Month/Date/Year ወይም ልዩ ዓላማ)
+    const periodLabel = data.purpose === 'ሌላ ክፍያ' ? 'ዓላማ (Target)' : 'ጊዜ (Period)';
+
     const caption = `🚨 **አዲስ የክፍያ ሪፖርት**\n\n` +
-                `👤 የከፋይ: @${ctx.from.username}\n` +
+                `👤 ከፋይ: @${ctx.from.username}\n` +
                 `🎯 ለማን: **${payerName}**\n` +
-                `📅 ጊዜ: ${data.period}\n` +
+                `📅 ${periodLabel}: **${data.period}**\n` +
                 `💰 መጠን: ${data.amount} ብር\n` +
                 `⚠️ ቅጣት: ${data.penalty || 0} ብር\n` +
                 `💳 መንገድ: **${gatewayName}**\n` +
-                `📝 ዓላማ: ${data.purpose}`;
+                `📝 ዓይነት: ${data.purpose}`;
     
     const kb = Markup.inlineKeyboard([
         [Markup.button.callback('✅ አጽድቅ', `p_app_${dbId}_${ctx.from.id}`)],
@@ -171,7 +182,9 @@ bot.on('web_app_data', async (ctx) => {
                 const res = db.prepare(`INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
                     .run(ctx.from.id, ctx.from.username || 'N/A', data.gateway, data.purpose, data.period, data.amount, data.penalty, data.payFor, time);
                 notifyFinance(ctx, data, res.lastInsertRowid, null, time);
-                await ctx.reply(`🚀 የ${data.gateway} ክፍያዎ ተመዝግቧል። ለፋይናንስ ኦፊሰር እንዲረጋገጥ ተልኳል።`);
+                
+                const gwName = data.gateway.charAt(0).toUpperCase() + data.gateway.slice(1);
+                await ctx.reply(`🚀 የ${gwName} ክፍያዎ ተመዝግቧል። ለፋይናንስ ኦፊሰር እንዲረጋገጥ ተልኳል።`);
             }
         }
     } catch (e) { console.error("Data error:", e); }
