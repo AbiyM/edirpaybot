@@ -80,6 +80,34 @@
             filter: grayscale(1);
         }
 
+        .gateway-pill {
+            border: 2px solid var(--card-border);
+            border-radius: 1.25rem;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: var(--tg-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gateway-pill.selected {
+            border-color: var(--brand-green);
+            background-color: var(--brand-light);
+            box-shadow: 0 4px 10px rgba(21, 128, 61, 0.1);
+        }
+
+        .gateway-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            object-fit: cover;
+            background-color: white;
+        }
+
         .upload-box {
             border: 2px dashed var(--card-border);
             border-radius: 1.5rem;
@@ -124,6 +152,7 @@
         <button onclick="showTab('help')" id="helpTab" class="tab-btn">እርዳታ</button>
     </nav>
 
+    <!-- Payment Section -->
     <div id="paymentSection" class="animate-section">
         <form id="paymentForm" class="space-y-6">
             <!-- Payer Selection -->
@@ -161,20 +190,12 @@
                 <div class="space-y-2">
                     <label id="periodLabel" class="text-[11px] font-bold uppercase opacity-50 ml-2">የክፍያ ወር/ጊዜ (Month/Date/Year)</label>
                     
-                    <!-- Container for Structured Date -->
                     <div id="dateGrid" class="grid grid-cols-3 gap-2">
-                        <select id="periodMonth" class="input-style text-xs" onchange="checkPaymentRestrictions()">
-                            <!-- Months populated by JS -->
-                        </select>
-                        <select id="periodDay" class="input-style text-xs">
-                            <!-- Days 1-30 populated by JS -->
-                        </select>
-                        <select id="periodYear" class="input-style text-xs">
-                            <!-- Years populated by JS -->
-                        </select>
+                        <select id="periodMonth" class="input-style text-xs" onchange="checkPaymentRestrictions()"></select>
+                        <select id="periodDay" class="input-style text-xs"></select>
+                        <select id="periodYear" class="input-style text-xs"></select>
                     </div>
 
-                    <!-- Single select for "Other Payment" fallback -->
                     <select id="periodOther" class="input-style hidden" onchange="checkPaymentRestrictions()">
                         <option value="ወደ ዕድር አካውንት">ወደ ዕድር አካውንት (To Edir Account)</option>
                         <option value="ወደ ሌላ አባል አካውንት">ወደ ሌላ አባል አካውንት (To Member Account)</option>
@@ -207,6 +228,25 @@
                     <div id="mEasy" class="method-card py-4" onclick="setMode('easypay')">
                         <span class="text-xl block mb-1">💳</span>
                         <span class="text-[11px] font-black uppercase">ዲጂታል</span>
+                    </div>
+                </div>
+
+                <!-- Digital Payment Options (MISSING PART ADDED BACK) -->
+                <div id="digitalGateways" class="hidden animate-section mt-4 pt-4 border-t border-black/5 space-y-4">
+                    <h4 class="text-[10px] font-bold uppercase opacity-40 text-center tracking-widest">መተግበሪያ ይምረጡ</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="gateway-pill selected" onclick="selectGateway('chapa', this)">
+                            <img src="https://ui-avatars.com/api/?name=C&background=15803d&color=fff" class="gateway-logo" alt="Chapa">
+                            <span class="text-[9px] font-black uppercase">Chapa</span>
+                        </div>
+                        <div class="gateway-pill" onclick="selectGateway('telebirr', this)">
+                            <img src="https://ui-avatars.com/api/?name=T&background=0052cc&color=fff" class="gateway-logo" alt="Telebirr">
+                            <span class="text-[9px] font-black uppercase">Telebirr</span>
+                        </div>
+                        <div class="gateway-pill" onclick="selectGateway('cbe', this)">
+                            <img src="https://ui-avatars.com/api/?name=B&background=6a1b9a&color=fff" class="gateway-logo" alt="CBE Birr">
+                            <span class="text-[9px] font-black uppercase">CBE Birr</span>
+                        </div>
                     </div>
                 </div>
 
@@ -245,29 +285,20 @@
         
         let payerMode = 'self';
         let payMode = 'manual';
+        let digitalGateway = 'chapa';
 
         const months = ["መስከረም", "ጥቅምት", "ህዳር", "ታህሳስ", "ጥር", "የካቲት", "መጋቢት", "ሚያዝያ", "ግንቦት", "ሰኔ", "ሐምሌ", "ነሐሴ"];
-        const currentYear = 2017; // Current EC Year (or use dynamic)
+        const currentYear = 2017; 
 
         function populateDateSelectors() {
             const mSelect = document.getElementById('periodMonth');
             const dSelect = document.getElementById('periodDay');
             const ySelect = document.getElementById('periodYear');
-
-            // Months
             mSelect.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-            
-            // Days (1-30)
             let days = "";
             for(let i=1; i<=30; i++) days += `<option value="${i}">${i}</option>`;
             dSelect.innerHTML = days;
-
-            // Years (Last year, current, next)
-            ySelect.innerHTML = `
-                <option value="${currentYear-1}">${currentYear-1}</option>
-                <option value="${currentYear}" selected>${currentYear}</option>
-                <option value="${currentYear+1}">${currentYear+1}</option>
-            `;
+            ySelect.innerHTML = `<option value="${currentYear-1}">${currentYear-1}</option><option value="${currentYear}" selected>${currentYear}</option><option value="${currentYear+1}">${currentYear+1}</option>`;
         }
 
         function checkPaymentRestrictions() {
@@ -275,7 +306,6 @@
             const periodOther = document.getElementById('periodOther').value;
             const mEasy = document.getElementById('mEasy');
             const note = document.getElementById('restrictionNote');
-
             if (purpose === "ሌላ ክፍያ" && periodOther === "ወደ ሌላ አባል አካውንት") {
                 setMode('manual');
                 mEasy.classList.add('disabled');
@@ -291,7 +321,6 @@
             const label = document.getElementById('periodLabel');
             const dateGrid = document.getElementById('dateGrid');
             const periodOther = document.getElementById('periodOther');
-
             if (purpose === "ሌላ ክፍያ") {
                 label.innerText = "የክፍያ ዓላማ (Purpose)";
                 dateGrid.classList.add('hidden');
@@ -323,11 +352,17 @@
             const purpose = document.getElementById('purpose').value;
             const periodOther = document.getElementById('periodOther').value;
             if (m === 'easypay' && purpose === "ሌላ ክፍያ" && periodOther === "ወደ ሌላ አባል አካውንት") return;
-
             payMode = m;
             document.getElementById('mManual').classList.toggle('selected', m === 'manual');
             document.getElementById('mEasy').classList.toggle('selected', m === 'easypay');
             document.getElementById('receiptUploadArea').classList.toggle('hidden', m !== 'manual');
+            document.getElementById('digitalGateways').classList.toggle('hidden', m !== 'easypay');
+        };
+
+        window.selectGateway = (gw, el) => {
+            digitalGateway = gw;
+            document.querySelectorAll('.gateway-pill').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
         };
 
         window.previewReceipt = (input) => {
@@ -336,9 +371,7 @@
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    placeholder.style.display = 'none';
+                    preview.src = e.target.result; preview.style.display = 'block'; placeholder.style.display = 'none';
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -348,7 +381,6 @@
             e.preventDefault();
             const purpose = document.getElementById('purpose').value;
             let finalPeriod = "";
-
             if (purpose === "ሌላ ክፍያ") {
                 finalPeriod = document.getElementById('periodOther').value;
             } else {
@@ -357,10 +389,9 @@
                 const y = document.getElementById('periodYear').value;
                 finalPeriod = `${m} ${d}, ${y}`;
             }
-
             const payload = {
                 type: 'payment_report',
-                gateway: payMode,
+                gateway: (payMode === 'manual') ? 'manual' : digitalGateway,
                 purpose: purpose,
                 period: finalPeriod,
                 amount: document.getElementById('amount').value,
@@ -371,7 +402,6 @@
             tg.close();
         });
 
-        // Init
         populateDateSelectors();
         handleTypeChange();
         if(tg.initDataUnsafe?.user) document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name;
