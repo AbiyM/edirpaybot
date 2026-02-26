@@ -80,51 +80,37 @@
             filter: grayscale(1);
         }
 
-        .gateway-pill {
-            border: 2px solid var(--card-border);
-            border-radius: 1.25rem;
-            padding: 0.75rem 0.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background-color: var(--tg-bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .gateway-pill.selected {
-            border-color: var(--brand-green);
-            background-color: var(--brand-light);
-            box-shadow: 0 4px 10px rgba(21, 128, 61, 0.1);
-        }
-
-        .gateway-logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            object-fit: cover;
-            background-color: white;
-        }
-
-        .upload-box {
-            border: 2px dashed var(--card-border);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            background-color: var(--tg-bg);
-            transition: all 0.3s ease;
-        }
-        .upload-box:hover { border-color: var(--brand-green); background-color: var(--brand-light); }
-        .preview-img { width: 100%; max-height: 200px; object-fit: contain; border-radius: 1rem; margin-top: 1rem; display: none; }
-
         .tab-btn { padding: 10px 4px; border-radius: 1rem; font-weight: 700; font-size: 12px; color: var(--tg-text); opacity: 0.6; }
         .active-tab { color: var(--brand-green) !important; background: var(--tg-secondary-bg); opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
         .animate-section { animation: slideUp 0.4s ease-out forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Stepper UI */
+        .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 900;
+            border: 2px solid var(--card-border);
+            background: var(--tg-secondary-bg);
+            z-index: 10;
+        }
+        .step-active { border-color: var(--brand-green); background: var(--brand-green); color: white; }
+        .step-line {
+            position: absolute;
+            top: 12px;
+            left: 24px;
+            right: -10px;
+            height: 2px;
+            background: var(--card-border);
+            z-index: 1;
+        }
+        .step-line-active { background: var(--brand-green); }
 
         /* Status Section Styles */
         .ledger-row {
@@ -142,9 +128,11 @@
             border-radius: 50px;
             text-transform: uppercase;
         }
-        .status-approved { background: #dcfce7; color: #15803d; }
-        .status-pending { background: #fef9c3; color: #a16207; }
-        .status-rejected { background: #fee2e2; color: #b91c1c; }
+
+        .tier-card {
+            background: linear-gradient(135deg, var(--tg-secondary-bg) 0%, var(--brand-light) 100%);
+            border: 1px solid var(--card-border);
+        }
     </style>
 </head>
 <body class="p-5 pb-10">
@@ -256,28 +244,28 @@
                     <h4 class="text-[10px] font-bold uppercase opacity-40 text-center tracking-widest">መተግበሪያ ይምረጡ</h4>
                     <div class="grid grid-cols-3 gap-3">
                         <div class="gateway-pill selected" onclick="selectGateway('chapa', this)">
-                            <img src="https://ui-avatars.com/api/?name=C&background=15803d&color=fff" class="gateway-logo" alt="Chapa">
-                            <span class="text-[9px] font-black uppercase">Chapa</span>
+                            <img src="https://ui-avatars.com/api/?name=C&background=15803d&color=fff" class="gateway-logo" style="width: 32px; height: 32px; border-radius: 8px;">
+                            <span class="text-[9px] font-black uppercase mt-1">Chapa</span>
                         </div>
                         <div class="gateway-pill" onclick="selectGateway('telebirr', this)">
-                            <img src="https://ui-avatars.com/api/?name=T&background=0052cc&color=fff" class="gateway-logo" alt="Telebirr">
-                            <span class="text-[9px] font-black uppercase">Telebirr</span>
+                            <img src="https://ui-avatars.com/api/?name=T&background=0052cc&color=fff" class="gateway-logo" style="width: 32px; height: 32px; border-radius: 8px;">
+                            <span class="text-[9px] font-black uppercase mt-1">Telebirr</span>
                         </div>
                         <div class="gateway-pill" onclick="selectGateway('cbe', this)">
-                            <img src="https://ui-avatars.com/api/?name=B&background=6a1b9a&color=fff" class="gateway-logo" alt="CBE Birr">
-                            <span class="text-[9px] font-black uppercase">CBE Birr</span>
+                            <img src="https://ui-avatars.com/api/?name=B&background=6a1b9a&color=fff" class="gateway-logo" style="width: 32px; height: 32px; border-radius: 8px;">
+                            <span class="text-[9px] font-black uppercase mt-1">CBE Birr</span>
                         </div>
                     </div>
                 </div>
 
                 <div id="receiptUploadArea" class="animate-section mt-4 pt-4 border-t border-black/5 space-y-3">
                     <h4 class="text-[10px] font-bold uppercase opacity-40 text-center tracking-widest">የባንክ ደረሰኝ ይጫኑ</h4>
-                    <div class="upload-box" onclick="document.getElementById('receiptFile').click()">
+                    <div class="upload-box bg-black/5 border-dashed border-2 border-slate-300 p-8 rounded-3xl text-center" onclick="document.getElementById('receiptFile').click()">
                         <div id="uploadPlaceholder">
                             <span class="text-3xl block mb-2">📸</span>
                             <span class="text-[10px] font-black uppercase opacity-60">ደረሰኝ ለመጫን እዚህ ይንኩ</span>
                         </div>
-                        <img id="previewImage" class="preview-img mx-auto" alt="Receipt Preview">
+                        <img id="previewImage" class="hidden mx-auto max-h-48 rounded-xl" alt="Receipt Preview">
                     </div>
                     <input type="file" id="receiptFile" class="hidden" accept="image/*" onchange="previewReceipt(this)">
                 </div>
@@ -289,119 +277,141 @@
         </form>
     </div>
 
-    <!-- Status Section (Bookkeeping Method) -->
+    <!-- Status Section (Bookkeeping Style) -->
     <div id="statusSection" class="hidden animate-section space-y-6">
-        <!-- Summary Card -->
         <div class="section-card bg-slate-900 text-white border-none p-6 shadow-2xl relative overflow-hidden">
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-green-500/20 rounded-full blur-3xl"></div>
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <p class="text-[10px] font-bold uppercase opacity-50 tracking-widest mb-1">አጠቃላይ ቁጠባ (Total Savings)</p>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-4xl font-black">1,500</span>
-                        <span class="text-sm font-bold opacity-60">ብር</span>
-                    </div>
-                </div>
-                <div class="bg-green-600/20 px-3 py-1 rounded-full border border-green-500/30">
-                    <span class="text-[10px] font-black text-green-400 uppercase">ፕሮ አባል (Pro)</span>
-                </div>
+            <p class="text-[10px] font-bold uppercase opacity-50 tracking-widest mb-1 text-green-400">ጠቅላላ የቁጠባ ሂሳብ</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-5xl font-black">2,450.00</span>
+                <span class="text-sm font-bold opacity-60">ብር</span>
             </div>
-            
             <div class="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-white/10">
                 <div>
-                    <p class="text-[9px] uppercase opacity-40 mb-1">ጠቅላላ ቅጣት</p>
-                    <p class="text-lg font-black text-red-400">20.00 <span class="text-[10px]">ብር</span></p>
+                    <p class="text-[9px] uppercase opacity-40 mb-1">ያልተከፈለ ቅጣት</p>
+                    <p class="text-lg font-black text-red-400">0.00</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-[9px] uppercase opacity-40 mb-1">የጸደቁ ክፍያዎች</p>
-                    <p class="text-lg font-black">15 <span class="text-[10px]">ጊዜ</span></p>
+                    <p class="text-[9px] uppercase opacity-40 mb-1">የአባልነት ደረጃ</p>
+                    <p class="text-lg font-black text-green-400">ፕሮ (Pro)</p>
                 </div>
             </div>
         </div>
 
-        <!-- Ledger / Transaction History -->
         <div class="section-card space-y-4">
             <div class="flex items-center justify-between mb-2">
-                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest px-1">የክፍያ መዝገብ (Passbook)</h3>
-                <span class="text-[10px] font-bold opacity-30">የመጨረሻ 5 እንቅስቃሴዎች</span>
+                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest">የሂሳብ መዝገብ (Ledger)</h3>
+                <span class="text-[9px] font-bold opacity-30">የቅርብ ጊዜ እንቅስቃሴዎች</span>
             </div>
-            
-            <div class="space-y-1">
-                <!-- Ledger Row 1 -->
+            <div class="space-y-1" id="ledgerContainer">
                 <div class="ledger-row">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-700 text-lg">💰</div>
-                        <div>
-                            <p class="text-sm font-black">መደበኛ መዋጮ (ጥር)</p>
-                            <p class="text-[10px] opacity-40">ጥር 12, 2017</p>
-                        </div>
+                    <div>
+                        <p class="text-sm font-black">መደበኛ መዋጮ (ጥር)</p>
+                        <p class="text-[10px] opacity-40">ጥር 12, 2017 | በዲጂታል</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-black">+100.00</p>
-                        <span class="status-badge status-approved">የጸደቀ</span>
+                        <p class="text-sm font-black text-green-600">+100.00</p>
+                        <span class="status-badge bg-green-100 text-green-700">የጸደቀ</span>
                     </div>
                 </div>
-
-                <!-- Ledger Row 2 -->
                 <div class="ledger-row">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-700 text-lg">⏳</div>
-                        <div>
-                            <p class="text-sm font-black">መደበኛ መዋጮ (የካቲት)</p>
-                            <p class="text-[10px] opacity-40">የካቲት 05, 2017</p>
-                        </div>
+                    <div>
+                        <p class="text-sm font-black">መደበኛ መዋጮ (የካቲት)</p>
+                        <p class="text-[10px] opacity-40">የካቲት 05, 2017 | በደረሰኝ</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-black">+100.00</p>
-                        <span class="status-badge status-pending">በመጠባበቅ ላይ</span>
-                    </div>
-                </div>
-
-                <!-- Ledger Row 3 -->
-                <div class="ledger-row">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-red-700 text-lg">⚠️</div>
-                        <div>
-                            <p class="text-sm font-black">የቅጣት ክፍያ</p>
-                            <p class="text-[10px] opacity-40">ታህሳስ 28, 2016</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-sm font-black text-red-600">+20.00</p>
-                        <span class="status-badge status-approved">የጸደቀ</span>
-                    </div>
-                </div>
-
-                <!-- Ledger Row 4 -->
-                <div class="ledger-row">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 text-lg">🔄</div>
-                        <div>
-                            <p class="text-sm font-black">ሌላ ክፍያ (ለአባል)</p>
-                            <p class="text-[10px] opacity-40">ህዳር 15, 2016</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-sm font-black">+250.00</p>
-                        <span class="status-badge status-approved">የጸደቀ</span>
+                        <p class="text-sm font-black text-slate-500">+100.00</p>
+                        <span class="status-badge bg-yellow-100 text-yellow-700">በመጠባበቅ ላይ</span>
                     </div>
                 </div>
             </div>
-
-            <div class="pt-4">
-                <button class="w-full py-3 bg-slate-50 text-[10px] font-black uppercase opacity-40 tracking-widest rounded-xl">ሙሉ መዝገብ ይመልከቱ (See All)</button>
-            </div>
+            <button class="w-full py-3 bg-black/5 rounded-xl text-[10px] font-black uppercase opacity-40 tracking-tighter">ሙሉ ዝርዝር ይመልከቱ</button>
         </div>
     </div>
 
-    <!-- Loan Section -->
-    <div id="loanSection" class="hidden animate-section p-10 text-center italic opacity-50">የብድር አገልግሎት በቅርቡ::</div>
+    <!-- Loan Section (Refined UI/UX) -->
+    <div id="loanSection" class="hidden animate-section space-y-6">
+        <!-- Tracker -->
+        <div class="section-card p-6 bg-slate-50 border-none">
+            <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest mb-6">የብድር ጥያቄ ሂደት (Step-by-Step)</h3>
+            <div class="relative flex justify-between items-start">
+                <div class="step-line" style="right: 10px;"></div>
+                <div class="flex flex-col items-center gap-2 relative z-10">
+                    <div class="step-circle step-active">1</div>
+                    <span class="text-[8px] font-black uppercase">ጥያቄ</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 relative z-10">
+                    <div class="step-circle">2</div>
+                    <span class="text-[8px] font-black uppercase opacity-40">ምርመራ</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 relative z-10">
+                    <div class="step-circle">3</div>
+                    <span class="text-[8px] font-black uppercase opacity-40">ውሳኔ</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 relative z-10">
+                    <div class="step-circle">4</div>
+                    <span class="text-[8px] font-black uppercase opacity-40">ርክክብ</span>
+                </div>
+            </div>
+            <div class="mt-8 p-4 bg-white rounded-2xl border border-slate-200 text-center">
+                <p class="text-xs font-bold text-slate-400">ንቁ የብድር ጥያቄ የለም።</p>
+            </div>
+        </div>
+
+        <!-- Loan Limits by Level -->
+        <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest px-2">የብድር መጠኖች በአባልነት ደረጃ</h3>
+        <div class="grid grid-cols-1 gap-4">
+            <div class="section-card p-5 tier-card flex items-center justify-between border-l-4 border-l-slate-400">
+                <div>
+                    <h4 class="text-[10px] font-black uppercase opacity-50 mb-1">መሠረታዊ አባል (Basic)</h4>
+                    <p class="text-2xl font-black">5,000 <span class="text-sm">ብር</span></p>
+                </div>
+                <div class="text-[9px] font-black bg-white px-3 py-1 rounded-full shadow-sm">ደረጃ 1</div>
+            </div>
+            <div class="section-card p-5 tier-card flex items-center justify-between border-l-4 border-l-green-600">
+                <div>
+                    <h4 class="text-[10px] font-black uppercase text-green-700 mb-1">ፕሮ አባል (Pro)</h4>
+                    <p class="text-2xl font-black text-green-800">15,000 <span class="text-sm">ብር</span></p>
+                </div>
+                <div class="text-[9px] font-black bg-white text-green-700 px-3 py-1 rounded-full shadow-sm">ደረጃ 2</div>
+            </div>
+            <div class="section-card p-5 tier-card flex items-center justify-between border-l-4 border-l-amber-500">
+                <div>
+                    <h4 class="text-[10px] font-black uppercase text-amber-600 mb-1">ልዩ አባል (Elite)</h4>
+                    <p class="text-2xl font-black text-amber-800">50,000 <span class="text-sm">ብር</span></p>
+                </div>
+                <div class="text-[9px] font-black bg-white text-amber-600 px-3 py-1 rounded-full shadow-sm">ደረጃ 3</div>
+            </div>
+        </div>
+
+        <div class="section-card bg-green-700 text-white p-6 shadow-xl">
+            <h3 class="text-lg font-black mb-1">ለብድር ማመልከት ይፈልጋሉ?</h3>
+            <p class="text-[10px] opacity-70 mb-5 leading-relaxed">ብድር ለመጠየቅ ቢያንስ ለ6 ወራት መደበኛ መዋጮ የከፈሉ መሆን ይኖርብዎታል። እንዲሁም ሁለት ዋስትና የሚሆኑ አባላትን ማቅረብ ይጠበቅብዎታል።</p>
+            <button disabled class="w-full py-4 bg-white/20 rounded-2xl font-black text-sm backdrop-blur-md cursor-not-allowed">አገልግሎቱ በቅርቡ ይከፈታል</button>
+        </div>
+    </div>
     
     <!-- Help Section -->
     <div id="helpSection" class="hidden animate-section p-4">
-        <div class="section-card space-y-4">
-            <h2 class="text-lg font-black">እርዳታ</h2>
-            <p class="text-xs opacity-60">ክፍያ በደረሰኝ ወይም በዲጂታል መተግበሪያዎች መፈጸም ይችላሉ::</p>
+        <div class="section-card space-y-6">
+            <h2 class="text-xl font-black">እርዳታ እና ድጋፍ</h2>
+            <div class="space-y-4">
+                <div class="p-4 bg-black/5 rounded-2xl">
+                    <p class="text-xs font-black mb-1 uppercase opacity-50 text-green-700">መደበኛ መዋጮ</p>
+                    <p class="text-sm font-bold">ከቀን 1-5 መደበኛ ክፍያ። ከቀን 6-10 ቅጣት 20 ብር። ከቀን 11 በኋላ ቅጣት 50 ብር ይጨመራል።</p>
+                </div>
+                <div class="p-4 bg-black/5 rounded-2xl">
+                    <p class="text-xs font-black mb-1 uppercase opacity-50 text-green-700">ክፍያ ለሌላ አባል</p>
+                    <p class="text-sm font-bold">ለሌላ አባል ሲከፍሉ የባንክ ደረሰኝ (Receipt) መጫን ግዴታ ነው። በዲጂታል መክፈል አይቻልም።</p>
+                </div>
+            </div>
+            
+            <div class="pt-4 border-t border-black/5">
+                <p class="text-[10px] font-bold uppercase opacity-40 mb-3 text-center">አስተዳዳሪውን ያነጋግሩ</p>
+                <a href="https://t.me/Abiymersha" class="flex items-center justify-center gap-3 w-full py-4 bg-green-700 text-white rounded-2xl font-black text-sm shadow-lg shadow-green-700/20 active:scale-95 transition-all">
+                    <span>@Abiymersha</span>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -431,14 +441,13 @@
             const purpose = document.getElementById('purpose').value;
             const periodOther = document.getElementById('periodOther').value;
             const mEasy = document.getElementById('mEasy');
-            const note = document.getElementById('restrictionNote');
             if (purpose === "ሌላ ክፍያ" && periodOther === "ወደ ሌላ አባል አካውንት") {
                 setMode('manual');
                 mEasy.classList.add('disabled');
-                note.classList.remove('hidden');
+                document.getElementById('restrictionNote').classList.remove('hidden');
             } else {
                 mEasy.classList.remove('disabled');
-                note.classList.add('hidden');
+                document.getElementById('restrictionNote').classList.add('hidden');
             }
         }
 
@@ -479,11 +488,12 @@
             const purpose = document.getElementById('purpose').value;
             const periodOther = document.getElementById('periodOther').value;
             if (m === 'easypay' && purpose === "ሌላ ክፍያ" && periodOther === "ወደ ሌላ አባል አካውንት") return;
+
             payMode = m;
             document.getElementById('mManual').classList.toggle('selected', m === 'manual');
             document.getElementById('mEasy').classList.toggle('selected', m === 'easypay');
             document.getElementById('receiptUploadArea').classList.toggle('hidden', m !== 'manual');
-            document.getElementById('digitalGateways').classList.toggle('hidden', m !== 'easypay');
+            document.getElementById('digitalGateways')?.classList.toggle('hidden', m !== 'easypay');
         };
 
         window.selectGateway = (gw, el) => {
