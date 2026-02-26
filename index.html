@@ -125,6 +125,26 @@
 
         .animate-section { animation: slideUp 0.4s ease-out forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Status Section Styles */
+        .ledger-row {
+            border-bottom: 1px solid var(--card-border);
+            padding: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ledger-row:last-child { border-bottom: none; }
+        .status-badge {
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 50px;
+            text-transform: uppercase;
+        }
+        .status-approved { background: #dcfce7; color: #15803d; }
+        .status-pending { background: #fef9c3; color: #a16207; }
+        .status-rejected { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body class="p-5 pb-10">
@@ -231,7 +251,7 @@
                     </div>
                 </div>
 
-                <!-- Digital Payment Options (MISSING PART ADDED BACK) -->
+                <!-- Digital Payment Options -->
                 <div id="digitalGateways" class="hidden animate-section mt-4 pt-4 border-t border-black/5 space-y-4">
                     <h4 class="text-[10px] font-bold uppercase opacity-40 text-center tracking-widest">መተግበሪያ ይምረጡ</h4>
                     <div class="grid grid-cols-3 gap-3">
@@ -269,9 +289,115 @@
         </form>
     </div>
 
-    <!-- Other Sections -->
-    <div id="statusSection" class="hidden animate-section p-10 text-center italic opacity-50">ሁኔታዎ እዚህ ይታያል::</div>
+    <!-- Status Section (Bookkeeping Method) -->
+    <div id="statusSection" class="hidden animate-section space-y-6">
+        <!-- Summary Card -->
+        <div class="section-card bg-slate-900 text-white border-none p-6 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-green-500/20 rounded-full blur-3xl"></div>
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <p class="text-[10px] font-bold uppercase opacity-50 tracking-widest mb-1">አጠቃላይ ቁጠባ (Total Savings)</p>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-black">1,500</span>
+                        <span class="text-sm font-bold opacity-60">ብር</span>
+                    </div>
+                </div>
+                <div class="bg-green-600/20 px-3 py-1 rounded-full border border-green-500/30">
+                    <span class="text-[10px] font-black text-green-400 uppercase">ፕሮ አባል (Pro)</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-white/10">
+                <div>
+                    <p class="text-[9px] uppercase opacity-40 mb-1">ጠቅላላ ቅጣት</p>
+                    <p class="text-lg font-black text-red-400">20.00 <span class="text-[10px]">ብር</span></p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] uppercase opacity-40 mb-1">የጸደቁ ክፍያዎች</p>
+                    <p class="text-lg font-black">15 <span class="text-[10px]">ጊዜ</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ledger / Transaction History -->
+        <div class="section-card space-y-4">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest px-1">የክፍያ መዝገብ (Passbook)</h3>
+                <span class="text-[10px] font-bold opacity-30">የመጨረሻ 5 እንቅስቃሴዎች</span>
+            </div>
+            
+            <div class="space-y-1">
+                <!-- Ledger Row 1 -->
+                <div class="ledger-row">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-700 text-lg">💰</div>
+                        <div>
+                            <p class="text-sm font-black">መደበኛ መዋጮ (ጥር)</p>
+                            <p class="text-[10px] opacity-40">ጥር 12, 2017</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black">+100.00</p>
+                        <span class="status-badge status-approved">የጸደቀ</span>
+                    </div>
+                </div>
+
+                <!-- Ledger Row 2 -->
+                <div class="ledger-row">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-700 text-lg">⏳</div>
+                        <div>
+                            <p class="text-sm font-black">መደበኛ መዋጮ (የካቲት)</p>
+                            <p class="text-[10px] opacity-40">የካቲት 05, 2017</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black">+100.00</p>
+                        <span class="status-badge status-pending">በመጠባበቅ ላይ</span>
+                    </div>
+                </div>
+
+                <!-- Ledger Row 3 -->
+                <div class="ledger-row">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-red-700 text-lg">⚠️</div>
+                        <div>
+                            <p class="text-sm font-black">የቅጣት ክፍያ</p>
+                            <p class="text-[10px] opacity-40">ታህሳስ 28, 2016</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black text-red-600">+20.00</p>
+                        <span class="status-badge status-approved">የጸደቀ</span>
+                    </div>
+                </div>
+
+                <!-- Ledger Row 4 -->
+                <div class="ledger-row">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 text-lg">🔄</div>
+                        <div>
+                            <p class="text-sm font-black">ሌላ ክፍያ (ለአባል)</p>
+                            <p class="text-[10px] opacity-40">ህዳር 15, 2016</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black">+250.00</p>
+                        <span class="status-badge status-approved">የጸደቀ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button class="w-full py-3 bg-slate-50 text-[10px] font-black uppercase opacity-40 tracking-widest rounded-xl">ሙሉ መዝገብ ይመልከቱ (See All)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loan Section -->
     <div id="loanSection" class="hidden animate-section p-10 text-center italic opacity-50">የብድር አገልግሎት በቅርቡ::</div>
+    
+    <!-- Help Section -->
     <div id="helpSection" class="hidden animate-section p-4">
         <div class="section-card space-y-4">
             <h2 class="text-lg font-black">እርዳታ</h2>
@@ -339,6 +465,7 @@
                 document.getElementById(s + 'Tab')?.classList.toggle('active-tab', s === tabName);
             });
             tg.HapticFeedback.impactOccurred('medium');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         window.togglePayer = (mode) => {
