@@ -13,94 +13,145 @@
 
     <style>
         :root {
-            --tg-bg: var(--tg-theme-bg-color, #f8fafc);
+            --tg-bg: var(--tg-theme-bg-color, #f1f5f9);
             --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #0f172a);
             --brand-green: #15803d;
+            --brand-light: #f0fdf4;
             --card-border: rgba(226, 232, 240, 0.8);
         }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --tg-bg: var(--tg-theme-bg-color, #0f172a);
+                --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #1e293b);
+                --tg-text: var(--tg-theme-text-color, #f8fafc);
+                --card-border: rgba(51, 65, 85, 0.5);
+                --brand-light: rgba(21, 128, 61, 0.1);
+            }
+        }
+
         body {
             background-color: var(--tg-bg);
             color: var(--tg-text);
             font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif;
             margin: 0; padding: 0;
+            transition: all 0.3s ease;
         }
+
         .section-card {
             background-color: var(--tg-secondary-bg);
             border: 1px solid var(--card-border);
-            border-radius: 1.5rem;
+            border-radius: 2rem;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
+
         .input-style {
             background-color: var(--tg-bg);
             border: 2px solid var(--card-border);
-            border-radius: 1rem;
-            padding: 1rem;
+            border-radius: 1.25rem;
+            padding: 0.875rem 1.25rem;
             width: 100%;
             font-size: 16px;
             color: var(--tg-text);
+            transition: all 0.2s ease;
+            outline: none;
         }
+
         .method-card {
             border: 2px solid var(--card-border);
             border-radius: 1.5rem;
-            padding: 1rem;
+            padding: 1.25rem 1rem;
             text-align: center;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: var(--tg-secondary-bg);
         }
+
         .method-card.selected {
             border-color: var(--brand-green);
-            background-color: rgba(21, 128, 61, 0.1);
+            background-color: var(--brand-light);
+            transform: scale(0.98);
         }
-        .tab-btn { padding: 12px; border-radius: 12px; font-weight: 800; font-size: 12px; color: rgba(255,255,255,0.6); }
-        .active-tab { color: white; background: rgba(255,255,255,0.2); }
+
+        .tab-btn { 
+            padding: 10px 4px; 
+            border-radius: 1rem; 
+            font-weight: 700; 
+            font-size: 12px; 
+            color: var(--tg-text);
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .active-tab { 
+            color: var(--brand-green) !important; 
+            background: var(--tg-secondary-bg);
+            opacity: 1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .animate-section { 
+            animation: slideUp 0.4s ease-out forwards; 
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="p-4">
+<body class="p-5 pb-10">
 
-    <header class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-green-700 rounded-xl flex items-center justify-center text-xl shadow-lg">🏡</div>
-            <h1 class="text-sm font-black uppercase">እሁድን በፍቅር</h1>
+    <header class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-green-700 rounded-2xl flex items-center justify-center text-3xl shadow-lg">🏡</div>
+            <div>
+                <h1 class="text-lg font-black leading-tight">እሁድን በፍቅር</h1>
+                <p id="dateDisplay" class="text-[10px] font-bold opacity-50 uppercase"></p>
+            </div>
         </div>
-        <span id="userName" class="text-xs font-bold opacity-70">አባል</span>
+        <div class="text-right">
+            <span id="userName" class="text-sm font-black block">አባል</span>
+            <span class="text-[10px] opacity-40 uppercase font-bold tracking-tighter">Edir Digital Pro</span>
+        </div>
     </header>
 
-    <nav id="mainNav" class="bg-green-700 p-1.5 rounded-2xl grid grid-cols-4 gap-1 mb-8">
+    <nav id="mainNav" class="bg-black/5 p-1 rounded-2xl grid grid-cols-4 gap-1 mb-8">
         <button onclick="showTab('payment')" id="payTab" class="tab-btn active-tab">ክፍያ</button>
         <button onclick="showTab('status')" id="statTab" class="tab-btn">ሁኔታ</button>
         <button onclick="showTab('loan')" id="loanTab" class="tab-btn">ብድር</button>
         <button onclick="showTab('help')" id="helpTab" class="tab-btn">እርዳታ</button>
     </nav>
 
-    <!-- Payment Section (Kutaa Kafaltii) -->
+    <!-- Payment Section -->
     <div id="paymentSection" class="animate-section">
-        <form id="paymentForm" class="space-y-4">
-            <!-- Payer Selection (Eenyu akka kaffalu filachuu) -->
-            <div class="section-card space-y-4">
-                <h3 class="text-[11px] font-black uppercase opacity-50 tracking-widest">ክፍያው ለማን ነው?</h3>
-                <div class="grid grid-cols-2 gap-3">
+        <form id="paymentForm" class="space-y-6">
+            <!-- Payer Selection -->
+            <div class="section-card space-y-5">
+                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest">ክፍያው ለማን ነው?</h3>
+                <div class="grid grid-cols-2 gap-4">
                     <div id="selfPay" class="method-card selected" onclick="togglePayer('self')">
-                        <span class="text-xl block mb-1">🙋‍♂️</span>
-                        <span class="text-[10px] font-bold uppercase">ለእኔ</span>
+                        <span class="text-3xl block mb-2">🙋‍♂️</span>
+                        <span class="text-xs font-black uppercase">ለእኔ</span>
                     </div>
                     <div id="otherPay" class="method-card" onclick="togglePayer('other')">
-                        <span class="text-xl block mb-1">👥</span>
-                        <span class="text-[10px] font-bold uppercase">ለሌላ ሰው</span>
+                        <span class="text-3xl block mb-2">👥</span>
+                        <span class="text-xs font-black uppercase">ለሌላ ሰው</span>
                     </div>
                 </div>
-
-                <div id="otherMemberBox" class="hidden animate-section mt-4 space-y-2">
-                    <label class="text-[10px] font-black uppercase opacity-50">የአባሉ ስም/Username</label>
+                <div id="otherMemberBox" class="hidden mt-4 pt-2">
+                    <label class="text-[11px] font-bold uppercase opacity-50 mb-2 block ml-2">የአባሉ ስም/Username</label>
                     <input type="text" id="targetMember" placeholder="@username ወይም ሙሉ ስም" class="input-style">
                 </div>
             </div>
 
-            <div class="section-card space-y-4">
+            <!-- Details Card -->
+            <div class="section-card space-y-6">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase opacity-50">የክፍያ ዓይነት</label>
-                    <select id="purpose" class="input-style">
+                    <label class="text-[11px] font-bold uppercase opacity-50 ml-2">የክፍያ ዓይነት</label>
+                    <select id="purpose" class="input-style" onchange="autoCalculatePenalty()">
                         <option value="መደበኛ መዋጮ">መደበኛ መዋጮ</option>
                         <option value="የብድር መመለሻ">የብድር መመለሻ</option>
                         <option value="የቅጣት ክፍያ">የቅጣት ክፍያ</option>
@@ -108,7 +159,7 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase opacity-50">የክፍያ ወር/ጊዜ</label>
+                    <label class="text-[11px] font-bold uppercase opacity-50 ml-2">የክፍያ ወር/ጊዜ</label>
                     <select id="period" class="input-style">
                         <option value="መስከረም">መስከረም</option><option value="ጥቅምት">ጥቅምት</option>
                         <option value="ህዳር">ህዳር</option><option value="ታህሳስ">ታህሳስ</option>
@@ -121,79 +172,97 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase opacity-50">መጠን (ብር)</label>
-                        <input type="number" id="amount" placeholder="0.00" required class="input-style text-green-700 font-bold">
+                        <label class="text-[11px] font-bold uppercase opacity-50 ml-2">መጠን (ብር)</label>
+                        <input type="number" id="amount" placeholder="0.00" required class="input-style text-green-700 font-black">
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase opacity-50">ቅጣት (ብር)</label>
-                        <input type="number" id="penalty" value="0" class="input-style text-red-600 font-bold">
+                        <label class="text-[11px] font-bold uppercase opacity-50 ml-2">ቅጣት (ብር)</label>
+                        <input type="number" id="penalty" value="0" class="input-style text-red-600 font-black">
+                        <p id="penaltyHint" class="text-[9px] text-red-500 font-bold mt-1 ml-2"></p>
                     </div>
                 </div>
             </div>
 
-            <div class="section-card space-y-4">
-                <h3 class="text-[11px] font-black uppercase opacity-50 tracking-widest">የክፍያ መንገድ</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <div id="mManual" class="method-card selected" onclick="setMode('manual')">🧾 በደረሰኝ</div>
-                    <div id="mEasy" class="method-card" onclick="setMode('easypay')">💳 ዲጂታል</div>
+            <!-- Payment Method -->
+            <div class="section-card space-y-5">
+                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest">የክፍያ መንገድ</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div id="mManual" class="method-card selected py-4" onclick="setMode('manual')">
+                        <span class="text-xl block mb-1">🧾</span>
+                        <span class="text-[11px] font-black uppercase">በደረሰኝ</span>
+                    </div>
+                    <div id="mEasy" class="method-card py-4" onclick="setMode('easypay')">
+                        <span class="text-xl block mb-1">💳</span>
+                        <span class="text-[11px] font-black uppercase">ዲጂታል</span>
+                    </div>
                 </div>
             </div>
 
-            <button type="submit" class="w-full py-4 bg-green-700 text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all">
+            <button type="submit" class="w-full py-5 bg-green-700 text-white rounded-[1.5rem] font-black text-lg shadow-xl active:scale-[0.97] transition-all flex items-center justify-center gap-3">
                 መረጃውን ላክ
             </button>
         </form>
     </div>
 
-    <!-- Placeholder for other sections (Bakka kutaawwan biroo) -->
+    <!-- Other sections (Status, Loan, Help) same as before -->
     <div id="statusSection" class="hidden animate-section p-4 text-center">
-        <h2 class="text-xl font-bold">የሁኔታ መከታተያ</h2>
-        <p class="opacity-60 mt-2">እዚህ ጋር የክፍያ ሁኔታዎን ማየት ይችላሉ።</p>
+        <h2 class="text-xl font-black">የሁኔታ መከታተያ</h2>
+        <p class="opacity-50 mt-4 italic">ክፍያዎ ሲጸድቅ እዚህ ጋር ይዘመናል::</p>
     </div>
-
-    <div id="loanSection" class="hidden animate-section p-4 text-center">
-        <h2 class="text-xl font-bold">የብድር አገልግሎት</h2>
-        <p class="opacity-60 mt-2">ይህ አገልግሎት በቅርቡ ይጀምራል።</p>
+    <div id="loanSection" class="hidden animate-section p-10 text-center">
+        <h2 class="text-xl font-black">የብድር አገልግሎት</h2>
+        <p class="opacity-50 mt-4 leading-relaxed">አገልግሎቱ በሂደት ላይ ነው::</p>
     </div>
-
-    <div id="helpSection" class="hidden animate-section p-4 text-center">
-        <h2 class="text-xl font-bold">እርዳታ</h2>
-        <p class="opacity-60 mt-2">ችግር ካጋጠመዎት አስተዳዳሪውን ያነጋግሩ።</p>
+    <div id="helpSection" class="hidden animate-section p-4">
+        <div class="section-card space-y-4">
+            <h2 class="text-lg font-black">እርዳታ</h2>
+            <p class="text-xs opacity-60">ከቀን 1-5 መደበኛ ክፍያ:: በቀን 6-10 ቅጣት 20 ብር:: ከቀን 11 በኋላ ቅጣት 50 ብር::</p>
+            <a href="https://t.me/Abiym" class="block w-full py-4 bg-slate-100 text-center rounded-xl font-bold">አስተዳዳሪውን አግኝ</a>
+        </div>
     </div>
 
     <script>
-        // Init Telegram WebApp (App-icha Telegram jalqabuu)
         const tg = window.Telegram.WebApp;
         tg.ready();
         
         let payerMode = 'self';
         let payMode = 'manual';
 
-        // Function to switch tabs (Kutaawwan gidduu deemuu)
-        window.showTab = (tabName) => {
-            const sections = ['payment', 'status', 'loan', 'help'];
-            const tabs = {
-                'payment': 'payTab',
-                'status': 'statTab',
-                'loan': 'loanTab',
-                'help': 'helpTab'
-            };
-
-            sections.forEach(s => {
-                const element = document.getElementById(s + 'Section');
-                const btn = document.getElementById(tabs[s]);
-                if (element) {
-                    element.classList.toggle('hidden', s !== tabName);
-                }
-                if (btn) {
-                    btn.classList.toggle('active-tab', s === tabName);
-                }
-            });
+        // Auto calculate penalty based on day of month
+        function autoCalculatePenalty() {
+            const today = new Date().getDate();
+            const purpose = document.getElementById('purpose').value;
+            const penaltyInput = document.getElementById('penalty');
+            const hint = document.getElementById('penaltyHint');
             
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            let penalty = 0;
+            let note = "";
+
+            // Only apply automatic penalty logic for "መደበኛ መዋጮ"
+            if (purpose === "መደበኛ መዋጮ") {
+                if (today >= 6 && today <= 10) {
+                    penalty = 20;
+                    note = "የቀን 6-10 ቅጣት (20 ብር)";
+                } else if (today >= 11) {
+                    penalty = 50;
+                    note = "ከቀን 11 በኋላ ቅጣት (50 ብር)";
+                } else {
+                    note = "መደበኛ የክፍያ ጊዜ (ቅጣት የለም)";
+                }
+            }
+
+            penaltyInput.value = penalty;
+            hint.innerText = note;
+        }
+
+        window.showTab = (tabName) => {
+            ['payment', 'status', 'loan', 'help'].forEach(s => {
+                document.getElementById(s + 'Section').classList.toggle('hidden', s !== tabName);
+                document.getElementById(s + 'Tab')?.classList.toggle('active-tab', s === tabName);
+            });
+            tg.HapticFeedback.impactOccurred('medium');
         };
 
-        // Toggle Payer (Eenyu akka kaffalu jijjiiruu)
         window.togglePayer = (mode) => {
             payerMode = mode;
             document.getElementById('selfPay').classList.toggle('selected', mode === 'self');
@@ -201,14 +270,12 @@
             document.getElementById('otherMemberBox').classList.toggle('hidden', mode === 'self');
         };
 
-        // Set Payment Mode (Akkaataa kaffaltii)
         window.setMode = (m) => {
             payMode = m;
             document.getElementById('mManual').classList.toggle('selected', m === 'manual');
             document.getElementById('mEasy').classList.toggle('selected', m === 'easypay');
         };
 
-        // Handle Form Submission (Deetaa erguu)
         document.getElementById('paymentForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const payload = {
@@ -224,10 +291,10 @@
             tg.close();
         });
 
-        // Set Username in header
-        if(tg.initDataUnsafe?.user) {
-            document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name;
-        }
+        // Initialize
+        if(tg.initDataUnsafe?.user) document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name;
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('am-ET', { month: 'long', day: 'numeric', year: 'numeric' });
+        autoCalculatePenalty();
     </script>
 </body>
 </html>
