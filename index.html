@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>እሁድን በፍቅር - Edir Digital Pro v1.2.0</title>
+    <title>እሁድን በፍቅር - Edir Digital Pro v1.3.0</title>
     <!-- SDKs -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +20,7 @@
             --brand-light: rgba(21, 128, 61, 0.08);
             --card-border: rgba(226, 232, 240, 1);
             --glass: rgba(255, 255, 255, 0.85);
+            --skymark-blue: #2563eb;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -39,142 +40,212 @@
             margin: 0; padding: 0;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
-            padding-bottom: 80px; /* Space for bottom menu */
+            padding-bottom: 140px; /* Enhanced bottom padding */
         }
 
-        /* --- LOADING ANIMATION --- */
+        /* --- ADVANCED LOADING ANIMATION --- */
         #appLoader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--tg-bg); display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 9999;
-            transition: opacity 0.8s ease, visibility 0.8s;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), visibility 1s;
         }
 
+        #appLoader::before {
+            content: "";
+            position: absolute; width: 150%; height: 150%;
+            background: radial-gradient(circle at 15% 15%, rgba(21, 128, 61, 0.08) 0%, transparent 40%),
+                        radial-gradient(circle at 85% 85%, rgba(37, 99, 235, 0.08) 0%, transparent 40%);
+            animation: mesh-rotate 25s linear infinite;
+            z-index: -1;
+        }
+        @keyframes mesh-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .loader-container { position: relative; display: flex; align-items: center; justify-content: center; }
-        .ring-outer { position: absolute; width: 180px; height: 180px; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; border: 2px solid var(--brand-green); opacity: 0.2; animation: blob-spin 8s linear infinite; }
-        .ring-inner { position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-green); border-bottom-color: var(--brand-green); animation: spin 2s linear infinite; }
-        @keyframes blob-spin { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.1); } }
+        
+        .ring-outer { 
+            position: absolute; width: 240px; height: 240px; 
+            border-radius: 35% 65% 65% 35% / 45% 40% 60% 55%; 
+            border: 2px solid var(--brand-green); 
+            opacity: 0.15; 
+            animation: blob-morph 10s linear infinite; 
+        }
+        
+        .ring-inner { 
+            position: absolute; width: 200px; height: 200px; 
+            border-radius: 50%; 
+            border: 4px solid transparent; 
+            border-top-color: var(--brand-green); 
+            border-bottom-color: var(--skymark-blue); 
+            animation: spin 3s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite; 
+        }
+
+        @keyframes blob-morph {
+            0%, 100% { border-radius: 35% 65% 65% 35% / 45% 40% 60% 55%; transform: rotate(0deg); }
+            33% { border-radius: 65% 35% 55% 45% / 60% 55% 45% 40%; }
+            66% { border-radius: 45% 55% 35% 65% / 40% 45% 55% 60%; }
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .loader-logo { width: 100px; height: 100px; border-radius: 30px; background: white; padding: 5px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); z-index: 10; object-fit: cover; }
+        .loader-logo { 
+            width: 120px; height: 120px; 
+            border-radius: 36px; background: white; 
+            padding: 10px; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.18); 
+            z-index: 10; object-fit: cover; 
+            animation: logo-float 4s ease-in-out infinite;
+        }
+        @keyframes logo-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+
+        .loading-progress { width: 180px; height: 6px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; margin-top: 40px; }
+        .loading-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--brand-green), var(--skymark-blue)); border-radius: 10px; animation: bar-fill 3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes bar-fill { 0% { width: 0%; } 100% { width: 100%; } }
+
+        /* --- COLLABORATION BRANDING --- */
+        .skymark-branding {
+            position: absolute; bottom: 60px; text-align: center; width: 100%;
+            animation: fade-in 1.5s ease-out;
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .skymark-logo-text {
+            font-size: 13px; font-weight: 900; letter-spacing: 0.2em;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
 
         /* --- UI COMPONENTS --- */
-        #mainContent { opacity: 0; transform: translateY(20px); transition: all 0.8s ease; }
+        #mainContent { opacity: 0; transform: translateY(20px); transition: all 1s ease; }
         #mainContent.visible { opacity: 1; transform: translateY(0); }
 
         .glass-card {
             background-color: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
             border: 1px solid var(--card-border);
-            border-radius: 2rem;
-            padding: 1.5rem;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.02);
-            transition: transform 0.3s ease;
+            border-radius: 2.75rem;
+            padding: 2.25rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04);
+            margin-bottom: 2.5rem;
         }
 
         .neo-input {
             background: var(--tg-secondary-bg);
             border: 2px solid var(--card-border);
-            border-radius: 1.25rem;
-            padding: 0.85rem 1.25rem;
-            width: 100%; font-size: 15px; color: var(--tg-text); outline: none;
+            border-radius: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            width: 100%; font-size: 16px; color: var(--tg-text); outline: none;
+            margin-top: 12px; transition: all 0.3s ease;
         }
-        .neo-input:focus { border-color: var(--brand-green); }
+        .neo-input:focus { border-color: var(--brand-green); box-shadow: 0 0 0 5px var(--brand-light); }
+
+        .top-nav {
+            background: var(--glass); padding: 12px; border-radius: 2rem;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+            position: sticky; top: 15px; z-index: 1000;
+            backdrop-filter: blur(40px); border: 1px solid var(--card-border);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.08); margin-bottom: 50px;
+        }
+
+        .tab-btn {
+            padding: 12px 2px; border-radius: 1.5rem; font-size: 10px;
+            font-weight: 800; text-transform: uppercase; color: var(--tg-text);
+            opacity: 0.4; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+        }
+        .tab-btn.active-tab { background: var(--brand-light); opacity: 1; color: var(--brand-green); transform: translateY(-3px); }
+        .tab-btn .icon { font-size: 24px; }
+
+        /* CUSTOM MODAL */
+        #customAlert {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center;
+            z-index: 5000; padding: 25px; backdrop-filter: blur(8px);
+        }
+        .alert-box {
+            background: var(--tg-secondary-bg); border-radius: 3rem; padding: 3rem;
+            width: 100%; max-width: 340px; text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3); animation: zoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         .method-card {
-            border: 2px solid var(--card-border); border-radius: 1.5rem;
-            padding: 1.25rem 1rem; text-align: center; cursor: pointer;
+            border: 2px solid var(--card-border); border-radius: 2rem;
+            padding: 1.75rem 1rem; text-align: center; cursor: pointer;
             transition: all 0.3s ease; background: var(--tg-secondary-bg);
         }
         .method-card.selected { border-color: var(--brand-green); background: var(--brand-light); }
 
-        /* NAVIGATION STYLING */
-        .top-nav {
-            background: var(--glass); padding: 10px; border-radius: 1.5rem;
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-            position: sticky; top: 10px; z-index: 1000;
-            backdrop-filter: blur(30px); border: 1px solid var(--card-border);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.05); margin-bottom: 20px;
-        }
-
-        .tab-btn {
-            padding: 8px 2px; border-radius: 1rem; font-size: 9px;
-            font-weight: 800; text-transform: uppercase; color: var(--tg-text);
-            opacity: 0.45; transition: all 0.3s ease;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-        }
-        .tab-btn.active-tab { background: var(--brand-light); opacity: 1; color: var(--brand-green); transform: scale(1.05); }
-        .tab-btn .icon { font-size: 18px; line-height: 1; }
-
-        /* CUSTOM ALERT BOX */
-        #customAlert {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;
-            z-index: 5000; padding: 20px; backdrop-filter: blur(5px);
-        }
-        .alert-box {
-            background: var(--tg-secondary-bg); border-radius: 2rem; padding: 2rem;
-            width: 100%; max-width: 320px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: zoomIn 0.3s ease;
-        }
-        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .status-badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 50px; text-transform: uppercase; }
+        .status-badge { font-size: 10px; font-weight: 900; padding: 6px 14px; border-radius: 50px; text-transform: uppercase; }
         .badge-approved { background: #dcfce7; color: #15803d; }
         .badge-pending { background: #fef9c3; color: #854d0e; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-        .gateway-pill { opacity: 0.6; grayscale: 1; }
-        .gateway-logo { width: 40px; height: 40px; border-radius: 10px; margin: 0 auto 6px; object-fit: contain; background: white; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .gateway-logo { width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 10px; object-fit: contain; background: white; padding: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); }
 
-        .faq-item { border-bottom: 1px solid var(--card-border); padding: 12px 0; }
-        .faq-question { font-weight: 800; font-size: 13px; color: var(--brand-green); margin-bottom: 4px; }
-        .animate-section { animation: reveal 0.5s ease forwards; }
-        @keyframes reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- FOOTER --- */
+        .footer-skymark {
+            text-align: center; margin-top: 60px; padding: 30px 0;
+            border-top: 1px solid var(--card-border);
+        }
+        .skymark-tag-footer {
+            font-size: 12px; font-weight: 900; letter-spacing: 0.15em;
+            color: var(--skymark-blue); opacity: 0.7; text-transform: uppercase;
+        }
+
+        .animate-section { animation: reveal 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
+        @keyframes reveal { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="p-4">
+<body class="p-7">
 
-    <!-- LOADER -->
+    <!-- LOADING SCREEN -->
     <div id="appLoader">
         <div class="loader-container">
             <div class="ring-outer"></div>
             <div class="ring-inner"></div>
             <img src="logo.jpg" alt="Logo" class="loader-logo" onerror="this.src='https://ui-avatars.com/api/?name=EP&background=15803d&color=fff'">
         </div>
-        <div class="mt-10 text-center">
-            <div class="text-xl font-black tracking-widest text-green-800">እሁድን በፍቅር</div>
-            <div class="mt-2 text-[10px] font-bold opacity-30 uppercase tracking-[0.3em]">v1.2.0 Premium</div>
+        
+        <div class="mt-16 text-center">
+            <div class="text-4xl font-black tracking-[0.25em] text-green-800 mb-3">እሁድን በፍቅር</div>
+            <div class="text-[12px] font-black opacity-30 uppercase tracking-[0.6em]">Edir Digital Pro</div>
+            
+            <div class="loading-progress mx-auto">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+
+        <div class="skymark-branding">
+            <p class="text-[10px] font-black opacity-30 uppercase tracking-[0.3em] mb-2">In Collaboration with</p>
+            <p class="skymark-logo-text">SKYMARK SOLUTION</p>
         </div>
     </div>
 
-    <!-- CUSTOM MESSAGE BOX -->
+    <!-- CUSTOM ALERT -->
     <div id="customAlert">
         <div class="alert-box">
-            <div class="text-4xl mb-4">📢</div>
-            <p id="alertMessage" class="font-bold text-sm leading-relaxed mb-6"></p>
-            <button onclick="closeAlert()" class="w-full py-4 bg-green-700 text-white rounded-2xl font-black shadow-lg shadow-green-900/20 active:scale-95 transition-all">እሺ</button>
+            <div class="text-6xl mb-8">📢</div>
+            <p id="alertMessage" class="font-bold text-lg leading-relaxed mb-10 text-slate-700"></p>
+            <button onclick="closeAlert()" class="w-full py-5 bg-green-700 text-white rounded-3xl font-black text-lg shadow-2xl active:scale-95 transition-all">እሺ</button>
         </div>
     </div>
 
     <!-- MAIN UI -->
     <div id="mainContent">
-        <header class="flex items-center justify-between mb-6 px-2">
-            <div class="flex items-center gap-4">
+        <header class="flex items-center justify-between mb-12 px-2">
+            <div class="flex items-center gap-7">
                 <div class="relative">
-                    <div class="w-14 h-14 bg-green-700 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
+                    <div class="w-16 h-16 bg-green-700 rounded-[2rem] flex items-center justify-center shadow-2xl overflow-hidden">
                         <img src="logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=EP&background=15803d&color=fff'">
                     </div>
-                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-white dark:border-slate-900 rounded-full"></div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white dark:border-slate-900 rounded-full"></div>
                 </div>
                 <div>
-                    <h1 id="userFullName" class="text-xl font-black leading-none mb-1">ሰላም!</h1>
-                    <p class="text-[9px] font-bold opacity-40 uppercase tracking-widest">Digital Edir Pro</p>
+                    <h1 id="userFullName" class="text-2xl font-black leading-none mb-2">ሰላም!</h1>
+                    <p class="text-[11px] font-bold opacity-40 uppercase tracking-widest">Digital Edir Pro v1.3</p>
                 </div>
             </div>
-            <button onclick="tg.close()" class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button onclick="tg.close()" class="w-14 h-14 bg-black/5 rounded-full flex items-center justify-center active:scale-90 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </header>
 
@@ -187,28 +258,28 @@
         </nav>
 
         <!-- PAYMENT SECTION -->
-        <div id="paymentSection" class="animate-section space-y-6">
-            <form id="paymentForm" class="space-y-6">
-                <!-- Payer Info -->
-                <div class="glass-card space-y-5">
-                    <h3 class="text-[11px] font-black uppercase opacity-40 tracking-wider">ክፍያው ለማን ነው?</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div id="selfPay" class="method-card selected p-4" onclick="togglePayer('self')">
-                            <span class="text-3xl block mb-1">🙋‍♂️</span>
-                            <span class="text-[10px] font-black uppercase">ለእኔ</span>
+        <div id="paymentSection" class="animate-section space-y-12">
+            <form id="paymentForm" class="space-y-12">
+                <!-- Payer Select -->
+                <div class="glass-card space-y-10">
+                    <h3 class="text-[12px] font-black uppercase opacity-40 tracking-widest">ክፍያው ለማን ነው?</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div id="selfPay" class="method-card selected" onclick="togglePayer('self')">
+                            <span class="text-5xl block mb-4">🙋‍♂️</span>
+                            <span class="text-[12px] font-black uppercase">ለእኔ</span>
                         </div>
-                        <div id="otherPay" class="method-card p-4" onclick="togglePayer('other')">
-                            <span class="text-3xl block mb-1">👥</span>
-                            <span class="text-[10px] font-black uppercase">ለሌላ</span>
+                        <div id="otherPay" class="method-card" onclick="togglePayer('other')">
+                            <span class="text-5xl block mb-4">👥</span>
+                            <span class="text-[12px] font-black uppercase">ለሌላ</span>
                         </div>
                     </div>
-                    <div id="otherMemberBox" class="hidden"><input type="text" id="targetMember" placeholder="@username" class="neo-input font-bold"></div>
+                    <div id="otherMemberBox" class="hidden mt-6"><input type="text" id="targetMember" placeholder="@username" class="neo-input font-bold"></div>
                 </div>
 
                 <!-- Payment Details -->
-                <div class="glass-card space-y-6">
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black uppercase opacity-40 ml-1">የክፍያ ዓይነት</label>
+                <div class="glass-card space-y-10">
+                    <div>
+                        <label class="text-[12px] font-black uppercase opacity-40 ml-2">የክፍያ ዓይነት</label>
                         <select id="purpose" class="neo-input font-extrabold text-green-800" onchange="handleTypeChange(); autoCalculatePenalty();">
                             <option value="መደበኛ መዋጮ">መደበኛ መዋጮ</option>
                             <option value="የብድር መመለሻ">የብድር መመለሻ</option>
@@ -216,154 +287,123 @@
                             <option value="ሌላ ክፍያ">ሌላ ክፍያ</option>
                         </select>
                     </div>
-                    <div class="space-y-2">
-                        <label id="periodLabel" class="text-[11px] font-black uppercase opacity-40 ml-1">የክፍያ ጊዜ</label>
-                        <div id="dateGrid" class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label id="periodLabel" class="text-[12px] font-black uppercase opacity-40 ml-2">የክፍያ ጊዜ</label>
+                        <div id="dateGrid" class="grid grid-cols-3 gap-4">
                             <select id="periodMonth" class="neo-input text-xs font-bold" onchange="autoCalculatePenalty()"></select>
                             <select id="periodDay" class="neo-input text-xs font-bold" onchange="autoCalculatePenalty()"></select>
                             <select id="periodYear" class="neo-input text-xs font-bold"></select>
                         </div>
-                        <select id="periodOther" class="neo-input font-bold hidden">
-                            <option value="ወደ ዕድር አካውንት">ወደ ዕድር አካውንት</option>
-                            <option value="ወደ ሌላ አባል አካውንት">ወደ ሌላ አባል አካውንት</option>
-                        </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1"><label class="text-[11px] font-black uppercase opacity-40 ml-1">መጠን</label><input type="number" id="amount" value="100" class="neo-input text-xl font-black text-green-700"></div>
-                        <div class="space-y-1"><label class="text-[11px] font-black uppercase opacity-40 ml-1">ቅጣት</label><input type="number" id="penalty" value="0" class="neo-input text-xl font-black text-red-600"></div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="text-[12px] font-black uppercase opacity-40 ml-2">መጠን</label><input type="number" id="amount" value="100" class="neo-input text-3xl font-black text-green-700"></div>
+                        <div><label class="text-[12px] font-black uppercase opacity-40 ml-2">ቅጣት</label><input type="number" id="penalty" value="0" class="neo-input text-3xl font-black text-red-600"></div>
                     </div>
-                    <p id="penaltyHint" class="text-[9px] font-bold text-red-500 text-center mt-[-10px]"></p>
                 </div>
 
-                <!-- Method -->
-                <div class="glass-card space-y-5">
-                    <h3 class="text-[11px] font-black uppercase opacity-40 tracking-wider">የክፍያ መንገድ</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div id="mManual" class="method-card selected py-4" onclick="setMode('manual')">🧾 በደረሰኝ</div>
-                        <div id="mEasy" class="method-card py-4" onclick="setMode('easypay')">💳 ዲጂታል</div>
+                <!-- Method Selection -->
+                <div class="glass-card space-y-10">
+                    <h3 class="text-[12px] font-black uppercase opacity-40 tracking-widest">የክፍያ መንገድ</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div id="mManual" class="method-card selected py-6" onclick="setMode('manual')">🧾 በደረሰኝ</div>
+                        <div id="mEasy" class="method-card py-6" onclick="setMode('easypay')">💳 ዲጂታል</div>
                     </div>
                     
-                    <!-- Digital Logos Section -->
-                    <div id="digitalGateways" class="hidden animate-section pt-2">
-                        <div class="text-center mb-4"><span class="text-[9px] font-black bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full uppercase">በቅርቡ ስራ ይጀምራል</span></div>
-                        <div class="grid grid-cols-3 gap-2 grayscale opacity-50">
-                            <div class="gateway-pill method-card p-2" onclick="showSoon('Chapa')">
-                                <img src="https://chapa.co/favicon.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=Ch'">
-                                <span class="text-[8px] font-black uppercase">Chapa</span>
-                            </div>
-                            <div class="gateway-pill method-card p-2" onclick="showSoon('Telebirr')">
-                                <img src="https://www.ethio-telecom.net/wp-content/uploads/2021/05/telebirr-logo.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=Tb'">
-                                <span class="text-[8px] font-black uppercase">Telebirr</span>
-                            </div>
-                            <div class="gateway-pill method-card p-2" onclick="showSoon('CBE')">
-                                <img src="https://combanketh.et/wp-content/uploads/2021/06/cbe_logo.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=CB'">
-                                <span class="text-[8px] font-black uppercase">CBE Birr</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Receipt Upload -->
-                    <div id="receiptUploadArea" class="text-center">
-                        <div class="bg-black/5 border-dashed border-2 border-slate-300 p-8 rounded-2xl cursor-pointer" onclick="document.getElementById('receiptFile').click()">
-                            <span class="text-[10px] font-black uppercase opacity-40 block">📸 ደረሰኝ ለመጫን</span>
-                            <img id="previewImage" class="hidden mx-auto max-h-40 rounded-2xl mt-3 shadow-xl border-2 border-white">
+                    <div id="receiptUploadArea" class="text-center mt-8">
+                        <div class="bg-black/5 border-dashed border-2 border-slate-300 p-20 rounded-[3rem] cursor-pointer hover:bg-black/10 transition-all" onclick="document.getElementById('receiptFile').click()">
+                            <span class="text-[13px] font-black uppercase opacity-40 block mb-2">📸 ደረሰኝ ለመጫን እዚህ ይጫኑ</span>
+                            <img id="previewImage" class="hidden mx-auto max-h-72 rounded-3xl mt-10 shadow-2xl border-4 border-white">
                         </div>
                         <input type="file" id="receiptFile" class="hidden" accept="image/*" onchange="previewReceipt(this)">
                     </div>
+
+                    <div id="digitalGateways" class="hidden animate-section pt-6">
+                        <div class="text-center mb-8"><span class="text-[11px] font-black bg-blue-500/10 text-blue-600 px-5 py-2 rounded-full uppercase">በቅርቡ ስራ ይጀምራል</span></div>
+                        <div class="grid grid-cols-3 gap-4 grayscale opacity-50 pointer-events-none">
+                            <div class="gateway-pill method-card p-4">
+                                <img src="https://chapa.co/favicon.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=Ch'">
+                                <span class="text-[9px] font-black uppercase">Chapa</span>
+                            </div>
+                            <div class="gateway-pill method-card p-4">
+                                <img src="https://www.ethio-telecom.net/wp-content/uploads/2021/05/telebirr-logo.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=Tb'">
+                                <span class="text-[9px] font-black uppercase">Telebirr</span>
+                            </div>
+                            <div class="gateway-pill method-card p-4">
+                                <img src="https://combanketh.et/wp-content/uploads/2021/06/cbe_logo.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=CB'">
+                                <span class="text-[9px] font-black uppercase">CBE Birr</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <button type="submit" class="w-full py-5 bg-green-700 text-white rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">መረጃውን ላክ</button>
+                <button type="submit" class="w-full py-8 bg-green-700 text-white rounded-[2.75rem] font-black text-2xl shadow-2xl active:scale-95 transition-all">መረጃውን ላክ</button>
             </form>
+
+            <footer class="footer-skymark">
+                <p class="text-[10px] font-black opacity-30 uppercase tracking-[0.3em] mb-2">In Collaboration with</p>
+                <p class="skymark-tag-footer">SKYMARK SOLUTION</p>
+            </footer>
         </div>
 
         <!-- STATUS SECTION -->
-        <div id="statusSection" class="hidden animate-section space-y-6">
-            <div class="glass-card bg-slate-900 text-white p-8 relative overflow-hidden border-none shadow-2xl">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-green-500/20 rounded-full blur-3xl"></div>
-                <p class="text-[10px] font-black uppercase opacity-40 text-green-400 tracking-widest mb-4">አጠቃላይ የተቀመጠ ገንዘብ</p>
-                <div class="flex items-baseline gap-2 mb-8"><span class="text-5xl font-black">2,450.00</span><span class="text-lg opacity-40">ብር</span></div>
-                <div class="flex justify-between items-center pt-6 border-t border-white/10">
-                    <div><p class="text-[9px] uppercase opacity-30">ደረጃ</p><p class="text-base font-black text-green-400">ፕሮ (Pro)</p></div>
-                    <div class="text-right"><p class="text-[9px] uppercase opacity-30">የጸደቁ</p><p class="text-base font-black">12 ጊዜ</p></div>
+        <div id="statusSection" class="hidden animate-section space-y-12">
+            <div class="glass-card bg-slate-900 text-white p-12 relative overflow-hidden border-none shadow-2xl">
+                <div class="absolute -right-10 -top-10 w-72 h-72 bg-green-500/20 rounded-full blur-3xl"></div>
+                <p class="text-[13px] font-black uppercase opacity-40 text-green-400 tracking-[0.25em] mb-8">አጠቃላይ የተቀመጠ ገንዘብ</p>
+                <div class="flex items-baseline gap-4 mb-14"><span class="text-7xl font-black tracking-tighter">2,450.00</span><span class="text-2xl opacity-40 font-bold">ብር</span></div>
+                <div class="flex justify-between items-center pt-10 border-t border-white/10">
+                    <div><p class="text-[11px] uppercase opacity-30 tracking-widest mb-1">ደረጃ</p><p class="text-2xl font-black text-green-400">ፕሮ (Pro)</p></div>
+                    <div class="text-right"><p class="text-[11px] uppercase opacity-30 tracking-widest mb-1">የጸደቁ</p><p class="text-2xl font-black">12 ጊዜ</p></div>
                 </div>
             </div>
-
-            <!-- List of activities -->
-            <div class="space-y-4">
-                <h3 class="text-[11px] font-black uppercase opacity-40 px-1 tracking-widest">የቅርብ ጊዜ ሁኔታ</h3>
-                <div class="glass-card p-0 overflow-hidden">
-                    <div class="p-5 flex items-center justify-between border-b border-black/5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center text-xl">⏳</div>
-                            <div><p class="text-xs font-black">መደበኛ መዋጮ (የካቲት)</p><p class="text-[9px] opacity-40 font-bold uppercase">ዛሬ | 9:15 AM</p></div>
-                        </div>
-                        <div class="text-right"><p class="text-xs font-black">100.00</p><span class="status-badge badge-pending">በመጠባበቅ</span></div>
-                    </div>
-                    <div class="p-5 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-green-50 text-green-700 rounded-xl flex items-center justify-center text-xl">✅</div>
-                            <div><p class="text-xs font-black">መደበኛ መዋጮ (ጥር)</p><p class="text-[9px] opacity-40 font-bold uppercase">ጥር 12 | 10:30 AM</p></div>
-                        </div>
-                        <div class="text-right"><p class="text-xs font-black">100.00</p><span class="status-badge badge-approved">የጸደቀ</span></div>
-                    </div>
-                </div>
-            </div>
+            
+            <footer class="footer-skymark">
+                <p class="text-[10px] font-black opacity-30 uppercase tracking-[0.3em] mb-2">In Collaboration with</p>
+                <p class="skymark-tag-footer">SKYMARK SOLUTION</p>
+            </footer>
         </div>
 
         <!-- LOAN SECTION -->
-        <div id="loanSection" class="hidden animate-section space-y-6">
-            <div class="glass-card p-6 text-center space-y-6">
-                <div class="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-[1.75rem] flex items-center justify-center text-5xl mx-auto shadow-inner">🏦</div>
-                <h2 class="text-xl font-black">የብድር መጠየቂያ</h2>
+        <div id="loanSection" class="hidden animate-section space-y-12">
+            <div class="glass-card p-10 text-center space-y-12">
+                <div class="w-24 h-24 bg-blue-50 rounded-[2.5rem] flex items-center justify-center text-6xl mx-auto shadow-inner">🏦</div>
+                <h2 class="text-3xl font-black">የብድር መጠየቂያ</h2>
                 
-                <!-- Guarantors -->
-                <div class="glass-card p-5 bg-black/5 border-none text-left space-y-4">
-                    <h3 class="text-[11px] font-black uppercase opacity-40 tracking-wider">የዋስ አባላት (Guarantors)</h3>
-                    <input type="text" id="loanWarrant1" placeholder="ዋስ 1 (@username)" class="neo-input font-bold text-sm">
-                    <input type="text" id="loanWarrant2" placeholder="ዋስ 2 (@username)" class="neo-input font-bold text-sm">
+                <div class="glass-card p-8 bg-black/5 border-none text-left space-y-6">
+                    <h3 class="text-[12px] font-black uppercase opacity-40 tracking-widest">የዋስ አባላት (Guarantors)</h3>
+                    <input type="text" id="loanWarrant1" placeholder="ዋስ 1 (@username)" class="neo-input font-bold">
+                    <input type="text" id="loanWarrant2" placeholder="ዋስ 2 (@username)" class="neo-input font-bold">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1"><label class="text-[10px] font-black uppercase opacity-40">መጠን</label><input type="number" id="lAmt" value="5000" class="neo-input text-center font-black" oninput="calcLoan()"></div>
-                    <div class="space-y-1"><label class="text-[10px] font-black uppercase opacity-40">ወራት</label><select id="lMo" class="neo-input text-center font-black" onchange="calcLoan()"><option value="6">6</option><option value="12" selected>12</option><option value="24">24</option></select></div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div><label class="text-[12px] font-black uppercase opacity-40">መጠን</label><input type="number" id="lAmt" value="5000" class="neo-input text-center font-black"></div>
+                    <div><label class="text-[12px] font-black uppercase opacity-40">ወራት</label><select id="lMo" class="neo-input text-center font-black" onchange="calcLoan()"><option value="6">6</option><option value="12" selected>12</option><option value="24">24</option></select></div>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="p-4 bg-black/5 rounded-2xl"><p class="text-[9px] uppercase opacity-40 mb-1">የወር ክፍያ</p><p id="lResM" class="text-lg font-black text-green-700">416.67</p></div>
-                    <div class="p-4 bg-slate-800 text-white rounded-2xl shadow-lg"><p class="text-[9px] uppercase opacity-40 mb-1">ጠቅላላ</p><p id="lResT" class="text-lg font-black">5000.00</p></div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="p-8 bg-black/5 rounded-[2.5rem]"><p class="text-[11px] uppercase opacity-40 mb-2">የወር ክፍያ</p><p id="lResM" class="text-2xl font-black text-green-700">416.67</p></div>
+                    <div class="p-8 bg-slate-800 text-white rounded-[2.5rem] shadow-2xl"><p class="text-[11px] uppercase opacity-40 mb-2">ጠቅላላ</p><p id="lResT" class="text-2xl font-black">5000.00</p></div>
                 </div>
-                <button disabled class="w-full py-4 bg-slate-200 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed">የብድር አገልግሎት በቅርቡ ይከፈታል</button>
+                <button disabled class="w-full py-6 bg-slate-200 text-slate-400 rounded-[2.5rem] font-black text-xs uppercase tracking-widest mt-6">የብድር አገልግሎት በቅርቡ ይከፈታል</button>
             </div>
         </div>
 
         <!-- HELP SECTION -->
-        <div id="helpSection" class="hidden animate-section p-2 space-y-6">
-            <div class="glass-card bg-green-700 text-white p-8 text-center relative overflow-hidden shadow-2xl">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                <h2 class="text-3xl font-black mb-2">የእርዳታ ማዕከል</h2>
-                <p class="text-xs opacity-70">እንዴት መርዳት እንችላለን?</p>
+        <div id="helpSection" class="hidden animate-section p-2 space-y-12">
+            <div class="glass-card bg-green-700 text-white p-12 text-center relative overflow-hidden shadow-2xl">
+                <div class="absolute -right-10 -top-10 w-56 h-56 bg-white/10 rounded-full blur-3xl"></div>
+                <h2 class="text-4xl font-black mb-4">የእርዳታ ማዕከል</h2>
+                <p class="text-base opacity-80">ሁሉንም መረጃ እዚህ ያገኛሉ</p>
             </div>
 
-            <!-- Rules -->
-            <div class="glass-card space-y-4 border-l-4 border-l-yellow-500">
-                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest">የዕድር ደንቦች (Rules)</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center"><span class="text-xs font-bold">መደበኛ ክፍያ ጊዜ</span><span class="text-[10px] font-black bg-black/5 px-2 py-1 rounded">ከቀን 1 - 5</span></div>
-                    <div class="flex justify-between items-center"><span class="text-xs font-bold">የቀን 6-10 ቅጣት</span><span class="text-[10px] font-black text-red-500">20 ብር</span></div>
-                    <div class="flex justify-between items-center"><span class="text-xs font-bold">ከቀን 11 በኋላ ቅጣት</span><span class="text-[10px] font-black text-red-500">50 ብር</span></div>
-                </div>
+            <div class="text-center pt-10">
+                <p class="text-[11px] font-black uppercase opacity-30 mb-6 tracking-widest">አሁንም እርዳታ ይፈልጋሉ?</p>
+                <a href="https://t.me/Abiymersha" class="flex items-center justify-center gap-5 w-full py-7 bg-slate-900 text-white rounded-[2.75rem] font-black text-xl shadow-2xl active:scale-95 transition-all"><span>አስተዳዳሪውን አግኝ (@Abiymersha)</span></a>
             </div>
 
-            <!-- FAQ -->
-            <div class="glass-card space-y-1">
-                <h3 class="text-[11px] font-black uppercase opacity-40 mb-4 tracking-widest">ተዘውታሪ ጥያቄዎች (FAQ)</h3>
-                <div class="faq-item"><div class="faq-question">Q: ክፍያዬ ለምን አልጸደቀም?</div><div class="faq-answer">ደረሰኝዎ በፋይናንስ ኦፊሰሩ እስኪረጋገጥ ድረስ ትንሽ መጠበቅ ይኖርብዎታል። አብዛኛውን ጊዜ ከ24 ሰዓት በታች ይፈጃል።</div></div>
-                <div class="faq-item"><div class="faq-question">Q: ብድር ለመውሰድ ምን ያስፈልጋል?</div><div class="faq-answer">ቢያንስ ለ6 ወራት መደበኛ አባል መሆን እና ሁለት የዋስ አባላት (Guarantors) ማቅረብ ይኖርብዎታል።</div></div>
-            </div>
-
-            <div class="text-center pt-4">
-                <p class="text-[10px] font-black uppercase opacity-30 mb-4 tracking-widest">አሁንም እርዳታ ይፈልጋሉ?</p>
-                <a href="https://t.me/Abiymersha" class="flex items-center justify-center gap-3 w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-base shadow-xl"><span>አስተዳዳሪውን አግኝ (@Abiymersha)</span></a>
-            </div>
+            <footer class="footer-skymark">
+                <p class="text-[10px] font-black opacity-30 uppercase tracking-[0.3em] mb-2">In Collaboration with</p>
+                <p class="skymark-tag-footer">SKYMARK SOLUTION</p>
+            </footer>
         </div>
     </div>
 
@@ -380,7 +420,7 @@
             document.getElementById('customAlert').style.display = 'flex';
         }
         function closeAlert() { document.getElementById('customAlert').style.display = 'none'; }
-        function showSoon(provider) { showAlert(`የ${provider} የክፍያ አገልግሎት በቅርቡ ስራ ይጀምራል። እባክዎ ለጊዜው በደረሰኝ (Manual) ክፍያ ይፈጽሙ።`); }
+        function showSoon() { showAlert("የዲጂታል ክፍያ አገልግሎት በቅርቡ ስራ ይጀምራል። እባክዎ ለጊዜው በደረሰኝ (Manual) ክፍያ ይፈጽሙ።"); }
 
         window.onload = function() {
             populateDateSelectors();
@@ -389,8 +429,8 @@
                 setTimeout(() => { 
                     document.getElementById('appLoader').style.display = 'none'; 
                     document.getElementById('mainContent').classList.add('visible'); 
-                }, 800);
-            }, 2500);
+                }, 1200);
+            }, 3500);
         };
 
         function populateDateSelectors() {
@@ -399,16 +439,17 @@
             mS.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
             let days = ""; for(let i=1; i<=30; i++) days += `<option value="${i}">${i}</option>`;
             dS.innerHTML = days;
-            yS.innerHTML = `<option value="${currentYear-1}">${currentYear-1}</option><option value="${currentYear}" selected>${currentYear}</option><option value="${currentYear+1}">${currentYear+1}</option>`;
+            yS.innerHTML = `<option value="${currentYear}">${currentYear}</option>`;
         }
 
         window.showTab = (t) => { 
             ['payment', 'status', 'loan', 'help'].forEach(s => { 
-                document.getElementById(s + 'Section').classList.toggle('hidden', s !== t); 
+                const el = document.getElementById(s + 'Section');
+                if(el) el.classList.toggle('hidden', s !== t); 
                 document.getElementById(s + 'Tab').classList.toggle('active-tab', s === t); 
             }); 
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); 
-            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         window.togglePayer = (m) => { 
@@ -419,7 +460,7 @@
         };
 
         window.setMode = (m) => { 
-            if (m === 'easypay') { showSoon('ዲጂታል'); return; }
+            if (m === 'easypay') { showSoon(); return; }
             payMode = m; 
             document.getElementById('mManual').classList.toggle('selected', m === 'manual'); 
             document.getElementById('mEasy').classList.toggle('selected', m === 'easypay'); 
@@ -438,20 +479,19 @@
 
         function handleTypeChange() { 
             const p = document.getElementById('purpose').value; 
-            const dg = document.getElementById('dateGrid'), po = document.getElementById('periodOther'), l = document.getElementById('periodLabel'); 
-            if (p === "ሌላ ክፍያ") { dg.classList.add('hidden'); po.classList.remove('hidden'); l.innerText = "ዓላማ"; } 
-            else { dg.classList.remove('hidden'); po.classList.add('hidden'); l.innerText = "የክፍያ ጊዜ"; } 
+            const dg = document.getElementById('dateGrid'), l = document.getElementById('periodLabel'); 
+            if (p === "ሌላ ክፍያ") { l.innerText = "ዓላማ (ለማን/ለምን)"; } 
+            else { l.innerText = "የክፍያ ጊዜ"; } 
         }
 
         function autoCalculatePenalty() { 
             const p = document.getElementById('purpose').value, d = parseInt(document.getElementById('periodDay').value); 
-            let pen = 0, note = ""; 
+            let pen = 0;
             if (p === "መደበኛ መዋጮ") { 
-                if (d >= 6 && d <= 10) { pen = 20; note = "የቀን 6-10 ቅጣት (20 ብር)"; } 
-                else if (d >= 11) { pen = 50; note = "ከቀን 11 በኋላ ቅጣት (50 ብር)"; } 
+                if (d >= 6 && d <= 10) pen = 20; 
+                else if (d >= 11) pen = 50; 
             } 
             document.getElementById('penalty').value = pen; 
-            document.getElementById('penaltyHint').innerText = note; 
         }
 
         function calcLoan() { 
@@ -466,7 +506,7 @@
                 type: 'payment_report', 
                 gateway: payMode, 
                 purpose: document.getElementById('purpose').value, 
-                period: (document.getElementById('purpose').value === "ሌላ ክፍያ") ? document.getElementById('periodOther').value : `${document.getElementById('periodMonth').value} ${document.getElementById('periodDay').value}, ${document.getElementById('periodYear').value}`, 
+                period: `${document.getElementById('periodMonth').value} ${document.getElementById('periodDay').value}, ${document.getElementById('periodYear').value}`, 
                 amount: document.getElementById('amount').value, 
                 penalty: document.getElementById('penalty').value, 
                 payFor: payerMode === 'self' ? 'self' : document.getElementById('targetMember').value,
