@@ -13,10 +13,12 @@ from dotenv import load_dotenv
 
 # --- 1. CONFIGURATION & LOGGING ---
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_IDS = [int(id.strip()) for id in os.getenv("ADMIN_ID", "1062635928").replace(',', ' ').split()]
+raw_admins = os.getenv("ADMIN_ID", "1062635928").replace(',', ' ').split()
+ADMIN_IDS = [int(id.strip()) for id in raw_admins]
 MINI_APP_URL = os.getenv("MINI_APP_URL")
 TEST_GROUP_ID = os.getenv("TEST_GROUP_ID")
 if TEST_GROUP_ID:
@@ -25,7 +27,8 @@ if TEST_GROUP_ID:
 DB_FILE = 'edir_pro_final.db'
 
 if not BOT_TOKEN:
-    raise ValueError("❌ BOT_TOKEN missing in Environment Variables!")
+    logger.critical("❌ BOT_TOKEN missing!")
+    exit(1)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -36,61 +39,51 @@ def init_db():
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS members (
-            user_id INTEGER PRIMARY KEY, 
-            username TEXT, 
-            full_name TEXT, 
-            total_savings REAL DEFAULT 0, 
-            joined_at TEXT
+            user_id INTEGER PRIMARY KEY, username TEXT, full_name TEXT, 
+            total_savings REAL DEFAULT 0, joined_at TEXT
         )
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS payments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            user_id INTEGER, 
-            username TEXT, 
-            gateway TEXT, 
-            purpose TEXT, 
-            period TEXT, 
-            total_amount REAL, 
-            penalty REAL DEFAULT 0, 
-            pay_for_member TEXT, 
-            guarantors TEXT,
-            file_id TEXT, 
-            status TEXT DEFAULT 'AWAIT_APPROVAL', 
-            group_msg_id INTEGER,
-            timestamp TEXT
+            id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, username TEXT, 
+            gateway TEXT, purpose TEXT, period TEXT, total_amount REAL, 
+            penalty REAL DEFAULT 0, pay_for_member TEXT, guarantors TEXT,
+            file_id TEXT, status TEXT DEFAULT 'AWAIT_APPROVAL', 
+            group_msg_id INTEGER, timestamp TEXT
         )
     ''')
     conn.commit()
     conn.close()
 
-# --- 3. RENDER STABILITY (HTTP SERVER) ---
+# --- 3. RENDER STABILITY ---
 async def handle_ping(request):
-    return web.Response(text="EdirPay Bot (Python) is fully operational")
+    return web.Response(text="EdirPay Bot (Python) is Online")
 
 async def start_http_server():
     app = web.Application()
     app.router.add_get('/', handle_ping)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', int(os.getenv("PORT", 3000)))
-    await site.start()
+    await web.TCPSite(runner, '0.0.0.0', int(os.getenv("PORT", 3000))).start()
 
-# --- 4. HELPERS ---
+# --- 4. UI HELPERS ---
 def is_admin(user_id):
     return user_id in ADMIN_IDS
 
-def format_group_report(username, purpose, period, amount, penalty, gateway, status_text, status_emoji):
-    return (f"📋 **የክፍያ ሪፖርት**\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"👤 **አባል:** @{username}\n"
-            f"🎯 **ዓላማ:** {purpose}\n"
-            f"📅 **ጊዜ:** {period}\n"
-            f"💰 **መጠን:** {amount} ብር\n"
-            f"⚠️ **ቅጣት:** {penalty if float(penalty) > 0 else 'የለም'}\n"
-            f"💳 **መንገድ:** {gateway.upper()}\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"{status_emoji} **ሁኔታ:** {status_text}")
+def format_group_report(p, status_emoji, status_text, reason=""):
+    msg = (f"📋 **የክፍያ ሪፖርት**\n"
+           f"━━━━━━━━━━━━━━━━━━\n"
+           f"👤 **ከአባል:** @{p['username']}\n"
+           f"🎯 **ዓላማ:** {p['purpose']}\n"
+           f"📅 **ጊዜ:** {p['period']}\n"
+           f"💰 **መጠን:** {p['total_amount']} ብር\n"
+           f"⚠️ **ቅጣት:** {p['penalty'] if float(p['penalty']) > 0 else 'የለም'}\n"
+           f"💳 **መንገድ:** {p['gateway'].upper()}\n"
+           f"━━━━━━━━━━━━━━━━━━\n"
+           f"{status_emoji} **ሁኔታ:** {status_text}")
+    if reason:
+        msg += f"\n📝 **ምክንያት:** {reason}"
+    return msg
 
 # --- 5. BOT HANDLERS ---
 
@@ -106,14 +99,10 @@ async def cmd_start(message: types.Message):
 
     builder = ReplyKeyboardBuilder()
     builder.row(types.KeyboardButton(text="📱 ሚኒ አፑን ክፈት", web_app=WebAppInfo(url=MINI_APP_URL)))
-    if is_admin(message.from_user.id):
-        builder.row(types.KeyboardButton(text="⚙️ የአስተዳዳሪ ሁነታ"))
+    if is_admin(message.from_user.id): builder.row(types.KeyboardButton(text="⚙️ የአስተዳዳሪ ሁነታ"))
     
-    await message.reply(
-        f"እንኳን ወደ **እሁድን በፍቅር** መጡ! 👋 (Python v3.7.2)\n\nከታች ያለውን ሚኒ አፕ በመጠቀም የክፍያ ሪፖርት መላክ ይችላሉ።",
-        reply_markup=builder.as_markup(resize_keyboard=True),
-        parse_mode="Markdown"
-    )
+    await message.reply(f"ሰላም {message.from_user.first_name}! 👋\nእንኳን ወደ **እሁድን በፍቅር** ዲጂታል ዕድር በደህና መጡ።",
+                         reply_markup=builder.as_markup(resize_keyboard=True), parse_mode="Markdown")
 
 @dp.message(F.content_type == types.ContentType.WEB_APP_DATA)
 async def handle_webapp_data(message: types.Message):
@@ -123,7 +112,6 @@ async def handle_webapp_data(message: types.Message):
             time_now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             guarantors = ", ".join([g for g in data.get('guarantors', []) if g]) or "የለም"
             
-            # ጊዜያዊ ዳታ በዳታቤዝ ውስጥ ማስቀመጥ (ደረሰኝ ሲመጣ ለመጠቀም)
             conn = sqlite3.connect(DB_FILE)
             cursor = conn.cursor()
             cursor.execute('''
@@ -134,47 +122,43 @@ async def handle_webapp_data(message: types.Message):
                   data['penalty'], data.get('payFor', 'self'), guarantors, 'AWAITING_FILE', time_now))
             conn.commit()
             conn.close()
-
-            await message.answer(f"✅ የ{data['amount']} ብር መረጃ ተመዝግቧል።\n\n📷 እባክዎ የባንክ ደረሰኝዎን ፎቶ አሁን ይላኩ።")
-    except Exception as e:
-        logging.error(f"WebAppData Error: {e}")
+            await message.answer(f"✅ የ{data['amount']} ብር መረጃ ተመዝግቧል።\n\n📷 እባክዎ ደረሰኝዎን አሁን ይላኩ።")
+    except Exception as e: logger.error(f"WebAppData Error: {e}")
 
 @dp.message(F.photo | F.document)
 async def handle_receipt_upload(message: types.Message):
     file_id = message.photo[-1].file_id if message.photo else message.document.file_id
-    
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM payments WHERE user_id = ? AND status = "AWAITING_FILE" ORDER BY id DESC LIMIT 1', (message.from_user.id,))
-    pay = cursor.fetchone()
+    pay_row = cursor.fetchone()
     
-    if pay:
-        payment_id = pay[0]
-        # 1. ዳታቤዝ አፕዴት
-        cursor.execute('UPDATE payments SET file_id = ?, status = "AWAIT_APPROVAL" WHERE id = ?', (file_id, payment_id))
+    if pay_row:
+        p = {'id': pay_row[0], 'user_id': pay_row[1], 'username': pay_row[2], 'gateway': pay_row[3], 'purpose': pay_row[4], 
+             'period': pay_row[5], 'total_amount': pay_row[6], 'penalty': pay_row[7], 'guarantors': pay_row[9]}
+        
+        cursor.execute('UPDATE payments SET file_id = ?, status = "AWAIT_APPROVAL" WHERE id = ?', (file_id, p['id']))
         conn.commit()
 
-        # 2. ለግሩፑ ማሳወቂያ መላክ
+        # ግሩፕ ላይ ሪፖርት መላክ
         if TEST_GROUP_ID:
-            report = format_group_report(pay[2], pay[4], pay[5], pay[6], pay[7], pay[3], "በመጠባበቅ ላይ", "⏳")
+            report = format_group_report(p, "⏳", "በመጠባበቅ ላይ")
             try:
                 sent = await bot.send_message(TEST_GROUP_ID, report, parse_mode="Markdown")
-                cursor.execute('UPDATE payments SET group_msg_id = ? WHERE id = ?', (sent.message_id, payment_id))
+                cursor.execute('UPDATE payments SET group_msg_id = ? WHERE id = ?', (sent.message_id, p['id']))
                 conn.commit()
-            except Exception as e: logging.error(f"Group notification error: {e}")
+            except Exception as e: logger.error(f"Group error: {e}")
 
-        # 3. ለአስተዳዳሪው መላክ
-        admin_msg = f"🚨 **አዲስ የክፍያ ማረጋገጫ**\n\n👤 አባል: @{pay[2]}\n💰 መጠን: {pay[6]} ብር\n🛡 ዋሶች: {pay[9]}"
+        # ለአስተዳዳሪ መላክ
         builder = InlineKeyboardBuilder()
-        builder.button(text="✅ አጽድቅ", callback_data=f"app_{payment_id}")
-        builder.button(text="❌ ውድቅ አድርግ", callback_data=f"rej_{payment_id}")
+        builder.button(text="✅ አጽድቅ", callback_data=f"app_{p['id']}")
+        builder.button(text="❌ ውድቅ አድርግ", callback_data=f"rej_{p['id']}")
         
         for admin_id in ADMIN_IDS:
-            try:
-                await bot.send_photo(admin_id, file_id, caption=admin_msg, reply_markup=builder.as_markup(), parse_mode="Markdown")
+            try: await bot.send_photo(admin_id, file_id, caption=f"🚨 **አዲስ ክፍያ**\n👤 @{p['username']}\n💰 {p['total_amount']} ብር", 
+                                        reply_markup=builder.as_markup(), parse_mode="Markdown")
             except: pass
-
-        await message.answer("📩 ደረሰኝዎ ደርሶናል። እንደተረጋገጠ እናሳውቆታለን!")
+        await message.answer("📩 ደረሰኝዎ ለፋይናንስ ኦፊሰር ተልኳል።")
     conn.close()
 
 @dp.callback_query(F.data.startswith("app_") | F.data.startswith("rej_"))
@@ -183,36 +167,35 @@ async def process_approval(callback: types.CallbackQuery):
 
     action, pay_id = callback.data.split("_")
     conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM payments WHERE id = ?', (pay_id,))
-    pay = cursor.fetchone()
+    p = cursor.fetchone()
     
-    if pay:
+    if p:
         if action == "app":
             cursor.execute('UPDATE payments SET status = "APPROVED" WHERE id = ?', (pay_id,))
-            cursor.execute('UPDATE members SET total_savings = total_savings + ? WHERE user_id = ?', (pay[6], pay[1]))
-            msg = f"✅ የ{pay[6]} ብር ክፍያዎ ተረጋግጦ ጽድቋል። እናመሰግናለን!"
-            status_txt, emoji = "ተረጋግጦ ጽድቋል", "✅"
+            cursor.execute('UPDATE members SET total_savings = total_savings + ? WHERE user_id = ?', (p['total_amount'], p['user_id']))
+            user_msg = f"✅ የ{p['total_amount']} ብር ክፍያዎ ጽድቋል።"
+            status_txt, emoji, reason = "ተረጋግጦ ጽድቋል", "✅", ""
         else:
             cursor.execute('UPDATE payments SET status = "REJECTED" WHERE id = ?', (pay_id,))
-            msg = f"❌ የ${pay[6]} ብር ክፍያዎ ውድቅ ተደርጓል። እባክዎ በትክክል ደግመው ይላኩ።"
-            status_txt, emoji = "ውድቅ ተደርጓል", "❌"
+            user_msg = f"❌ የ{p['total_amount']} ብር ክፍያዎ ውድቅ ተደርጓል። ደረሰኙ ግልጽ አይደለም።"
+            status_txt, emoji, reason = "ውድቅ ተደርጓል", "❌", "ደረሰኙ ትክክል አይደለም"
         
         conn.commit()
-        try: await bot.send_message(pay[1], msg)
+        try: await bot.send_message(p['user_id'], user_msg)
         except: pass
 
-        # ግሩፕ ላይ ያለውን ሁኔታ መቀየር
-        if TEST_GROUP_ID and pay[12]:
-            updated_report = format_group_report(pay[2], pay[4], pay[5], pay[6], pay[7], pay[3], status_txt, emoji)
-            try: await bot.edit_message_text(updated_report, TEST_GROUP_ID, pay[12], parse_mode="Markdown")
+        if TEST_GROUP_ID and p['group_msg_id']:
+            updated_report = format_group_report(p, emoji, status_txt, reason)
+            try: await bot.edit_message_text(updated_report, TEST_GROUP_ID, p['group_msg_id'], parse_mode="Markdown")
             except: pass
 
     await callback.message.edit_caption(caption=f"{callback.message.caption}\n\n🏁 **ውሳኔ:** {'✅ ጸድቋል' if action == 'app' else '❌ ውድቅ ተደርጓል'}")
     await callback.answer("ተጠናቋል")
     conn.close()
 
-# --- 6. MAIN ---
 async def main():
     init_db()
     await asyncio.gather(start_http_server(), dp.start_polling(bot))
