@@ -39,8 +39,7 @@
             margin: 0; padding: 0;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
-            /* Bottom padding adjusted for shorter menu */
-            padding-bottom: 90px;
+            padding-bottom: 40px;
         }
 
         /* --- STYLISH LOADING ANIMATION --- */
@@ -126,27 +125,26 @@
         }
         .method-card.selected { border-color: var(--brand-green); background: var(--brand-light); }
 
-        /* FIXED BOTTOM NAVIGATION - COMPACT & FLEXIBLE */
+        /* TOP STICKY NAVIGATION */
         .tab-bar {
             background: var(--glass);
-            padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 12px)); 
-            border-radius: 1.75rem 1.75rem 0 0;
+            padding: 10px 12px; 
+            border-radius: 1.5rem;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 6px;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            position: sticky;
+            top: 10px;
             z-index: 1000;
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
-            border-top: 1px solid var(--card-border);
-            box-shadow: 0 -8px 30px rgba(0,0,0,0.06);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+            margin-bottom: 25px;
         }
 
         .tab-btn {
-            padding: 6px 2px;
+            padding: 8px 2px;
             border-radius: 1rem;
             font-size: 9px;
             font-weight: 800;
@@ -164,6 +162,7 @@
             background: var(--brand-light);
             opacity: 1;
             color: var(--brand-green);
+            transform: scale(1.05);
         }
         .tab-btn span.icon {
             font-size: 18px;
@@ -208,10 +207,14 @@
         #notificationCenter.open { transform: translateX(-100%); right: 0; }
 
         .status-badge { font-size: 10px; font-weight: 900; padding: 4px 12px; border-radius: 50px; text-transform: uppercase; }
-        .gateway-logo { width: 38px; height: 38px; border-radius: 12px; margin: 0 auto 8px; object-fit: cover; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .gateway-logo { width: 44px; height: 44px; border-radius: 12px; margin: 0 auto 8px; object-fit: contain; background: white; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
 
         .animate-section { animation: reveal 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
         @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .faq-item { border-bottom: 1px solid var(--card-border); padding: 12px 0; }
+        .faq-question { font-weight: 800; font-size: 13px; color: var(--brand-green); margin-bottom: 4px; display: flex; align-items: start; gap: 8px; }
+        .faq-answer { font-size: 12px; opacity: 0.7; line-height: 1.6; }
     </style>
 </head>
 <body class="p-5">
@@ -241,7 +244,7 @@
 
     <!-- MAIN CONTENT -->
     <div id="mainContent">
-        <header class="flex items-center justify-between mb-8 px-2">
+        <header class="flex items-center justify-between mb-6 px-2">
             <div class="flex items-center gap-5">
                 <div class="relative">
                     <div class="w-14 h-14 bg-green-700 rounded-[20px] flex items-center justify-center shadow-xl overflow-hidden active:scale-90 transition-transform">
@@ -261,6 +264,26 @@
                 <div id="notifBadge" class="absolute top-3.5 right-3.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
             </button>
         </header>
+
+        <!-- TOP NAVIGATION BAR -->
+        <nav id="mainNav" class="tab-bar">
+            <button onclick="showTab('payment')" id="paymentTab" class="tab-btn active-tab">
+                <span class="icon">💳</span>
+                <span>ክፍያ</span>
+            </button>
+            <button onclick="showTab('status')" id="statusTab" class="tab-btn">
+                <span class="icon">📊</span>
+                <span>ሁኔታ</span>
+            </button>
+            <button onclick="showTab('loan')" id="loanTab" class="tab-btn">
+                <span class="icon">🏦</span>
+                <span>ብድር</span>
+            </button>
+            <button onclick="showTab('help')" id="helpTab" class="tab-btn">
+                <span class="icon">❓</span>
+                <span>እርዳታ</span>
+            </button>
+        </nav>
 
         <!-- PAYMENT SECTION -->
         <div id="paymentSection" class="animate-section space-y-6">
@@ -315,11 +338,27 @@
                         <div id="mManual" class="method-card selected py-4" onclick="setMode('manual')">🧾 በደረሰኝ</div>
                         <div id="mEasy" class="method-card py-4" onclick="setMode('easypay')">💳 ዲጂታል</div>
                     </div>
-                    <div id="digitalGateways" class="hidden grid grid-cols-3 gap-2">
-                        <div class="gateway-pill method-card p-2 selected" onclick="selectGateway('chapa', this)"><img src="chapa.jpg" class="gateway-logo w-8 h-8 mb-1" onerror="this.src='https://ui-avatars.com/api/?name=C'"><span class="text-[8px] font-black uppercase">Chapa</span></div>
-                        <div class="gateway-pill method-card p-2" onclick="selectGateway('telebirr', this)"><img src="telebirr.jpg" class="gateway-logo w-8 h-8 mb-1" onerror="this.src='https://ui-avatars.com/api/?name=T'"><span class="text-[8px] font-black uppercase">Tele</span></div>
-                        <div class="gateway-pill method-card p-2" onclick="selectGateway('cbe', this)"><img src="cbe.jpg" class="gateway-logo w-8 h-8 mb-1" onerror="this.src='https://ui-avatars.com/api/?name=B'"><span class="text-[8px] font-black uppercase">CBE</span></div>
+                    
+                    <div id="digitalGateways" class="hidden animate-section pt-2">
+                        <div class="text-center mb-4">
+                            <span class="text-[10px] font-black bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full uppercase tracking-tighter">አንዱን ይምረጡ (Soon)</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="gateway-pill method-card p-2 grayscale-[0.6] hover:grayscale-0 transition-all" onclick="selectGateway('chapa', this)">
+                                <img src="https://chapa.co/favicon.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=Ch&background=15803d&color=fff'">
+                                <span class="text-[8px] font-black uppercase">Chapa</span>
+                            </div>
+                            <div class="gateway-pill method-card p-2 grayscale-[0.6] hover:grayscale-0 transition-all" onclick="selectGateway('telebirr', this)">
+                                <img src="https://www.ethio-telecom.net/wp-content/uploads/2021/05/telebirr-logo.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=Tb&background=0052cc&color=fff'">
+                                <span class="text-[8px] font-black uppercase">Telebirr</span>
+                            </div>
+                            <div class="gateway-pill method-card p-2 grayscale-[0.6] hover:grayscale-0 transition-all" onclick="selectGateway('cbe', this)">
+                                <img src="https://combanketh.et/wp-content/uploads/2021/06/cbe_logo.png" class="gateway-logo" onerror="this.src='https://ui-avatars.com/api/?name=CB&background=6a1b9a&color=fff'">
+                                <span class="text-[8px] font-black uppercase">CBE Birr</span>
+                            </div>
+                        </div>
                     </div>
+
                     <div id="receiptUploadArea" class="text-center">
                         <div class="bg-black/5 border-dashed border-2 border-slate-300 p-8 rounded-2xl cursor-pointer hover:bg-black/5 transition-all" onclick="document.getElementById('receiptFile').click()">
                             <span class="text-[10px] font-black uppercase opacity-40 block">📸 ደረሰኝ ለመጫን</span>
@@ -360,6 +399,16 @@
             <div class="glass-card p-6 text-center space-y-6">
                 <div class="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-[1.75rem] flex items-center justify-center text-5xl mx-auto">🏦</div>
                 <h2 class="text-xl font-black">የብድር ማስያ (Calculator)</h2>
+                
+                <!-- Warranty Members Area -->
+                <div class="glass-card p-5 bg-black/5 border-none rounded-2xl space-y-4 text-left">
+                    <h3 class="text-[11px] font-black uppercase opacity-40 tracking-wider">የዋስ አባላት (Guarantors)</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="loanWarrant1" placeholder="ዋስ 1 (@username)" class="neo-input font-bold text-sm">
+                        <input type="text" id="loanWarrant2" placeholder="ዋስ 2 (@username)" class="neo-input font-bold text-sm">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1"><label class="text-[10px] font-black uppercase opacity-40">መጠን</label><input type="number" id="lAmt" value="5000" class="neo-input text-center font-black text-sm" oninput="calcLoan()"></div>
                     <div class="space-y-1"><label class="text-[10px] font-black uppercase opacity-40">ወራት</label><select id="lMo" class="neo-input text-center font-black text-sm" onchange="calcLoan()"><option value="6">6</option><option value="12" selected>12</option><option value="24">24</option></select></div>
@@ -372,36 +421,80 @@
             </div>
         </div>
 
-        <!-- HELP SECTION -->
-        <div id="helpSection" class="hidden animate-section p-4">
-            <div class="glass-card p-8 space-y-8 text-center">
-                <h2 class="text-2xl font-black">እርዳታ</h2>
-                <div class="p-5 bg-black/5 rounded-2xl border-l-4 border-l-green-600 text-left">
-                    <p class="text-xs font-bold opacity-70 leading-relaxed">ከቀን 1-5 መደበኛ። ከቀን 6-10 ቅጣት 20 ብር። ከቀን 11 በኋላ ቅጣት 50 ብር ይሆናል።</p>
+        <!-- HELP SECTION (ENHANCED HELP CENTER) -->
+        <div id="helpSection" class="hidden animate-section p-2 space-y-6 pb-20">
+            <!-- Header Card -->
+            <div class="glass-card bg-green-700 text-white p-8 text-center relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                <h2 class="text-3xl font-black mb-2">የእርዳታ ማዕከል</h2>
+                <p class="text-xs opacity-70">እንዴት መርዳት እንችላለን?</p>
+            </div>
+
+            <!-- 1. Quick Guide Section -->
+            <div class="glass-card space-y-4">
+                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest px-1">አጠቃቀም (Quick Guide)</h3>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-700 rounded-full flex items-center justify-center font-black flex-shrink-0">1</div>
+                        <p class="text-xs font-bold leading-relaxed">ክፍያ ለመፈጸም "ክፍያ" ገጽ ላይ ገብተው ፎርሙን ይሙሉና ደረሰኝ ይላኩ።</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-700 rounded-full flex items-center justify-center font-black flex-shrink-0">2</div>
+                        <p class="text-xs font-bold leading-relaxed">የቁጠባ ሁኔታዎን ለማየት "ሁኔታ" የሚለውን ገጽ ይጠቀሙ።</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-700 rounded-full flex items-center justify-center font-black flex-shrink-0">3</div>
+                        <p class="text-xs font-bold leading-relaxed">ብድር ለመጠየቅ "ብድር" ገጽ ላይ ወርሃዊ ክፍያዎን ማሰላት ይችላሉ።</p>
+                    </div>
                 </div>
-                <a href="https://t.me/Abiymersha" class="flex items-center justify-center gap-3 w-full py-4 bg-green-700 text-white rounded-2xl font-black text-base shadow-lg">@Abiymersha</a>
+            </div>
+
+            <!-- 2. Edir Rules Section -->
+            <div class="glass-card space-y-4 border-l-4 border-l-yellow-500">
+                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest px-1">የዕድር ደንቦች (Rules)</h3>
+                <div class="space-y-3 px-1">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold">መደበኛ ክፍያ ጊዜ</span>
+                        <span class="text-[10px] font-black bg-black/5 px-2 py-1 rounded">ከቀን 1 - 5</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold">የቀን 6-10 ቅጣት</span>
+                        <span class="text-[10px] font-black text-red-500">20 ብር</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold">ከቀን 11 በኋላ ቅጣት</span>
+                        <span class="text-[10px] font-black text-red-500">50 ብር</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. FAQ Section -->
+            <div class="glass-card space-y-4">
+                <h3 class="text-[11px] font-black uppercase opacity-40 tracking-widest px-1">ተዘውታሪ ጥያቄዎች (FAQ)</h3>
+                <div class="space-y-1">
+                    <div class="faq-item">
+                        <div class="faq-question"><span>Q:</span> ክፍያዬ ለምን አልጸደቀም?</div>
+                        <div class="faq-answer">ክፍያ የሚጸድቀው በፋይናንስ ኦፊሰሩ ደረሰኝዎ ሲረጋገጥ ነው። አብዛኛውን ጊዜ ከ24 ሰዓት በታች ይፈጃል።</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question"><span>Q:</span> ብድር ለመውሰድ ምን ያስፈልጋል?</div>
+                        <div class="faq-answer">ቢያንስ ለ6 ወራት መደበኛ አባል መሆን እና ሁለት የዋስ አባላት (Guarantors) ማቅረብ ይኖርብዎታል።</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question"><span>Q:</span> "Pro" ደረጃ ምንድነው?</div>
+                        <div class="faq-answer">"Pro" ደረጃ ማለት ቁጥባቸው ከ2,000 ብር በላይ ለሆኑ እና ክፍያቸው ለማያቋርጡ አባላት የሚሰጥ ልዩ መለያ ነው።</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Support Button -->
+            <div class="text-center pt-4">
+                <p class="text-[10px] font-black uppercase opacity-30 mb-4 tracking-widest">አሁንም እርዳታ ይፈልጋሉ?</p>
+                <a href="https://t.me/Abiymersha" class="flex items-center justify-center gap-3 w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-base shadow-xl active:scale-95 transition-all">
+                    <span>አስተዳዳሪውን አግኝ (@Abiymersha)</span>
+                </a>
             </div>
         </div>
-
-        <!-- FIXED BOTTOM NAVIGATION - COMPACT VERSION -->
-        <nav id="mainNav" class="tab-bar">
-            <button onclick="showTab('payment')" id="paymentTab" class="tab-btn active-tab">
-                <span class="icon">💳</span>
-                <span>ክፍያ</span>
-            </button>
-            <button onclick="showTab('status')" id="statusTab" class="tab-btn">
-                <span class="icon">📊</span>
-                <span>ሁኔታ</span>
-            </button>
-            <button onclick="showTab('loan')" id="loanTab" class="tab-btn">
-                <span class="icon">🏦</span>
-                <span>ብድር</span>
-            </button>
-            <button onclick="showTab('help')" id="helpTab" class="tab-btn">
-                <span class="icon">❓</span>
-                <span>እርዳታ</span>
-            </button>
-        </nav>
 
         <!-- Notification Drawer -->
         <div id="notificationCenter">
@@ -471,10 +564,6 @@
         };
 
         window.setMode = (m) => { 
-            if (m === 'easypay' && payerMode === 'other') { 
-                showAlert("ለሌላ አባል በደረሰኝ ብቻ ነው መክፈል የሚቻለው!"); 
-                return; 
-            } 
             payMode = m; 
             document.getElementById('mManual').classList.toggle('selected', m === 'manual'); 
             document.getElementById('mEasy').classList.toggle('selected', m === 'easypay'); 
@@ -483,9 +572,10 @@
         };
 
         window.selectGateway = (g, el) => { 
-            digitalGateway = g; 
-            document.querySelectorAll('.gateway-pill').forEach(p => p.classList.remove('selected')); 
-            el.classList.add('selected'); 
+            let providerName = g.charAt(0).toUpperCase() + g.slice(1);
+            if(g === 'cbe') providerName = "CBE Birr";
+            showAlert(`የ${providerName} ክፍያ አገልግሎት በቅርቡ ስራ ይጀምራል። እባክዎ ለጊዜው በደረሰኝ (Manual) ክፍያ ይፈጽሙ።`);
+            setTimeout(() => { setMode('manual'); }, 500);
         };
 
         window.previewReceipt = (i) => { 
@@ -494,6 +584,7 @@
                 r.onload = (e) => { 
                     document.getElementById('previewImage').src = e.target.result; 
                     document.getElementById('previewImage').classList.remove('hidden'); 
+                    document.getElementById('uploadPlaceholder')?.classList.add('hidden'); 
                 }; 
                 r.readAsDataURL(i.files[0]); 
             } 
@@ -535,7 +626,8 @@
                 period: (document.getElementById('purpose').value === "ሌላ ክፍያ") ? document.getElementById('periodOther').value : `${document.getElementById('periodMonth').value} ${document.getElementById('periodDay').value}, ${document.getElementById('periodYear').value}`, 
                 amount: document.getElementById('amount').value, 
                 penalty: document.getElementById('penalty').value, 
-                payFor: payerMode === 'self' ? 'self' : document.getElementById('targetMember').value 
+                payFor: payerMode === 'self' ? 'self' : document.getElementById('targetMember').value,
+                guarantors: [document.getElementById('loanWarrant1').value, document.getElementById('loanWarrant2').value]
             }; 
             tg.sendData(JSON.stringify(payload)); 
             tg.close(); 
