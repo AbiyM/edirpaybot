@@ -1,6 +1,6 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v3.7.0 - Group Notification Enhanced
- * ከሚኒ አፕ v1.1.0 ጋር የተናበበ
+ * እሁድን በፍቅር ዲጂታል ፕሮ v3.7.2 - Final Backend Core
+ * ለአስተዳዳሪዎች እና ለግሩፕ ማሳወቂያዎች የተመቻቸ
  */
 
 require('dotenv').config();
@@ -8,12 +8,14 @@ const { Telegraf, session, Markup } = require('telegraf');
 const Database = require('better-sqlite3');
 const http = require('http');
 
-// --- 1. RENDER STABILITY (Keep-Alive) ---
+// --- 1. RENDER HEALTH CHECK ---
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
     res.writeHead(200);
-    res.end('Bot Backend is Running');
-}).listen(PORT);
+    res.end('Ehuden Befikir Bot is Online');
+}).listen(PORT, () => {
+    console.log(`📡 Health-check server is running on port ${PORT}`);
+});
 
 // --- 2. CONFIGURATION ---
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -23,7 +25,7 @@ const MINI_APP_URL = process.env.MINI_APP_URL;
 const DB_FILE = 'edir_pro_final.db';
 
 if (!BOT_TOKEN) {
-    console.error("❌ BOT_TOKEN missing!");
+    console.error("❌ ስህተት: BOT_TOKEN በ Environment Variables ውስጥ አልተገኘም!");
     process.exit(1);
 }
 
@@ -62,15 +64,18 @@ bot.use(session());
 // --- 4. HELPERS ---
 const isAdmin = (id) => id === ADMIN_ID;
 
-const formatGroupMessage = (p, statusText) => {
-    return `📋 **የክፍያ ሪፖርት**\n\n` +
-           `👤 አባል: @${p.username}\n` +
-           `🎯 ዓላማ: ${p.purpose}\n` +
-           `📅 ጊዜ: ${p.period}\n` +
-           `💰 መጠን: ${p.total_amount} ብር\n` +
-           `⚠️ ቅጣት: ${p.penalty} ብር\n` +
-           `💳 መንገድ: ${p.gateway.toUpperCase()}\n` +
-           `🔢 ሁኔታ: ${statusText}`;
+// ግሩፕ ውስጥ የሚላከውን መልእክት ቅርጽ የሚያስተካክል ፋንክሽን
+const formatGroupReport = (p, statusEmoji, statusText) => {
+    return `📋 **የክፍያ ሪፖርት**\n` +
+           `━━━━━━━━━━━━━━━━━━\n` +
+           `👤 **አባል:** @${p.username}\n` +
+           `🎯 **ዓላማ:** ${p.purpose}\n` +
+           `📅 **ጊዜ:** ${p.period}\n` +
+           `💰 **መጠን:** ${p.total_amount} ብር\n` +
+           `⚠️ **ቅጣት:** ${p.penalty > 0 ? p.penalty + ' ብር' : 'የለም'}\n` +
+           `💳 **መንገድ:** ${p.gateway ? p.gateway.toUpperCase() : 'MANUAL'}\n` +
+           `━━━━━━━━━━━━━━━━━━\n` +
+           `${statusEmoji} **ሁኔታ:** ${statusText}`;
 };
 
 // --- 5. COMMANDS ---
@@ -105,7 +110,6 @@ bot.on('web_app_data', async (ctx) => {
                 ? data.guarantors.join(', ') 
                 : 'የለም';
 
-            // ለጊዜያዊ ሴሽን ማስቀመጥ (ደረሰኝ ለመቀበል)
             ctx.session.pendingPayment = { ...data, guarantors: guarantorText, timestamp: time };
 
             if (data.gateway === 'manual') {
@@ -115,12 +119,11 @@ bot.on('web_app_data', async (ctx) => {
             }
         }
     } catch (e) {
-        console.error("Data processing error:", e);
-        ctx.reply("❌ መረጃውን በማስኬድ ላይ ስህተት አጋጥሟል።");
+        console.error("Processing Error:", e);
     }
 });
 
-// --- 7. PHOTO HANDLER (FOR RECEIPTS) ---
+// --- 7. PHOTO HANDLER ---
 
 bot.on(['photo', 'document'], async (ctx) => {
     const pending = ctx.session?.pendingPayment;
@@ -129,10 +132,10 @@ bot.on(['photo', 'document'], async (ctx) => {
     const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
     const username = ctx.from.username || ctx.from.first_name;
 
-    // 1. መጀመሪያ መረጃውን በዳታቤዝ መመዝገብ
+    // 1. ዳታቤዝ መመዝገብ
     const insert = db.prepare(`
-        INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, guarantors, file_id, timestamp, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'AWAIT_APPROVAL')
+        INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, guarantors, file_id, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     const result = insert.run(
@@ -141,41 +144,40 @@ bot.on(['photo', 'document'], async (ctx) => {
     );
     const paymentId = result.lastInsertRowid;
 
-    // 2. ለግሩፑ ማሳወቂያ መላክ (በመጠባበቅ ላይ)
+    // 2. ለግሩፑ ማሳወቂያ መላክ (Waiting Status)
     let groupMsgId = null;
     if (TEST_GROUP_ID) {
-        const groupMsg = formatGroupMessage({
+        const reportText = formatGroupReport({
             username: username,
             purpose: pending.purpose,
             period: pending.period,
             total_amount: pending.amount,
             penalty: pending.penalty,
             gateway: pending.gateway
-        }, "⏳ በመጠባበቅ ላይ");
+        }, "⏳", "በመጠባበቅ ላይ");
 
         try {
-            const sent = await bot.telegram.sendMessage(TEST_GROUP_ID, groupMsg, { parse_mode: 'Markdown' });
+            const sent = await bot.telegram.sendMessage(TEST_GROUP_ID, reportText, { parse_mode: 'Markdown' });
             groupMsgId = sent.message_id;
-            // የመልእክቱን ID በዳታቤዝ ውስጥ እናስቀምጣለን በኋላ ላይ Status ለመቀየር
             db.prepare("UPDATE payments SET group_msg_id = ? WHERE id = ?").run(groupMsgId, paymentId);
-        } catch (e) { console.log("Group msg error:", e.message); }
+        } catch (e) { console.log("Group notification error"); }
     }
 
     // 3. ለአስተዳዳሪው ማሳወቂያ መላክ
-    const adminMsg = `🚨 **አዲስ የክፍያ ማረጋገጫ ጥያቄ**\n\n👤 አባል: @${username}\n🎯 ዓላማ: ${pending.purpose}\n💰 መጠን: ${pending.amount} ብር\n🛡 ዋሶች: ${pending.guarantors}`;
+    const adminMsg = `🚨 **አዲስ የክፍያ ማረጋገጫ ጥያቄ**\n\n👤 አባል: @${username}\n💰 መጠን: ${pending.amount} ብር\n🎯 ዓላማ: ${pending.purpose}`;
     const inlineKb = Markup.inlineKeyboard([
-        [Markup.button.callback("✅ አጽድቅ", `approve_${paymentId}`), Markup.button.callback("❌ ውድቅ አድርግ", `reject_${paymentId}`)]
+        [Markup.button.callback("✅ አጽድቅ", `app_${paymentId}`), Markup.button.callback("❌ ውድቅ አድርግ", `rej_${paymentId}`)]
     ]);
 
     await bot.telegram.sendPhoto(ADMIN_ID, fileId, { caption: adminMsg, ...inlineKb });
     
     ctx.session.pendingPayment = null; 
-    await ctx.reply(`📩 ደረሰኝዎ ደርሶናል። እንደተረጋገጠ በግል እናሳውቆታለን!`);
+    await ctx.reply(`📩 ደረሰኝዎ ለፋይናንስ ኦፊሰር ተልኳል። እንደተረጋገጠ እናሳውቆታለን!`);
 });
 
-// --- 8. ADMIN ACTIONS (APPROVE / REJECT) ---
+// --- 8. ADMIN ACTIONS ---
 
-bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
+bot.action(/^(app|rej)_(\d+)$/, async (ctx) => {
     if (!isAdmin(ctx.from.id)) return ctx.answerCbQuery("ፈቃድ የለዎትም!");
 
     const [_, action, paymentId] = ctx.match;
@@ -183,35 +185,32 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
     
     if (!pay) return ctx.answerCbQuery("ክፍያው አልተገኘም!");
 
-    if (action === 'approve') {
-        // ዳታቤዝ አፕዴት
+    if (action === 'app') {
         db.prepare("UPDATE payments SET status = 'APPROVED' WHERE id = ?").run(paymentId);
         db.prepare("UPDATE members SET total_savings = total_savings + ? WHERE user_id = ?").run(pay.total_amount, pay.user_id);
         
-        // ለአባል ማሳወቅ
-        await bot.telegram.sendMessage(pay.user_id, `✅ የ${pay.total_amount} ብር የ${pay.purpose} ክፍያዎ ተረጋግጦ ጽድቋል። እናመሰግናለን!`);
+        await bot.telegram.sendMessage(pay.user_id, `✅ የ${pay.total_amount} ብር ክፍያዎ ተረጋግጦ ጽድቋል። እናመሰግናለን!`);
         
-        // የግሩፕ መልእክት አፕዴት
         if (TEST_GROUP_ID && pay.group_msg_id) {
-            const updatedGroupMsg = formatGroupMessage(pay, "✅ ጸድቋል");
-            await bot.telegram.editMessageText(TEST_GROUP_ID, pay.group_msg_id, null, updatedGroupMsg, { parse_mode: 'Markdown' }).catch(()=>{});
+            const updatedText = formatGroupReport(pay, "✅", "ተረጋግጦ ጽድቋል");
+            await bot.telegram.editMessageText(TEST_GROUP_ID, pay.group_msg_id, null, updatedText, { parse_mode: 'Markdown' }).catch(()=>{});
         }
     } else {
-        // ውድቅ ሲደረግ
         db.prepare("UPDATE payments SET status = 'REJECTED' WHERE id = ?").run(paymentId);
+        await bot.telegram.sendMessage(pay.user_id, `❌ የ${pay.total_amount} ብር ክፍያዎ ውድቅ ተደርጓል። እባክዎ በትክክል ደግመው ይላኩ።`);
         
-        // ለአባል ማሳወቅ
-        await bot.telegram.sendMessage(pay.user_id, `❌ የ${pay.total_amount} ብር ክፍያዎ ውድቅ ተደርጓል።\n\nምክንያት፡ ሰነዱ ትክክል አይደለም ወይም ግልጽ አይደለም። እባክዎ በድጋሚ ይላኩ።`);
-        
-        // የግሩፕ መልእክት አፕዴት
         if (TEST_GROUP_ID && pay.group_msg_id) {
-            const updatedGroupMsg = formatGroupMessage(pay, "❌ ውድቅ ተደርጓል (Invalid Receipt)");
-            await bot.telegram.editMessageText(TEST_GROUP_ID, pay.group_msg_id, null, updatedGroupMsg, { parse_mode: 'Markdown' }).catch(()=>{});
+            const updatedText = formatGroupReport(pay, "❌", "ውድቅ ተደርጓል (Invalid Receipt)");
+            await bot.telegram.editMessageText(TEST_GROUP_ID, pay.group_msg_id, null, updatedText, { parse_mode: 'Markdown' }).catch(()=>{});
         }
     }
 
-    await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n\n🏁 **ውሳኔ:** ${action === 'approve' ? '✅ ጸድቋል' : '❌ ውድቅ ተደርጓል'}`);
+    await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n\n🏁 **ውሳኔ:** ${action === 'app' ? '✅ ጸድቋል' : '❌ ውድቅ ተደርጓል'}`);
     ctx.answerCbQuery("ተጠናቋል");
 });
 
-bot.launch().then(() => console.log("🚀 Bot Backend v3.7.0 Online with Live Group Status"));
+// --- 9. LAUNCH ---
+bot.launch().then(() => console.log("🚀 Bot Backend v3.7.2 is fully operational!"));
+
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
