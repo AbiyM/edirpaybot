@@ -1,5 +1,5 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v3.6.0 - Backend Core
+ * እሁድን በፍቅር ዲጂታል ፕሮ v3.7.0 - Group Notification Enhanced
  * ከሚኒ አፕ v1.1.0 ጋር የተናበበ
  */
 
@@ -51,6 +51,7 @@ db.exec(`
         guarantors TEXT,
         file_id TEXT,
         status TEXT DEFAULT 'AWAIT_APPROVAL',
+        group_msg_id INTEGER,
         timestamp TEXT
     );
 `);
@@ -60,6 +61,17 @@ bot.use(session());
 
 // --- 4. HELPERS ---
 const isAdmin = (id) => id === ADMIN_ID;
+
+const formatGroupMessage = (p, statusText) => {
+    return `📋 **የክፍያ ሪፖርት**\n\n` +
+           `👤 አባል: @${p.username}\n` +
+           `🎯 ዓላማ: ${p.purpose}\n` +
+           `📅 ጊዜ: ${p.period}\n` +
+           `💰 መጠን: ${p.total_amount} ብር\n` +
+           `⚠️ ቅጣት: ${p.penalty} ብር\n` +
+           `💳 መንገድ: ${p.gateway.toUpperCase()}\n` +
+           `🔢 ሁኔታ: ${statusText}`;
+};
 
 // --- 5. COMMANDS ---
 
@@ -89,8 +101,6 @@ bot.on('web_app_data', async (ctx) => {
         const data = JSON.parse(ctx.webAppData.data.json());
         if (data.type === 'payment_report') {
             const time = new Date().toLocaleString('am-ET');
-            
-            // የዋስ አባላትን መረጃ ማስተካከል
             const guarantorText = data.guarantors && data.guarantors.filter(g => g).length > 0 
                 ? data.guarantors.join(', ') 
                 : 'የለም';
@@ -98,24 +108,9 @@ bot.on('web_app_data', async (ctx) => {
             // ለጊዜያዊ ሴሽን ማስቀመጥ (ደረሰኝ ለመቀበል)
             ctx.session.pendingPayment = { ...data, guarantors: guarantorText, timestamp: time };
 
-            // ለሙከራ ግሩፑ (edirpayTest) ማሳወቂያ መላክ
-            if (TEST_GROUP_ID) {
-                const groupMsg = `🔔 **አዲስ የክፍያ ሪፖርት ደርሷል**\n\n` +
-                                `👤 አባል: @${ctx.from.username || ctx.from.first_name}\n` +
-                                `💰 መጠን: ${data.amount} ብር\n` +
-                                `📅 ጊዜ: ${data.period}\n` +
-                                `💳 መንገድ: ${data.gateway.toUpperCase()}\n` +
-                                `🛡 ዋሶች: ${guarantorText}\n\n` +
-                                `✅ አስተዳዳሪዎች እባካችሁ በግል ገብታችሁ አጽድቁ።`;
-                
-                await bot.telegram.sendMessage(TEST_GROUP_ID, groupMsg, { parse_mode: 'Markdown' })
-                         .catch(e => console.log("Group notification error:", e.message));
-            }
-
             if (data.gateway === 'manual') {
                 await ctx.reply(`✅ የ${data.amount} ብር መረጃ ተመዝግቧል።\n\n📷 እባክዎ የባንክ ደረሰኝዎን (Receipt) ፎቶ አሁን ይላኩ።`);
             } else {
-                // ለወደፊት ዲጂታል ክፍያ ሲከፈት የሚሆን
                 await ctx.reply(`🚀 የ${data.gateway} ክፍያዎ ተመዝግቧል። ሲረጋገጥ እናሳውቆታለን።`);
             }
         }
@@ -132,46 +127,91 @@ bot.on(['photo', 'document'], async (ctx) => {
     if (!pending) return;
 
     const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
-    
-    // በዳታቤዝ ውስጥ ማስቀመጥ
+    const username = ctx.from.username || ctx.from.first_name;
+
+    // 1. መጀመሪያ መረጃውን በዳታቤዝ መመዝገብ
     const insert = db.prepare(`
-        INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, guarantors, file_id, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, guarantors, file_id, timestamp, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'AWAIT_APPROVAL')
     `);
     
-    insert.run(
-        ctx.from.id, ctx.from.username || 'N/A', pending.gateway, pending.purpose, pending.period, 
+    const result = insert.run(
+        ctx.from.id, username, pending.gateway, pending.purpose, pending.period, 
         pending.amount, pending.penalty, pending.payFor, pending.guarantors, fileId, pending.timestamp
     );
+    const paymentId = result.lastInsertRowid;
 
-    // ለአስተዳዳሪው ማሳወቂያ መላክ
-    const adminMsg = `🚨 **አዲስ የክፍያ ማረጋገጫ ጥያቄ**\n\n👤 አባል: @${ctx.from.username}\n🎯 ዓላማ: ${pending.purpose}\n💰 መጠን: ${pending.amount} ብር\n🛡 ዋሶች: ${pending.guarantors}`;
+    // 2. ለግሩፑ ማሳወቂያ መላክ (በመጠባበቅ ላይ)
+    let groupMsgId = null;
+    if (TEST_GROUP_ID) {
+        const groupMsg = formatGroupMessage({
+            username: username,
+            purpose: pending.purpose,
+            period: pending.period,
+            total_amount: pending.amount,
+            penalty: pending.penalty,
+            gateway: pending.gateway
+        }, "⏳ በመጠባበቅ ላይ");
+
+        try {
+            const sent = await bot.telegram.sendMessage(TEST_GROUP_ID, groupMsg, { parse_mode: 'Markdown' });
+            groupMsgId = sent.message_id;
+            // የመልእክቱን ID በዳታቤዝ ውስጥ እናስቀምጣለን በኋላ ላይ Status ለመቀየር
+            db.prepare("UPDATE payments SET group_msg_id = ? WHERE id = ?").run(groupMsgId, paymentId);
+        } catch (e) { console.log("Group msg error:", e.message); }
+    }
+
+    // 3. ለአስተዳዳሪው ማሳወቂያ መላክ
+    const adminMsg = `🚨 **አዲስ የክፍያ ማረጋገጫ ጥያቄ**\n\n👤 አባል: @${username}\n🎯 ዓላማ: ${pending.purpose}\n💰 መጠን: ${pending.amount} ብር\n🛡 ዋሶች: ${pending.guarantors}`;
     const inlineKb = Markup.inlineKeyboard([
-        [Markup.button.callback("✅ አጽድቅ", `approve_${ctx.from.id}_${pending.amount}`), Markup.button.callback("❌ ውድቅ አድርግ", `reject_${ctx.from.id}`)]
+        [Markup.button.callback("✅ አጽድቅ", `approve_${paymentId}`), Markup.button.callback("❌ ውድቅ አድርግ", `reject_${paymentId}`)]
     ]);
 
     await bot.telegram.sendPhoto(ADMIN_ID, fileId, { caption: adminMsg, ...inlineKb });
     
     ctx.session.pendingPayment = null; 
-    await ctx.reply(`📩 ደረሰኝዎ ለፋይናንስ ኦፊሰር ተልኳል። እንደተረጋገጠ እናሳውቆታለን!`);
+    await ctx.reply(`📩 ደረሰኝዎ ደርሶናል። እንደተረጋገጠ በግል እናሳውቆታለን!`);
 });
 
-// --- 8. ADMIN ACTIONS ---
+// --- 8. ADMIN ACTIONS (APPROVE / REJECT) ---
 
-bot.action(/^(approve|reject)_(\d+)_?(\d+)?$/, async (ctx) => {
+bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
     if (!isAdmin(ctx.from.id)) return ctx.answerCbQuery("ፈቃድ የለዎትም!");
 
-    const [_, action, targetUserId, amount] = ctx.match;
+    const [_, action, paymentId] = ctx.match;
+    const pay = db.prepare("SELECT * FROM payments WHERE id = ?").get(paymentId);
     
+    if (!pay) return ctx.answerCbQuery("ክፍያው አልተገኘም!");
+
     if (action === 'approve') {
-        db.prepare("UPDATE members SET total_savings = total_savings + ? WHERE user_id = ?").run(amount, targetUserId);
-        await bot.telegram.sendMessage(targetUserId, `✅ የ${amount} ብር ክፍያዎ ተረጋግጦ ጽድቋል። እናመሰግናለን!`);
+        // ዳታቤዝ አፕዴት
+        db.prepare("UPDATE payments SET status = 'APPROVED' WHERE id = ?").run(paymentId);
+        db.prepare("UPDATE members SET total_savings = total_savings + ? WHERE user_id = ?").run(pay.total_amount, pay.user_id);
+        
+        // ለአባል ማሳወቅ
+        await bot.telegram.sendMessage(pay.user_id, `✅ የ${pay.total_amount} ብር የ${pay.purpose} ክፍያዎ ተረጋግጦ ጽድቋል። እናመሰግናለን!`);
+        
+        // የግሩፕ መልእክት አፕዴት
+        if (TEST_GROUP_ID && pay.group_msg_id) {
+            const updatedGroupMsg = formatGroupMessage(pay, "✅ ጸድቋል");
+            await bot.telegram.editMessageText(TEST_GROUP_ID, pay.group_msg_id, null, updatedGroupMsg, { parse_mode: 'Markdown' }).catch(()=>{});
+        }
     } else {
-        await bot.telegram.sendMessage(targetUserId, `❌ ክፍያዎ ውድቅ ተደርጓል። እባክዎ መረጃውን በድጋሚ በትክክል ይላኩ።`);
+        // ውድቅ ሲደረግ
+        db.prepare("UPDATE payments SET status = 'REJECTED' WHERE id = ?").run(paymentId);
+        
+        // ለአባል ማሳወቅ
+        await bot.telegram.sendMessage(pay.user_id, `❌ የ${pay.total_amount} ብር ክፍያዎ ውድቅ ተደርጓል።\n\nምክንያት፡ ሰነዱ ትክክል አይደለም ወይም ግልጽ አይደለም። እባክዎ በድጋሚ ይላኩ።`);
+        
+        // የግሩፕ መልእክት አፕዴት
+        if (TEST_GROUP_ID && pay.group_msg_id) {
+            const updatedGroupMsg = formatGroupMessage(pay, "❌ ውድቅ ተደርጓል (Invalid Receipt)");
+            await bot.telegram.editMessageText(TEST_GROUP_ID, pay.group_msg_id, null, updatedGroupMsg, { parse_mode: 'Markdown' }).catch(()=>{});
+        }
     }
 
     await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n\n🏁 **ውሳኔ:** ${action === 'approve' ? '✅ ጸድቋል' : '❌ ውድቅ ተደርጓል'}`);
     ctx.answerCbQuery("ተጠናቋል");
 });
 
-bot.launch().then(() => console.log("🚀 Bot Backend v3.6.0 Online"));
+bot.launch().then(() => console.log("🚀 Bot Backend v3.7.0 Online with Live Group Status"));
