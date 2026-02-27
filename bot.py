@@ -1,249 +1,177 @@
-import asyncio
-import json
-import logging
-import os
-import sqlite3
-from datetime import datetime
-from aiohttp import web
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import Command
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
-from aiogram.types import WebAppInfo
-from dotenv import load_dotenv
+/**
+ * እሁድን በፍቅር ዲጂታል ፕሮ v3.6.0 - Backend Core
+ * ከሚኒ አፕ v1.1.0 ጋር የተናበበ
+ */
 
-# --- 1. CONFIGURATION & LOGGING ---
-load_dotenv()
-logging.basicConfig(level=logging.INFO)
+require('dotenv').config();
+const { Telegraf, session, Markup } = require('telegraf');
+const Database = require('better-sqlite3');
+const http = require('http');
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-# አስተዳዳሪዎችን ለመለየት (ለምሳሌ: 1062635928)
-admin_env = os.getenv("ADMIN_IDS", "1062635928")
-ADMIN_IDS = [int(id.strip()) for id in admin_env.replace(',', ' ').split()]
-MINI_APP_URL = os.getenv("MINI_APP_URL")
-TEST_GROUP_ID = os.getenv("TEST_GROUP_ID")
-if TEST_GROUP_ID:
-    TEST_GROUP_ID = int(TEST_GROUP_ID)
+// --- 1. RENDER STABILITY (Keep-Alive) ---
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('Bot Backend is Running');
+}).listen(PORT);
 
-DB_FILE = 'edir_pro_final.db'
+// --- 2. CONFIGURATION ---
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const ADMIN_ID = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : 1062635928;
+const TEST_GROUP_ID = process.env.TEST_GROUP_ID ? parseInt(process.env.TEST_GROUP_ID) : null;
+const MINI_APP_URL = process.env.MINI_APP_URL;
+const DB_FILE = 'edir_pro_final.db';
 
-if not BOT_TOKEN:
-    raise ValueError("❌ BOT_TOKEN missing in .env file!")
+if (!BOT_TOKEN) {
+    console.error("❌ BOT_TOKEN missing!");
+    process.exit(1);
+}
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+// --- 3. DATABASE SETUP ---
+const db = new Database(DB_FILE);
+db.exec(`
+    CREATE TABLE IF NOT EXISTS members (
+        user_id INTEGER PRIMARY KEY,
+        username TEXT,
+        full_name TEXT,
+        tier TEXT DEFAULT 'መሠረታዊ',
+        total_savings REAL DEFAULT 0,
+        joined_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        username TEXT,
+        gateway TEXT,
+        purpose TEXT,
+        period TEXT,
+        total_amount REAL,
+        penalty REAL DEFAULT 0,
+        pay_for_member TEXT,
+        guarantors TEXT,
+        file_id TEXT,
+        status TEXT DEFAULT 'AWAIT_APPROVAL',
+        timestamp TEXT
+    );
+`);
 
-# --- 2. DATABASE SETUP ---
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS members (
-            user_id INTEGER PRIMARY KEY, 
-            username TEXT, 
-            full_name TEXT, 
-            tier TEXT DEFAULT 'መሠረታዊ', 
-            total_savings REAL DEFAULT 0, 
-            joined_at TEXT
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS payments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            user_id INTEGER, 
-            username TEXT, 
-            gateway TEXT, 
-            purpose TEXT, 
-            period TEXT, 
-            total_amount REAL, 
-            penalty REAL DEFAULT 0, 
-            pay_for_member TEXT, 
-            file_id TEXT, 
-            status TEXT DEFAULT 'AWAIT_APPROVAL', 
-            timestamp TEXT
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            user_id INTEGER, 
-            title TEXT, 
-            message TEXT, 
-            type TEXT, 
-            timestamp TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
+const bot = new Telegraf(BOT_TOKEN);
+bot.use(session());
 
-# --- 3. RENDER STABILITY (HTTP SERVER) ---
-async def handle_ping(request):
-    return web.Response(text="EdirPay Bot (Python) is Active")
+// --- 4. HELPERS ---
+const isAdmin = (id) => id === ADMIN_ID;
 
-async def start_http_server():
-    app = web.Application()
-    app.router.add_get('/', handle_ping)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', int(os.getenv("PORT", 3000)))
-    await site.start()
+// --- 5. COMMANDS ---
 
-# --- 4. BOT HANDLERS ---
-
-def is_admin(user_id):
-    return user_id in ADMIN_IDS
-
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute('INSERT OR IGNORE INTO members (user_id, username, full_name, joined_at) VALUES (?, ?, ?, ?)',
-                   (message.from_user.id, message.from_user.username or 'N/A', message.from_user.first_name, now))
-    conn.commit()
-    conn.close()
-
-    builder = ReplyKeyboardBuilder()
-    builder.row(types.KeyboardButton(text="📱 ሚኒ አፑን ክፈት", web_app=WebAppInfo(url=MINI_APP_URL)))
+bot.start((ctx) => {
+    const now = new Date().toLocaleString('am-ET');
+    db.prepare('INSERT OR IGNORE INTO members (user_id, username, full_name, joined_at) VALUES (?, ?, ?, ?)').run(
+        ctx.from.id, ctx.from.username || 'N/A', ctx.from.first_name, now
+    );
     
-    if is_admin(message.from_user.id):
-        builder.row(types.KeyboardButton(text="⚙️ የአስተዳዳሪ ሁነታ (Admin Mode)"))
+    const kb = [[Markup.button.webApp("📱 ሚኒ አፑን ክፈት", MINI_APP_URL)]];
+    if (isAdmin(ctx.from.id)) kb.push(["⚙️ የአስተዳዳሪ ሁነታ"]);
     
-    builder.row(types.KeyboardButton(text="📊 ሁኔታዬን እይ"), types.KeyboardButton(text="❓ እርዳታ"))
-    
-    await message.reply(
-        f"እንኳን ወደ **እሁድን በፍቅር** መጡ! 👋 v25.2.2 (Python)\n\nእባክዎ ሚኒ አፑን በመክፈት የክፍያ ሪፖርትዎን ይላኩ።",
-        reply_markup=builder.as_markup(resize_keyboard=True),
-        parse_mode="Markdown"
-    )
+    ctx.replyWithMarkdown(
+        `እንኳን ወደ **እሁድን በፍቅር** መጡ! 👋\n\nከታች ያለውን ሜኑ በመጠቀም የክፍያ ሪፖርት መላክ ወይም ቁጠባዎን ማየት ይችላሉ።`,
+        Markup.keyboard(kb).resize()
+    );
+});
 
-@dp.message(Command("id"))
-async def cmd_id(message: types.Message):
-    await message.reply(
-        f"📌 **የቻት መረጃ**\n\n👤 ስም: *{message.chat.title or 'የግል ቻት'}*\n"
-        f"🆔 ID: `{message.chat.id}`\n"
-        f"🌐 ዓይነት: `{message.chat.type}`\n\n"
-        f"💡 ይህንን ID በሬንደር ላይ በ `TEST_GROUP_ID` ቦታ ያስገቡት።",
-        parse_mode="Markdown"
-    )
+bot.command('id', (ctx) => {
+    ctx.replyWithMarkdown(`📌 የዚህ ቻት መለያ (ID): \`${ctx.chat.id}\``);
+});
 
-@dp.message(F.content_type == types.ContentType.WEB_APP_DATA)
-async def handle_webapp_data(message: types.Message):
-    try:
-        data = json.loads(message.web_app_data.data)
-        if data.get('type') == 'payment_report':
-            time_now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+// --- 6. WEB APP DATA HANDLER ---
+
+bot.on('web_app_data', async (ctx) => {
+    try {
+        const data = JSON.parse(ctx.webAppData.data.json());
+        if (data.type === 'payment_report') {
+            const time = new Date().toLocaleString('am-ET');
             
-            # ለግሩፕ ማሳወቂያ መላክ
-            if TEST_GROUP_ID:
-                try:
-                    await bot.send_message(
-                        TEST_GROUP_ID,
-                        f"🔔 **አዲስ የክፍያ ሪፖርት ደርሷል**\n\n"
-                        f"👤 አባል: @{message.from_user.username or message.from_user.first_name}\n"
-                        f"🎯 ዓላማ: {data['purpose']}\n"
-                        f"💰 መጠን: {data['amount']} ብር\n"
-                        f"💳 መንገድ: {data['gateway'].upper()}\n\n"
-                        f"✅ አስተዳዳሪዎች እባካችሁ በግል ገብታችሁ አጽድቁ።",
-                        parse_mode="Markdown"
-                    )
-                except Exception as e:
-                    logging.error(f"Group notification error: {e}")
+            // የዋስ አባላትን መረጃ ማስተካከል
+            const guarantorText = data.guarantors && data.guarantors.filter(g => g).length > 0 
+                ? data.guarantors.join(', ') 
+                : 'የለም';
 
-            if data['gateway'] == 'manual':
-                # ሴሽን ለመምሰል እዚህ ጋር ዳታውን ለጊዜው እናስቀምጣለን (ቀላል በሆነ መንገድ)
-                # በእውነተኛ ስራ ላይ Redis ወይም FSM መጠቀም ይመከራል
-                await message.answer(f"✅ የ{data['amount']} ብር መረጃ ተመዝግቧል። 📷 እባክዎ ደረሰኝዎን አሁን ይላኩ።")
-                # ለቀላልነት ዳታውን በዴታቤዝ ውስጥ 'PENDING_FILE' ብለን እናስቀምጠዋለን
-                conn = sqlite3.connect(DB_FILE)
-                cursor = conn.cursor()
-                cursor.execute('''
-                    INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, status, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (message.from_user.id, message.from_user.username or 'N/A', data['gateway'], data['purpose'], data['period'], data['amount'], data['penalty'], data.get('payFor', 'self'), 'AWAITING_FILE', time_now))
-                conn.commit()
-                conn.close()
-            else:
-                conn = sqlite3.connect(DB_FILE)
-                cursor = conn.cursor()
-                cursor.execute('''
-                    INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (message.from_user.id, message.from_user.username or 'N/A', data['gateway'], data['purpose'], data['period'], data['amount'], data['penalty'], data.get('payFor', 'self'), time_now))
-                conn.commit()
-                conn.close()
-                await message.answer(f"🚀 የ{data['gateway'].upper()} ክፍያዎ ተመዝግቧል። ሲረጋገጥ እናሳውቆታለን።")
-    except Exception as e:
-        logging.error(f"WebAppData Error: {e}")
+            // ለጊዜያዊ ሴሽን ማስቀመጥ (ደረሰኝ ለመቀበል)
+            ctx.session.pendingPayment = { ...data, guarantors: guarantorText, timestamp: time };
 
-@dp.message(F.photo | F.document)
-async def handle_receipt_upload(message: types.Message):
-    file_id = message.photo[-1].file_id if message.photo else message.document.file_id
+            // ለሙከራ ግሩፑ (edirpayTest) ማሳወቂያ መላክ
+            if (TEST_GROUP_ID) {
+                const groupMsg = `🔔 **አዲስ የክፍያ ሪፖርት ደርሷል**\n\n` +
+                                `👤 አባል: @${ctx.from.username || ctx.from.first_name}\n` +
+                                `💰 መጠን: ${data.amount} ብር\n` +
+                                `📅 ጊዜ: ${data.period}\n` +
+                                `💳 መንገድ: ${data.gateway.toUpperCase()}\n` +
+                                `🛡 ዋሶች: ${guarantorText}\n\n` +
+                                `✅ አስተዳዳሪዎች እባካችሁ በግል ገብታችሁ አጽድቁ።`;
+                
+                await bot.telegram.sendMessage(TEST_GROUP_ID, groupMsg, { parse_mode: 'Markdown' })
+                         .catch(e => console.log("Group notification error:", e.message));
+            }
+
+            if (data.gateway === 'manual') {
+                await ctx.reply(`✅ የ${data.amount} ብር መረጃ ተመዝግቧል።\n\n📷 እባክዎ የባንክ ደረሰኝዎን (Receipt) ፎቶ አሁን ይላኩ።`);
+            } else {
+                // ለወደፊት ዲጂታል ክፍያ ሲከፈት የሚሆን
+                await ctx.reply(`🚀 የ${data.gateway} ክፍያዎ ተመዝግቧል። ሲረጋገጥ እናሳውቆታለን።`);
+            }
+        }
+    } catch (e) {
+        console.error("Data processing error:", e);
+        ctx.reply("❌ መረጃውን በማስኬድ ላይ ስህተት አጋጥሟል።");
+    }
+});
+
+// --- 7. PHOTO HANDLER (FOR RECEIPTS) ---
+
+bot.on(['photo', 'document'], async (ctx) => {
+    const pending = ctx.session?.pendingPayment;
+    if (!pending) return;
+
+    const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
     
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    # ፋይል የሚጠባበቅ የመጨረሻ ክፍያ መፈለግ
-    cursor.execute('SELECT id FROM payments WHERE user_id = ? AND status = "AWAITING_FILE" ORDER BY id DESC LIMIT 1', (message.from_user.id,))
-    row = cursor.fetchone()
+    // በዳታቤዝ ውስጥ ማስቀመጥ
+    const insert = db.prepare(`
+        INSERT INTO payments (user_id, username, gateway, purpose, period, total_amount, penalty, pay_for_member, guarantors, file_id, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
     
-    if row:
-        cursor.execute('UPDATE payments SET file_id = ?, status = "AWAIT_APPROVAL" WHERE id = ?', (file_id, row[0]))
-        conn.commit()
-        await message.answer("📩 ደረሰኝዎ ለፋይናንስ ኦፊሰር ተልኳል። እናመሰግናለን!")
-    conn.close()
+    insert.run(
+        ctx.from.id, ctx.from.username || 'N/A', pending.gateway, pending.purpose, pending.period, 
+        pending.amount, pending.penalty, pending.payFor, pending.guarantors, fileId, pending.timestamp
+    );
 
-# --- 5. ADMIN ACTIONS ---
+    // ለአስተዳዳሪው ማሳወቂያ መላክ
+    const adminMsg = `🚨 **አዲስ የክፍያ ማረጋገጫ ጥያቄ**\n\n👤 አባል: @${ctx.from.username}\n🎯 ዓላማ: ${pending.purpose}\n💰 መጠን: ${pending.amount} ብር\n🛡 ዋሶች: ${pending.guarantors}`;
+    const inlineKb = Markup.inlineKeyboard([
+        [Markup.button.callback("✅ አጽድቅ", `approve_${ctx.from.id}_${pending.amount}`), Markup.button.callback("❌ ውድቅ አድርግ", `reject_${ctx.from.id}`)]
+    ]);
 
-@dp.message(F.text == "⚙️ የአስተዳዳሪ ሁነታ (Admin Mode)")
-async def admin_mode(message: types.Message):
-    if not is_admin(message.from_user.id): return
+    await bot.telegram.sendPhoto(ADMIN_ID, fileId, { caption: adminMsg, ...inlineKb });
     
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM payments WHERE status = "AWAIT_APPROVAL"')
-    pending_count = cursor.fetchone()[0]
-    conn.close()
+    ctx.session.pendingPayment = null; 
+    await ctx.reply(`📩 ደረሰኝዎ ለፋይናንስ ኦፊሰር ተልኳል። እንደተረጋገጠ እናሳውቆታለን!`);
+});
 
-    builder = ReplyKeyboardBuilder()
-    builder.row(types.KeyboardButton(text=f"📑 የሚጠባበቁ ክፍያዎች ({pending_count})"))
-    builder.row(types.KeyboardButton(text="📈 አጠቃላይ ሪፖርት"), types.KeyboardButton(text="👤 ወደ አባልነት ተመለስ"))
+// --- 8. ADMIN ACTIONS ---
+
+bot.action(/^(approve|reject)_(\d+)_?(\d+)?$/, async (ctx) => {
+    if (!isAdmin(ctx.from.id)) return ctx.answerCbQuery("ፈቃድ የለዎትም!");
+
+    const [_, action, targetUserId, amount] = ctx.match;
     
-    await message.answer("🛠 የአስተዳዳሪ መቆጣጠሪያ ማዕከል", reply_markup=builder.as_markup(resize_keyboard=True))
+    if (action === 'approve') {
+        db.prepare("UPDATE members SET total_savings = total_savings + ? WHERE user_id = ?").run(amount, targetUserId);
+        await bot.telegram.sendMessage(targetUserId, `✅ የ${amount} ብር ክፍያዎ ተረጋግጦ ጽድቋል። እናመሰግናለን!`);
+    } else {
+        await bot.telegram.sendMessage(targetUserId, `❌ ክፍያዎ ውድቅ ተደርጓል። እባክዎ መረጃውን በድጋሚ በትክክል ይላኩ።`);
+    }
 
-@dp.callback_query(F.data.startswith("app_") | F.data.startswith("rej_"))
-async def process_approval(callback: types.CallbackQuery):
-    if not is_admin(callback.from_user.id):
-        await callback.answer("ፈቃድ የለዎትም!")
-        return
+    await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n\n🏁 **ውሳኔ:** ${action === 'approve' ? '✅ ጸድቋል' : '❌ ውድቅ ተደርጓል'}`);
+    ctx.answerCbQuery("ተጠናቋል");
+});
 
-    action, pay_id = callback.data.split("_")
-    new_status = "APPROVED" if action == "app" else "REJECTED"
-    
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute('SELECT user_id, total_amount FROM payments WHERE id = ?', (pay_id,))
-    payment = cursor.fetchone()
-    
-    if payment:
-        cursor.execute('UPDATE payments SET status = ? WHERE id = ?', (new_status, pay_id))
-        if action == "app":
-            cursor.execute('UPDATE members SET total_savings = total_savings + ? WHERE user_id = ?', (payment[1], payment[0]))
-            try:
-                await bot.send_message(payment[0], f"✅ የ{payment[1]} ብር ክፍያዎ ተረጋግጦ ጽድቋል።")
-            except: pass
-        conn.commit()
-    conn.close()
-
-    await callback.message.edit_caption(caption=f"{callback.message.caption}\n\n🏁 **ውሳኔ:** {'✅ ጸድቋል' if action == 'app' else '❌ ውድቅ ተደርጓል'}")
-    await callback.answer("ተጠናቋል")
-
-# --- 6. MAIN ---
-async def main():
-    init_db()
-    # የሬንደር ሰርቨርን እና ቦቱን በአንድ ላይ ማስነሳት
-    await asyncio.gather(
-        start_http_server(),
-        dp.start_polling(bot)
-    )
-
-if __name__ == "__main__":
-    asyncio.run(main())
+bot.launch().then(() => console.log("🚀 Bot Backend v3.6.0 Online"));
