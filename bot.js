@@ -1,6 +1,6 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v4.9.0 - Stable Production Version
- * ቴሌግራም ግሩፕ ላይ ትዕዛዞች እንዲሰሩ የተስተካከለ
+ * እሁድን በፍቅር ዲጂታል ፕሮ v4.9.1 - Final Debug & Stability Version
+ * ቴሌግራም ግሩፕ ላይ ትዕዛዞች ምላሽ ካልሰጡ ይህን ስሪት ይጠቀሙ
  */
 
 require('dotenv').config();
@@ -12,7 +12,7 @@ const http = require('http');
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
     res.writeHead(200);
-    res.end('EdirPay Bot is Online');
+    res.end('EdirPay Bot is Online and Listening');
 }).listen(PORT);
 
 // --- 2. ኮንፊገሬሽን (Configuration) ---
@@ -74,10 +74,10 @@ const formatGroupReport = (p, emoji, statusText) => {
 
 // --- 5. ቦት ትዕዛዞች (Handlers) ---
 
-// ግሩፕ ውስጥ የሚላኩ መልዕክቶችን ለመከታተል (Debug)
+// ግሩፕ ውስጥ የሚላኩ መልዕክቶችን ለመከታተል (Debug Logger)
 bot.on('message', (ctx, next) => {
     if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
-        console.log(`[GROUP MSG] From: ${ctx.from.username || ctx.from.id} | Text: ${ctx.message.text || 'Photo/Other'}`);
+        console.log(`[DEBUG LOG] Message in Group (${ctx.chat.id}): "${ctx.message.text || 'Not Text'}" From: ${ctx.from.username || ctx.from.id}`);
     }
     return next();
 });
@@ -93,9 +93,9 @@ bot.start((ctx) => {
     );
 });
 
-// /pay ትዕዛዝ (በግሩፕም ሆነ በግል እንዲሰራ በ Regex የተደገፈ)
-bot.hears(/^\/pay(@[a-zA-Z0-9_]+bot)?$/i, async (ctx) => {
-    console.log(`[COMMAND] /pay detected in chat: ${ctx.chat.id}`);
+// /pay ትዕዛዝ - አሁን 'bot.command' በመጠቀም (ይበልጥ አስተማማኝ ነው)
+bot.command('pay', async (ctx) => {
+    console.log(`[COMMAND LOG] /pay command triggered in chat: ${ctx.chat.id}`);
     try {
         await ctx.reply(
             `ሰላም ${ctx.from.first_name}! 👋\nክፍያ ለመፈጸም ወይም ቀሪ ሂሳብዎን ለማየት ከታች ያለውን አዝራር ይጫኑ፦`,
@@ -104,7 +104,7 @@ bot.hears(/^\/pay(@[a-zA-Z0-9_]+bot)?$/i, async (ctx) => {
             ])
         );
     } catch (err) {
-        console.error("❌ Reply Error:", err.message);
+        console.error("❌ Reply Error in /pay:", err.message);
     }
 });
 
@@ -124,11 +124,11 @@ bot.on('web_app_data', async (ctx) => {
             );
         }
     } catch (err) {
-        console.error("WebAppData Error:", err);
+        console.error("❌ WebAppData Processing Error:", err);
     }
 });
 
-// ደረሰኝ ሲላክ
+// የደረሰኝ ፎቶ ሲላክ
 bot.on(['photo', 'document'], async (ctx) => {
     const paymentData = ctx.session?.activePayment;
     if (!paymentData) return;
@@ -169,7 +169,7 @@ bot.on(['photo', 'document'], async (ctx) => {
         await ctx.reply(`📩 ደረሰኝዎ ለፋይናንስ ኦፊሰር ደርሷል (መለያ፡ \`${paymentData.txId}\`)።`);
 
     } catch (err) {
-        console.error("Processing Error:", err);
+        console.error("❌ Processing Error (Photo/Receipt):", err);
     }
 });
 
@@ -205,7 +205,7 @@ bot.action(/^(app|rej)_(\d+)$/, async (ctx) => {
     ctx.answerCbQuery("Done");
 });
 
-bot.launch().then(() => console.log("🚀 EdirPay Bot Online! /pay is ready for groups."));
+bot.launch().then(() => console.log("🚀 EdirPay Bot Online! Listening for /pay command in all chats."));
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
