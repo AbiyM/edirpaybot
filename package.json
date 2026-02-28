@@ -1,20 +1,14 @@
 {
-  "name": "edirpaybot",
-  "version": "1.0.0",
-  "description": "Telegram bot for Ehuden Befikir Edir payments and loans",
+  "name": "edir-digital-pro",
+  "version": "5.4.0",
   "main": "bot.js",
   "scripts": {
-    "start": "node bot.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node bot.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.0.0",
-    "dotenv": "^16.4.5",
-    "telegraf": "^4.16.3"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "author": "AbiyM",
-  "license": "ISC"
+    "telegraf": "^4.16.3",
+    "sqlite3": "^5.1.7",
+    "sqlite": "^5.1.1",
+    "dotenv": "^16.4.5"
+  }
 }
