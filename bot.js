@@ -1,7 +1,7 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v5.7.3 - Group Station Edition
+ * እሁድን በፍቅር ዲጂታል ፕሮ v5.7.4 - Group Menu & Station Expert
  * ቴክኖሎጂ፡ Telegraf (Telegram Bot API), sqlite (Database), Node.js
- * ማሻሻያ፡ በግሩፕ ውስጥ ፒን ተደርጎ የሚቀመጥ 'Pay Here' አዝራር (Station) ተጨምሯል
+ * ማሻሻያ፡ በግሩፕ ውስጥ እንደ ሜኑ አዝራር የሚያገለግል የ'Pay Here' ጣቢያ እና የ'/setup' መመሪያ ተጨምሯል
  */
 
 require('dotenv').config();
@@ -71,7 +71,7 @@ async function initDB() {
     console.log("✅ Database Ready.");
 }
 
-// --- 4. HELPERS & ERROR HANDLING ---
+// --- 4. HELPERS & LOGGING ---
 bot.use(session());
 
 bot.catch((err, ctx) => {
@@ -80,7 +80,7 @@ bot.catch((err, ctx) => {
 
 bot.use(async (ctx, next) => {
     if (ctx.message && ctx.message.text) {
-        console.log(`[INCOMING] ${ctx.chat.type}: ${ctx.message.text} from ${ctx.from.id} in ${ctx.chat.id}`);
+        console.log(`[INCOMING] ${ctx.chat.type}: ${ctx.message.text} from ${ctx.from.id}`);
     }
     return next();
 });
@@ -113,12 +113,8 @@ bot.on('inline_query', async (ctx) => {
             id: 'pay_now',
             title: '💳 ክፍያ ይፈጽሙ (Pay Now)',
             description: 'የእሁድን በፍቅር ሚኒ አፕ በመጠቀም ክፍያ ለመፈጸም እዚህ ይጫኑ',
-            input_message_content: {
-                message_text: `ሰላም! የዕድር ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጠቀሙ።`
-            },
-            reply_markup: {
-                inline_keyboard: [[{ text: "📱 ሚኒ አፑን ክፈት", web_app: { url: MINI_APP_URL } }]]
-            },
+            input_message_content: { message_text: `ሰላም! የዕድር ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጠቀሙ።` },
+            reply_markup: { inline_keyboard: [[{ text: "📱 ሚኒ አፑን ክፈት", web_app: { url: MINI_APP_URL } }]] },
             thumb_url: 'https://cdn-icons-png.flaticon.com/512/10149/10149458.png'
         }
     ];
@@ -127,17 +123,14 @@ bot.on('inline_query', async (ctx) => {
 
 // --- 6. BOT COMMANDS ---
 
+// ቦቱ ወደ ግሩፕ ሲገባ የሚላክ ሰላምታ
 bot.on('new_chat_members', async (ctx) => {
     const isBotAdded = ctx.message.new_chat_members.some(m => m.id === ctx.botInfo.id);
     if (isBotAdded) {
         const text = `ሰላም! 🖐 እኔ **የእሁድን በፍቅር** ዲጂታል ዕድር ቦት ነኝ።\n\n` +
                      `አባላት በዚህ ግሩፕ ውስጥ ሆነው ክፍያ ለመፈጸም እንዲችሉ እባክዎ **Admin** ያድርጉኝ።\n\n` +
-                     `ክፍያ ለመጀመር፦ /pay ብለው ይላኩ ወይም በየትኛውም ቻት ውስጥ **@${ctx.botInfo.username}** ብለው ይጥሩኝ።`;
-        return ctx.replyWithMarkdown(text, {
-            reply_markup: {
-                inline_keyboard: [[{ text: "📱 ሚኒ አፑን ክፈት", web_app: { url: MINI_APP_URL } }]]
-            }
-        });
+                     `ለመጀመር፦ /setup ብለው ይላኩ።`;
+        return ctx.replyWithMarkdown(text);
     }
 });
 
@@ -150,29 +143,33 @@ bot.start(async (ctx) => {
         );
         const text = `ሰላም ${ctx.from.first_name}! 👋 ወደ **እሁድን በፍቅር** ዲጂታል ዕድር እንኳን ደህና መጡ።`;
         return await ctx.replyWithMarkdown(text, {
-            reply_markup: {
-                inline_keyboard: [[{ text: "📱 መተግበሪያውን ክፈት", web_app: { url: MINI_APP_URL } }]]
-            }
+            reply_markup: { inline_keyboard: [[{ text: "📱 መተግበሪያውን ክፈት", web_app: { url: MINI_APP_URL } }]] }
         });
-    } catch (e) { console.error("Start Command Error:", e); }
+    } catch (e) { console.error("Start Error:", e); }
 });
 
-// [PAY STATION COMMAND] - ለግሩፑ ፒን ተደርጎ የሚቀመጥ አዝራር
+// [SETUP COMMAND] - ለግሩፕ አድሚኖች መመሪያ
+bot.command('setup', async (ctx) => {
+    const text = `⚙️ **የግሩፕ አቀነባበር መመሪያ**\n━━━━━━━━━━━━━━━━━━\n` +
+                 `ቦቱ በግሩፕ ውስጥ እንደ "ሜኑ አዝራር" ሆኖ እንዲያገለግል እነዚህን 2 ደረጃዎች ይከተሉ፦\n\n` +
+                 `1️⃣ **አስተዳዳሪ ያድርጉኝ፦** ቦቱ መልዕክቶችን የማንበብ እና የማጥፋት መብት ያለው አድሚን መሆን አለበት።\n\n` +
+                 `2️⃣ **ጣቢያውን ይፍጠሩ፦** በግሩፕ ውስጥ \`/payhere\` ብለው ይላኩ። የሚመጣውን መልዕክት **Pin** በማድረግ አባላት ሁልጊዜ እንዲያገኙት ያድርጉ።\n\n` +
+                 `3️⃣ **Command Menu፦** በ @BotFather በኩል 'Edit Commands' በማድረግ 'pay' እና 'payhere' የሚሉትን ይጨምሩ።`;
+    return ctx.replyWithMarkdown(text);
+});
+
+// [PAYHERE STATION] - የግሩፑ 'ሜኑ አዝራር'
 bot.command('payhere', async (ctx) => {
-    const stationText = `🏦 **የእሁድን በፍቅር ዲጂታል ዕድር**\n` +
+    const stationText = `🏦 **የእሁድን በፍቅር ዲጂታል ዕድር ጣቢያ**\n` +
                         `━━━━━━━━━━━━━━━━━━\n` +
-                        `ሰላም አባላት! 👋 በዚህ ግሩፕ ውስጥ ክፍያ ለመፈጸም ወይም ቁጠባዎን ለማየት ከታች ያለውን **"ክፍያ ይፈጽሙ"** የሚለውን አዝራር ይጠቀሙ።\n\n` +
-                        `💡 **ማሳሰቢያ፦** መረጃውን በሚኒ አፑ ከላኩ በኋላ፣ ደረሰኝዎን ለቦቱ (@${ctx.botInfo.username}) በግል መላክዎን አይርሱ።\n` +
+                        `ሰላም አባላት! 👋 በዚህ ግሩፕ ውስጥ ክፍያ ለመፈጸም ወይም ቁጠባዎን ለማየት ከታች ያለውን አዝራር ይጠቀሙ።\n\n` +
+                        `💡 **ማሳሰቢያ፦** መረጃውን ከላኩ በኋላ ደረሰኝዎን ለቦቱ (@${ctx.botInfo.username}) በግል መላክዎን አይርሱ።\n` +
                         `━━━━━━━━━━━━━━━━━━`;
-    
     try {
         await ctx.replyWithMarkdown(stationText, {
-            reply_markup: {
-                inline_keyboard: [[{ text: "💳 ክፍያ ይፈጽሙ / ሚኒ አፕ", web_app: { url: MINI_APP_URL } }]]
-            }
+            reply_markup: { inline_keyboard: [[{ text: "💳 ክፍያ ይፈጽሙ / ሚኒ አፕ", web_app: { url: MINI_APP_URL } }]] }
         });
-        // አድሚኑን ፒን እንዲያደርግ ማሳሰብ
-        return ctx.reply("☝️ **የክፍያ አዝራሩ ተልኳል። አባላት በቀላሉ እንዲያገኙት እባክዎ ይህንን መልዕክት ፒን (Pin) ያድርጉት።**");
+        return ctx.reply("☝️ **የክፍያ ጣቢያው ተፈጥሯል። አባላት በቀላሉ እንዲያገኙት እባክዎ ይህንን መልዕክት ፒን (Pin) ያድርጉት።**");
     } catch (e) {
         console.error("PayHere Error:", e);
         return ctx.reply("❌ አዝራሩን መላክ አልተቻለም። ቦቱ አድሚን መሆኑን ያረጋግጡ።");
@@ -181,16 +178,12 @@ bot.command('payhere', async (ctx) => {
 
 bot.command('pay', async (ctx) => {
     try {
-        const text = `ሰላም ${ctx.from.first_name}! ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጫኑ፦`;
-        return await ctx.reply(text, {
-            reply_markup: {
-                inline_keyboard: [[{ text: "💳 ክፍያ ይፈጽሙ", web_app: { url: MINI_APP_URL } }]]
-            }
+        return await ctx.reply(`ሰላም ${ctx.from.first_name}! ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጫኑ፦`, {
+            reply_markup: { inline_keyboard: [[{ text: "💳 ክፍያ ይፈጽሙ", web_app: { url: MINI_APP_URL } }]] }
         });
     } catch (e) {
-        console.error("❌ Pay Command Failure:", e.description || e.message);
-        const errorText = "❌ አዝራሩን መላክ አልተቻለም። እባክዎ ቦቱን በግል ቻት ያነጋግሩ።";
-        return ctx.reply(errorText);
+        console.error("Pay Error:", e);
+        return ctx.reply("❌ እባክዎ ቦቱን በግል ቻት ያነጋግሩ።");
     }
 });
 
@@ -201,12 +194,10 @@ bot.command('admin', async (ctx) => {
         const pStats = await db.get("SELECT SUM(penalty) as tp FROM payments WHERE status = 'APPROVED'");
         const pending = await db.get("SELECT COUNT(*) as count FROM payments WHERE status IN ('PENDING_REVIEW', 'PENDING_TREASURY')");
         await ctx.replyWithMarkdown(`📊 **የአስተዳዳሪ ማጠቃለያ**\n━━━━━━━━━━━━━━━━━━\n👥 አባላት: ${stats.count}\n💰 ቁጠባ: ${stats.total || 0} ብር\n⚠️ ቅጣት: ${pStats.tp || 0} ብር\n⏳ ጥያቄዎች: ${pending.count}`);
-    } catch (e) { console.error("Admin Command Error:", e); }
+    } catch (e) { console.error("Admin Error:", e); }
 });
 
-bot.command('id', async (ctx) => {
-    return await ctx.reply(`Chat ID: \`${ctx.chat.id}\``, { parse_mode: 'Markdown' });
-});
+bot.command('id', async (ctx) => ctx.reply(`Chat ID: \`${ctx.chat.id}\``, { parse_mode: 'Markdown' }));
 
 // --- 7. DATA & MEDIA HANDLING ---
 
@@ -217,7 +208,6 @@ bot.on('web_app_data', async (ctx) => {
             const txId = generateTXID();
             const timestamp = new Date().toLocaleString('am-ET');
             const gateway = data.gateway ? data.gateway.toUpperCase() : "MANUAL";
-            
             await db.run("DELETE FROM payments WHERE user_id = ? AND status = 'AWAITING_PHOTO'", ctx.from.id);
             await db.run(
                 `INSERT INTO payments (tx_id, user_id, username, purpose, period, amount, penalty, pay_for, gateway, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -232,20 +222,17 @@ bot.on(['photo', 'document'], async (ctx) => {
     try {
         const pending = await db.get("SELECT * FROM payments WHERE user_id = ? AND status = 'AWAITING_PHOTO' ORDER BY id DESC LIMIT 1", ctx.from.id);
         if (!pending) return;
-        
         const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
         await db.run("UPDATE payments SET status = 'PENDING_REVIEW', file_id = ? WHERE id = ?", fileId, pending.id);
-        
         if (TEST_GROUP_ID) {
             const report = formatPaymentReport(pending, "⏳", "በምርመራ ላይ...");
             const sent = await bot.telegram.sendMessage(TEST_GROUP_ID, report);
             await db.run('UPDATE payments SET group_msg_id = ? WHERE id = ?', sent.message_id, pending.id);
         }
-        
         const revKb = Markup.inlineKeyboard([[Markup.button.callback("✅ አጽድቅ", `rev_app_${pending.id}`), Markup.button.callback("❌ ውድቅ", `rev_rej_${pending.id}`)]]);
         await bot.telegram.sendPhoto(ADMIN_ID, fileId, { caption: `🚨 ምርመራ: ${pending.tx_id}`, ...revKb });
         await ctx.reply(`📩 ደረሰኝዎ ለምርመራ ደርሷል። ሲጸድቅ እናሳውቆታለን።`);
-    } catch (err) { console.error("Upload Handling Error:", err); }
+    } catch (err) { console.error("Upload Error:", err); }
 });
 
 // --- 8. APPROVAL ACTIONS ---
@@ -290,7 +277,7 @@ bot.action(/^(rev_app|rev_rej|tr_app|tr_rej)_(\d+)$/, async (ctx) => {
         }
         await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n🏁 ውሳኔ: ${action} በ: ${adminName}`);
         ctx.answerCbQuery("Done");
-    } catch (e) { console.error("Action Handling Error:", e); }
+    } catch (e) { console.error("Action Error:", e); }
 });
 
 // --- 9. STARTUP & CONFLICT RESOLUTION ---
@@ -299,14 +286,21 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 async function startBot(retries = 10) {
     try {
         await initDB();
-        console.log("🧹 Clearing old Telegram connections...");
+        console.log("🧹 Webhook ማጽዳት...");
         await bot.telegram.deleteWebhook({ drop_pending_updates: true });
         
-        console.log("⏳ Initializing bot instance...");
+        // በግሩፕ ውስጥ የሚታዩ ትዕዛዞችን ማዘጋጀት
+        await bot.telegram.setMyCommands([
+            { command: 'pay', description: 'ክፍያ ለመጀመር' },
+            { command: 'payhere', description: 'የክፍያ ጣቢያ በግሩፕ ለመፍጠር' },
+            { command: 'setup', description: 'የግሩፕ አቀነባበር መመሪያ' },
+            { command: 'admin', description: 'የአስተዳዳሪ ማጠቃለያ' }
+        ]);
+
+        console.log("⏳ ኮኔክሽን በማስተካከል ላይ...");
         await sleep(6000); 
-        
         await bot.launch({ dropPendingUpdates: true });
-        console.log("🚀 EdirPay Enterprise v5.7.3 Online!");
+        console.log("🚀 EdirPay Enterprise v5.7.4 Online!");
     } catch (err) {
         if (err.response && err.response.error_code === 409 && retries > 0) {
             console.warn(`⚠️ Conflict. Retrying in 10s... (${retries} left)`);
