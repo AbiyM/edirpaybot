@@ -1,7 +1,7 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v5.6.9 - Enterprise Tracking & Stability
+ * እሁድን በፍቅር ዲጂታል ፕሮ v5.7.2 - Inline Mode & Group Integration
  * ቴክኖሎጂ፡ Telegraf (Telegram Bot API), sqlite (Database), Node.js
- * ማሻሻያ፡ ትዕዛዞች በግሩፕ ውስጥ ሲጠሩ ዝርዝር ሎግ (Logging) እንዲያሳዩ እና አስተማማኝነታቸው እንዲጨምር ተደርጓል
+ * ማሻሻያ፡ Inline Mode በመጠቀም አባላት በየትኛውም ቻት ውስጥ @Edirpaybot ብለው ክፍያ እንዲጀምሩ ተደርጓል
  */
 
 require('dotenv').config();
@@ -22,6 +22,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : null;
 const FINANCE_ID = process.env.FINANCE_ID ? parseInt(process.env.FINANCE_ID) : null;
 const TEST_GROUP_ID = process.env.TEST_GROUP_ID ? parseInt(process.env.TEST_GROUP_ID) : null;
+
 const MINI_APP_URL = process.env.MINI_APP_URL || "https://abiym.github.io/edirpaybot/";
 const DB_FILE = process.env.DISK_PATH ? `${process.env.DISK_PATH}/edir_pro_final.db` : 'edir_pro_final.db';
 
@@ -74,7 +75,7 @@ async function initDB() {
 bot.use(session());
 
 bot.catch((err, ctx) => {
-    console.error(`❌ Telegraf Error [${ctx.updateType}]:`, err);
+    console.error(`❌ Bot Logic Error [${ctx.updateType}]:`, err);
 });
 
 bot.use(async (ctx, next) => {
@@ -103,7 +104,43 @@ const formatPaymentReport = (p, emoji, statusText) => {
     return base;
 };
 
-// --- 5. BOT COMMANDS ---
+// --- 5. INLINE MODE HANDLER ---
+
+// አባላት በማንኛውም ቦታ @botname ብለው ሲጽፉ የሚመጣ ምርጫ
+bot.on('inline_query', async (ctx) => {
+    const results = [
+        {
+            type: 'article',
+            id: 'pay_now',
+            title: '💳 ክፍያ ይፈጽሙ (Pay Now)',
+            description: 'የእሁድን በፍቅር ሚኒ አፕ በመጠቀም ክፍያ ለመፈጸም እዚህ ይጫኑ',
+            input_message_content: {
+                message_text: `ሰላም! የዕድር ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጠቀሙ።`
+            },
+            reply_markup: {
+                inline_keyboard: [[{ text: "📱 ሚኒ አፑን ክፈት", web_app: { url: MINI_APP_URL } }]]
+            },
+            thumb_url: 'https://cdn-icons-png.flaticon.com/512/10149/10149458.png'
+        }
+    ];
+    return await ctx.answerInlineQuery(results, { cache_time: 0 });
+});
+
+// --- 6. BOT COMMANDS ---
+
+bot.on('new_chat_members', async (ctx) => {
+    const isBotAdded = ctx.message.new_chat_members.some(m => m.id === ctx.botInfo.id);
+    if (isBotAdded) {
+        const text = `ሰላም! 🖐 እኔ **የእሁድን በፍቅር** ዲጂታል ዕድር ቦት ነኝ።\n\n` +
+                     `አባላት በዚህ ግሩፕ ውስጥ ሆነው ክፍያ ለመፈጸም እንዲችሉ እባክዎ **Admin** ያድርጉኝ።\n\n` +
+                     `ክፍያ ለመጀመር፦ /pay ብለው ይላኩ ወይም በየትኛውም ቻት ውስጥ **@${ctx.botInfo.username}** ብለው ይጥሩኝ።`;
+        return ctx.replyWithMarkdown(text, {
+            reply_markup: {
+                inline_keyboard: [[{ text: "📱 ሚኒ አፑን ክፈት", web_app: { url: MINI_APP_URL } }]]
+            }
+        });
+    }
+});
 
 bot.start(async (ctx) => {
     try {
@@ -113,22 +150,26 @@ bot.start(async (ctx) => {
             ctx.from.id, ctx.from.username || 'N/A', ctx.from.first_name, time
         );
         const text = `ሰላም ${ctx.from.first_name}! 👋 ወደ **እሁድን በፍቅር** ዲጂታል ዕድር እንኳን ደህና መጡ።`;
-        return await ctx.replyWithMarkdown(text, Markup.inlineKeyboard([
-            [Markup.button.webApp("📱 መተግበሪያውን ክፈት", MINI_APP_URL)]
-        ]));
+        return await ctx.replyWithMarkdown(text, {
+            reply_markup: {
+                inline_keyboard: [[{ text: "📱 መተግበሪያውን ክፈት", web_app: { url: MINI_APP_URL } }]]
+            }
+        });
     } catch (e) { console.error("Start Command Error:", e); }
 });
 
 bot.command('pay', async (ctx) => {
-    console.log(`[PAY] Triggered in ${ctx.chat.id} (${ctx.chat.type})`);
     try {
         const text = `ሰላም ${ctx.from.first_name}! ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጫኑ፦`;
-        return await ctx.reply(text, Markup.inlineKeyboard([
-            [Markup.button.webApp("💳 ክፍያ ይፈጽሙ", MINI_APP_URL)]
-        ]));
+        return await ctx.reply(text, {
+            reply_markup: {
+                inline_keyboard: [[{ text: "💳 ክፍያ ይፈጽሙ", web_app: { url: MINI_APP_URL } }]]
+            }
+        });
     } catch (e) {
-        console.error("Pay Command Error:", e);
-        return ctx.reply("❌ አዝራሩን መላክ አልተቻለም። እባክዎ ቦቱን በግል ቻት ያነጋግሩ።");
+        console.error("❌ Pay Command Failure:", e.description || e.message);
+        const errorText = "❌ አዝራሩን መላክ አልተቻለም። እባክዎ ቦቱን በግል ቻት ያነጋግሩ።";
+        return ctx.reply(errorText);
     }
 });
 
@@ -143,10 +184,10 @@ bot.command('admin', async (ctx) => {
 });
 
 bot.command('id', async (ctx) => {
-    return await ctx.reply(`ID: \`${ctx.chat.id}\``, { parse_mode: 'Markdown' });
+    return await ctx.reply(`Chat ID: \`${ctx.chat.id}\``, { parse_mode: 'Markdown' });
 });
 
-// --- 6. DATA & MEDIA HANDLING ---
+// --- 7. DATA & MEDIA HANDLING ---
 
 bot.on('web_app_data', async (ctx) => {
     try {
@@ -186,7 +227,7 @@ bot.on(['photo', 'document'], async (ctx) => {
     } catch (err) { console.error("Upload Handling Error:", err); }
 });
 
-// --- 7. APPROVAL ACTIONS ---
+// --- 8. APPROVAL ACTIONS ---
 
 bot.action(/^(rev_app|rev_rej|tr_app|tr_rej)_(\d+)$/, async (ctx) => {
     try {
@@ -231,7 +272,7 @@ bot.action(/^(rev_app|rev_rej|tr_app|tr_rej)_(\d+)$/, async (ctx) => {
     } catch (e) { console.error("Action Handling Error:", e); }
 });
 
-// --- 8. STARTUP & CONFLICT RESOLUTION ---
+// --- 9. STARTUP & CONFLICT RESOLUTION ---
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 async function startBot(retries = 10) {
@@ -244,7 +285,7 @@ async function startBot(retries = 10) {
         await sleep(6000); 
         
         await bot.launch({ dropPendingUpdates: true });
-        console.log("🚀 EdirPay Enterprise v5.6.9 Online!");
+        console.log("🚀 EdirPay Enterprise v5.7.2 Online!");
     } catch (err) {
         if (err.response && err.response.error_code === 409 && retries > 0) {
             console.warn(`⚠️ Conflict. Retrying in 10s... (${retries} left)`);
