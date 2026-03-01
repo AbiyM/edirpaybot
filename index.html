@@ -13,19 +13,21 @@
 
     <style>
         :root {
-            --tg-bg: var(--tg-theme-bg-color, #f8fafc);
+            /* Updated background color to #9ffca5 */
+            --tg-bg: var(--tg-theme-bg-color, #9ffca5);
             --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #0f172a);
             --brand-green: #15803d;
             --brand-light: rgba(21, 128, 61, 0.08);
-            --card-border: rgba(226, 232, 240, 1);
+            --card-border: rgba(0, 0, 0, 0.05);
             --glass: rgba(255, 255, 255, 0.85);
             --skymark-blue: #2563eb;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --tg-bg: var(--tg-theme-bg-color, #020617);
+                /* In dark mode, we keep a darker variant but allow theme override */
+                --tg-bg: var(--tg-theme-bg-color, #0a1a0a);
                 --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #0f172a);
                 --tg-text: var(--tg-theme-text-color, #f1f5f9);
                 --card-border: rgba(30, 41, 59, 0.8);
@@ -40,7 +42,7 @@
             margin: 0; padding: 0;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
-            padding-bottom: 140px; /* Enhanced bottom padding */
+            padding-bottom: 140px;
         }
 
         /* --- ADVANCED LOADING ANIMATION --- */
@@ -54,8 +56,8 @@
         #appLoader::before {
             content: "";
             position: absolute; width: 150%; height: 150%;
-            background: radial-gradient(circle at 15% 15%, rgba(21, 128, 61, 0.08) 0%, transparent 40%),
-                        radial-gradient(circle at 85% 85%, rgba(37, 99, 235, 0.08) 0%, transparent 40%);
+            background: radial-gradient(circle at 15% 15%, rgba(21, 128, 61, 0.1) 0%, transparent 40%),
+                        radial-gradient(circle at 85% 85%, rgba(37, 99, 235, 0.1) 0%, transparent 40%);
             animation: mesh-rotate 25s linear infinite;
             z-index: -1;
         }
@@ -67,7 +69,7 @@
             position: absolute; width: 240px; height: 240px; 
             border-radius: 35% 65% 65% 35% / 45% 40% 60% 55%; 
             border: 2px solid var(--brand-green); 
-            opacity: 0.15; 
+            opacity: 0.2; 
             animation: blob-morph 10s linear infinite; 
         }
         
@@ -90,7 +92,7 @@
         .loader-logo { 
             width: 120px; height: 120px; 
             border-radius: 36px; background: white; 
-            padding: 10px; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.18); 
+            padding: 10px; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.1); 
             z-index: 10; object-fit: cover; 
             animation: logo-float 4s ease-in-out infinite;
         }
@@ -124,7 +126,7 @@
             border: 1px solid var(--card-border);
             border-radius: 2.75rem;
             padding: 2.25rem;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.03);
             margin-bottom: 2.5rem;
         }
 
@@ -143,7 +145,7 @@
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
             position: sticky; top: 15px; z-index: 1000;
             backdrop-filter: blur(40px); border: 1px solid var(--card-border);
-            box-shadow: 0 15px 45px rgba(0,0,0,0.08); margin-bottom: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 50px;
         }
 
         .tab-btn {
@@ -175,10 +177,6 @@
         }
         .method-card.selected { border-color: var(--brand-green); background: var(--brand-light); }
 
-        .status-badge { font-size: 10px; font-weight: 900; padding: 6px 14px; border-radius: 50px; text-transform: uppercase; }
-        .badge-approved { background: #dcfce7; color: #15803d; }
-        .badge-pending { background: #fef9c3; color: #854d0e; animation: pulse 2s infinite; }
-
         .gateway-logo { width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 10px; object-fit: contain; background: white; padding: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); }
 
         /* --- FOOTER --- */
@@ -206,7 +204,7 @@
         </div>
         
         <div class="mt-16 text-center">
-            <div class="text-4xl font-black tracking-[0.25em] text-green-800 mb-3">እሁድን በፍቅር</div>
+            <div class="text-4xl font-black tracking-[0.25em] text-green-900 mb-3">እሁድን በፍቅር</div>
             <div class="text-[12px] font-black opacity-30 uppercase tracking-[0.6em]">Edir Digital Pro</div>
             
             <div class="loading-progress mx-auto">
@@ -310,7 +308,7 @@
                     </div>
                     
                     <div id="receiptUploadArea" class="text-center mt-8">
-                        <div class="bg-black/5 border-dashed border-2 border-slate-300 p-20 rounded-[3rem] cursor-pointer hover:bg-black/10 transition-all" onclick="document.getElementById('receiptFile').click()">
+                        <div class="bg-black/5 border-dashed border-2 border-slate-300 p-20 rounded-[3rem] cursor-pointer font-bold hover:bg-black/10 transition-all" onclick="document.getElementById('receiptFile').click()">
                             <span class="text-[13px] font-black uppercase opacity-40 block mb-2">📸 ደረሰኝ ለመጫን እዚህ ይጫኑ</span>
                             <img id="previewImage" class="hidden mx-auto max-h-72 rounded-3xl mt-10 shadow-2xl border-4 border-white">
                         </div>
@@ -479,7 +477,7 @@
 
         function handleTypeChange() { 
             const p = document.getElementById('purpose').value; 
-            const dg = document.getElementById('dateGrid'), l = document.getElementById('periodLabel'); 
+            const l = document.getElementById('periodLabel'); 
             if (p === "ሌላ ክፍያ") { l.innerText = "ዓላማ (ለማን/ለምን)"; } 
             else { l.innerText = "የክፍያ ጊዜ"; } 
         }
