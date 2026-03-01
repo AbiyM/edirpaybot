@@ -1,7 +1,7 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v5.5.0 - Full Feature Backend
+ * እሁድን በፍቅር ዲጂታል ፕሮ v5.5.1 - Render & Group Fix
  * ቴክኖሎጂ፡ Telegraf (Telegram Bot API), sqlite (Database), Node.js
- * ዋና ተግባራት፡ ምዝገባ፣ ክፍያ፣ ብድር፣ የአስተዳዳሪ ማረጋገጫ እና ማሳወቂያዎች
+ * ማሻሻያ፡ 409 Conflict እና 400 Button Type ስህተቶችን ለመፍታት የተስተካከለ
  */
 
 require('dotenv').config();
@@ -98,9 +98,14 @@ bot.start(async (ctx) => {
 
     const text = `ሰላም ${ctx.from.first_name}! 👋 ወደ **እሁድን በፍቅር** ዲጂታል ዕድር እንኳን ደህና መጡ።\n\nመተግበሪያውን በመክፈት ክፍያ መፈጸም ወይም ቁጠባዎን ማየት ይችላሉ።`;
     
-    return ctx.replyWithMarkdown(text, Markup.inlineKeyboard([
-        [Markup.button.webApp("📱 መተግበሪያውን ክፈት", MINI_APP_URL)]
-    ]));
+    // Fix: Using explicit structure for WebApp button to avoid 'BUTTON_TYPE_INVALID'
+    const keyboard = {
+        inline_keyboard: [
+            [{ text: "📱 መተግበሪያውን ክፈት", web_app: { url: MINI_APP_URL } }]
+        ]
+    };
+
+    return ctx.replyWithMarkdown(text, { reply_markup: keyboard });
 });
 
 // Admin Panel (/admin)
@@ -111,6 +116,15 @@ bot.command('admin', async (ctx) => {
     const lCount = await db.get("SELECT COUNT(*) as count FROM loans WHERE status = 'PENDING'");
     
     await ctx.replyWithMarkdown(`📊 **የአስተዳዳሪ ማጠቃለያ**\n━━━━━━━━━━━━━━━━━━\n👥 አባላት: ${stats.count}\n💰 ጠቅላላ ቁጠባ: ${stats.total || 0} ብር\n⏳ የሚጠባበቁ ክፍያዎች: ${pCount.count}\n🏦 የሚጠባበቁ ብድሮች: ${lCount.count}`);
+});
+
+bot.command('pay', (ctx) => {
+    const keyboard = {
+        inline_keyboard: [
+            [{ text: "💳 ክፍያ ይፈጽሙ", web_app: { url: MINI_APP_URL } }]
+        ]
+    };
+    return ctx.reply(`ክፍያ ለመፈጸም አዝራሩን ይጫኑ፦`, { reply_markup: keyboard });
 });
 
 bot.command('id', (ctx) => ctx.reply(`የዚህ ቻት ID፦ \`${ctx.chat.id}\``, { parse_mode: 'Markdown' }));
@@ -201,7 +215,7 @@ bot.action(/^(pay_app|pay_rej|loan_app|loan_rej)_(\d+)$/, async (ctx) => {
         } else {
             await db.run("UPDATE payments SET status = 'REJECTED' WHERE id = ?", id);
             await bot.telegram.sendMessage(p.user_id, `❌ **ክፍያዎ ውድቅ ተደርጓል!**\nመለያ፦ \`${p.tx_id}\`\nእባክዎ ደረሰኝዎን አረጋግጠው በድጋሚ ይሞክሩ።`);
-            if (TEST_GROUP_ID && p.group_msg_id) await bot.telegram.editMessageText(TEST_GROUP_ID, p.group_msg_id, null, formatPaymentReport(p, "❌", "ውድቅ ተደርጓል"), { parse_mode: 'Markdown' }).catch(()=>{});
+            if (TEST_GROUP_ID && p.group_msg_id) await db.telegram.editMessageText(TEST_GROUP_ID, p.group_msg_id, null, formatPaymentReport(p, "❌", "ውድቅ ተደርጓል"), { parse_mode: 'Markdown' }).catch(()=>{});
         }
     } 
     
@@ -225,10 +239,21 @@ bot.action(/^(pay_app|pay_rej|loan_app|loan_rej)_(\d+)$/, async (ctx) => {
 async function start() {
     try {
         await initDB();
+        
+        // Robust handling for Render deployment to avoid 409 Conflict
+        console.log("🧹 Clearing old connections...");
         await bot.telegram.deleteWebhook({ drop_pending_updates: true });
-        await bot.launch();
-        console.log("🚀 EdirPay Enterprise v5.5.0 Online!");
-    } catch (err) { console.error("Startup Failed:", err); }
+        
+        await bot.launch({
+            allowedUpdates: [],
+            dropPendingUpdates: true
+        });
+        
+        console.log("🚀 EdirPay Enterprise v5.5.1 Online!");
+    } catch (err) { 
+        console.error("❌ Startup Failed:", err);
+        // Do not exit process (status 1) to keep Render instance alive for debugging
+    }
 }
 
 start();
