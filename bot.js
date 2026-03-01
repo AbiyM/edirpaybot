@@ -1,7 +1,7 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v5.6.7 - Handled Error & Group Fix
+ * እሁድን በፍቅር ዲጂታል ፕሮ v5.6.8 - Production Group Stability
  * ቴክኖሎጂ፡ Telegraf (Telegram Bot API), sqlite (Database), Node.js
- * ማሻሻያ፡ Unhandled error ስህተትን ለመፍታት bot.catch መጨመር እና የግሩፕ አዝራር ማስተካከያ
+ * ማሻሻያ፡ ዝርዝር የሎግ መረጃ (Logging) እና የግሩፕ ትዕዛዞች ጥንካሬ ማረጋገጫ
  */
 
 require('dotenv').config();
@@ -73,14 +73,15 @@ async function initDB() {
 // --- 4. HELPERS & ERROR HANDLING ---
 bot.use(session());
 
-// [GLOBAL ERROR HANDLER] ቦቱ እንዳይቆም እና ስህተቱን እንዲያሳይ
+// [GLOBAL ERROR HANDLER]
 bot.catch((err, ctx) => {
-    console.error(`❌ Telegraf Error for ${ctx.updateType}:`, err);
+    console.error(`❌ Telegraf Error [${ctx.updateType}]:`, err);
 });
 
+// [LOGGING MIDDLEWARE] - Matches your provided logs
 bot.use(async (ctx, next) => {
     if (ctx.message && ctx.message.text) {
-        console.log(`[INCOMING] ${ctx.chat.type}: ${ctx.message.text} from ${ctx.from.id}`);
+        console.log(`[INCOMING] ${ctx.chat.type}: ${ctx.message.text} from ${ctx.from.id} in ${ctx.chat.id}`);
     }
     return next();
 });
@@ -114,23 +115,21 @@ bot.start(async (ctx) => {
             ctx.from.id, ctx.from.username || 'N/A', ctx.from.first_name, time
         );
         const text = `ሰላም ${ctx.from.first_name}! 👋 ወደ **እሁድን በፍቅር** ዲጂታል ዕድር እንኳን ደህና መጡ።`;
-        return ctx.replyWithMarkdown(text, Markup.inlineKeyboard([
+        return await ctx.replyWithMarkdown(text, Markup.inlineKeyboard([
             [Markup.button.webApp("📱 መተግበሪያውን ክፈት", MINI_APP_URL)]
         ]));
-    } catch (e) { console.error("Start Error:", e); }
+    } catch (e) { console.error("Start Command Error:", e); }
 });
 
 bot.command('pay', async (ctx) => {
-    console.log(`[PAY] Triggered in ${ctx.chat.id}`);
     try {
         const text = `ሰላም ${ctx.from.first_name}! ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጫኑ፦`;
-        // በግሩፕ ውስጥ የዌብ አፕ አዝራር እንዲሰራ ጥንቃቄ የተሞላበት አወቃቀር
         return await ctx.reply(text, Markup.inlineKeyboard([
             [Markup.button.webApp("💳 ክፍያ ይፈጽሙ", MINI_APP_URL)]
         ]));
     } catch (e) {
         console.error("Pay Command Error:", e);
-        return ctx.reply("❌ አዝራሩን መላክ አልተቻለም። እባክዎ ቦቱን በግል ቻት ያነጋግሩ ወይም አድሚን መሆኑን ያረጋግጡ።");
+        return ctx.reply("❌ አዝራሩን መላክ አልተቻለም። እባክዎ ቦቱን በግል ቻት ያነጋግሩ።");
     }
 });
 
@@ -144,7 +143,9 @@ bot.command('admin', async (ctx) => {
     } catch (e) { console.error("Admin Command Error:", e); }
 });
 
-bot.command('id', (ctx) => ctx.reply(`ID: \`${ctx.chat.id}\``, { parse_mode: 'Markdown' }));
+bot.command('id', async (ctx) => {
+    return await ctx.reply(`ID: \`${ctx.chat.id}\``, { parse_mode: 'Markdown' });
+});
 
 // --- 6. DATA & MEDIA HANDLING ---
 
@@ -155,12 +156,13 @@ bot.on('web_app_data', async (ctx) => {
             const txId = generateTXID();
             const timestamp = new Date().toLocaleString('am-ET');
             const gateway = data.gateway ? data.gateway.toUpperCase() : "MANUAL";
+            
             await db.run("DELETE FROM payments WHERE user_id = ? AND status = 'AWAITING_PHOTO'", ctx.from.id);
             await db.run(
                 `INSERT INTO payments (tx_id, user_id, username, purpose, period, amount, penalty, pay_for, gateway, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 txId, ctx.from.id, ctx.from.username || ctx.from.first_name, data.purpose, data.period, data.amount, data.penalty, data.payFor, gateway, timestamp
             );
-            await ctx.replyWithMarkdown(`✅ የ${data.amount} ብር መረጃ ተመዝግቧል፦ \`${txId}\`\n\n📷 **አሁን ደረሰኝዎን ይላኩ።**`);
+            await ctx.replyWithMarkdown(`✅ የ${data.amount} ብር መረጃ ተመዝግቧል፦ \`${txId}\`\n\n📷 **አሁን ደረሰኝዎን (Screenshot) ይላኩ።**`);
         } 
     } catch (err) { console.error("WebAppData Error:", err); }
 });
@@ -169,17 +171,20 @@ bot.on(['photo', 'document'], async (ctx) => {
     try {
         const pending = await db.get("SELECT * FROM payments WHERE user_id = ? AND status = 'AWAITING_PHOTO' ORDER BY id DESC LIMIT 1", ctx.from.id);
         if (!pending) return;
+        
         const fileId = ctx.message.photo ? ctx.message.photo.pop().file_id : ctx.message.document.file_id;
         await db.run("UPDATE payments SET status = 'PENDING_REVIEW', file_id = ? WHERE id = ?", fileId, pending.id);
+        
         if (TEST_GROUP_ID) {
             const report = formatPaymentReport(pending, "⏳", "በምርመራ ላይ...");
             const sent = await bot.telegram.sendMessage(TEST_GROUP_ID, report);
             await db.run('UPDATE payments SET group_msg_id = ? WHERE id = ?', sent.message_id, pending.id);
         }
+        
         const revKb = Markup.inlineKeyboard([[Markup.button.callback("✅ አጽድቅ", `rev_app_${pending.id}`), Markup.button.callback("❌ ውድቅ", `rev_rej_${pending.id}`)]]);
         await bot.telegram.sendPhoto(ADMIN_ID, fileId, { caption: `🚨 ምርመራ: ${pending.tx_id}`, ...revKb });
-        await ctx.reply(`📩 ደረሰኝዎ ለምርመራ ደርሷል።`);
-    } catch (err) { console.error("Upload Error:", err); }
+        await ctx.reply(`📩 ደረሰኝዎ ለምርመራ ደርሷል። ሲጸድቅ እናሳውቆታለን።`);
+    } catch (err) { console.error("Upload Handling Error:", err); }
 });
 
 // --- 7. APPROVAL ACTIONS ---
@@ -199,11 +204,11 @@ bot.action(/^(rev_app|rev_rej|tr_app|tr_rej)_(\d+)$/, async (ctx) => {
                 await bot.telegram.sendPhoto(FINANCE_ID || ADMIN_ID, p.file_id, { caption: `🏦 ባንክ ማረጋገጫ: ${p.tx_id}\n✅ Reviewed by ${adminName}`, ...trKb });
                 if (TEST_GROUP_ID && p.group_msg_id) {
                     const up = await db.get("SELECT * FROM payments WHERE id = ?", id);
-                    await bot.telegram.editMessageText(TEST_GROUP_ID, p.group_msg_id, null, formatPaymentReport(up, "⏳", "ባንክ እየታየ ነው..."));
+                    await bot.telegram.editMessageText(TEST_GROUP_ID, p.group_msg_id, null, formatPaymentReport(up, "⏳", "ደረሰኝ ተረጋግጧል፤ ባንክ እየታየ ነው..."));
                 }
             } else {
                 await db.run("UPDATE payments SET status = 'REJECTED' WHERE id = ?", id);
-                await bot.telegram.sendMessage(p.user_id, `❌ ውድቅ ተደርጓል (#${p.tx_id})`);
+                await bot.telegram.sendMessage(p.user_id, `❌ ክፍያዎ ውድቅ ተደርጓል (#${p.tx_id})`);
             }
         }
         if (tier === 'tr') {
@@ -212,35 +217,38 @@ bot.action(/^(rev_app|rev_rej|tr_app|tr_rej)_(\d+)$/, async (ctx) => {
                 await db.run("UPDATE payments SET status = 'APPROVED', treasurer_name = ? WHERE id = ?", adminName, id);
                 const total = (p.amount || 0) + (p.penalty || 0);
                 await db.run("UPDATE members SET balance = balance + ? WHERE user_id = ?", total, p.user_id);
-                await bot.telegram.sendMessage(p.user_id, `✅ ጽድቋል (#${p.tx_id})\nብር፦ ${total}`);
+                await bot.telegram.sendMessage(p.user_id, `✅ ክፍያዎ ጽድቋል (#${p.tx_id})\nአጠቃላይ ብር፦ ${total}`);
                 if (TEST_GROUP_ID && p.group_msg_id) {
                     const final = await db.get("SELECT * FROM payments WHERE id = ?", id);
-                    await bot.telegram.editMessageText(TEST_GROUP_ID, p.group_msg_id, null, formatPaymentReport(final, "✅", "ጽድቋል"));
+                    await bot.telegram.editMessageText(TEST_GROUP_ID, p.group_msg_id, null, formatPaymentReport(final, "✅", "ተረጋግጦ ጽድቋል"));
                 }
             } else {
                 await db.run("UPDATE payments SET status = 'REJECTED' WHERE id = ?", id);
+                await bot.telegram.sendMessage(p.user_id, `❌ ክፍያዎ ውድቅ ተደርጓል (#${p.tx_id})`);
             }
         }
         await ctx.editMessageCaption(`${ctx.callbackQuery.message.caption}\n🏁 ውሳኔ: ${action} በ: ${adminName}`);
-        ctx.answerCbQuery("OK");
-    } catch (e) { console.error("Action Error:", e); }
+        ctx.answerCbQuery("Done");
+    } catch (e) { console.error("Action Handling Error:", e); }
 });
 
-// --- 8. STARTUP ---
+// --- 8. STARTUP & CONFLICT RESOLUTION ---
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 async function startBot(retries = 10) {
     try {
         await initDB();
-        console.log("🧹 Clearing Webhooks...");
+        console.log("🧹 Clearing old Telegram connections...");
         await bot.telegram.deleteWebhook({ drop_pending_updates: true });
-        console.log("⏳ Cooling down...");
+        
+        console.log("⏳ Initializing bot instance...");
         await sleep(6000); 
+        
         await bot.launch({ dropPendingUpdates: true });
-        console.log("🚀 EdirPay Enterprise v5.6.7 Online!");
+        console.log("🚀 EdirPay Enterprise v5.6.8 Online!");
     } catch (err) {
         if (err.response && err.response.error_code === 409 && retries > 0) {
-            console.warn(`⚠️ Conflict. Retrying... (${retries})`);
+            console.warn(`⚠️ Conflict. Retrying in 10s... (${retries} left)`);
             await sleep(10000);
             return startBot(retries - 1);
         }
@@ -248,3 +256,6 @@ async function startBot(retries = 10) {
     }
 }
 startBot();
+
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
