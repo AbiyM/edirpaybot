@@ -1,7 +1,7 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v5.7.2 - Inline Mode & Group Integration
+ * እሁድን በፍቅር ዲጂታል ፕሮ v5.7.3 - Group Station Edition
  * ቴክኖሎጂ፡ Telegraf (Telegram Bot API), sqlite (Database), Node.js
- * ማሻሻያ፡ Inline Mode በመጠቀም አባላት በየትኛውም ቻት ውስጥ @Edirpaybot ብለው ክፍያ እንዲጀምሩ ተደርጓል
+ * ማሻሻያ፡ በግሩፕ ውስጥ ፒን ተደርጎ የሚቀመጥ 'Pay Here' አዝራር (Station) ተጨምሯል
  */
 
 require('dotenv').config();
@@ -106,7 +106,6 @@ const formatPaymentReport = (p, emoji, statusText) => {
 
 // --- 5. INLINE MODE HANDLER ---
 
-// አባላት በማንኛውም ቦታ @botname ብለው ሲጽፉ የሚመጣ ምርጫ
 bot.on('inline_query', async (ctx) => {
     const results = [
         {
@@ -156,6 +155,28 @@ bot.start(async (ctx) => {
             }
         });
     } catch (e) { console.error("Start Command Error:", e); }
+});
+
+// [PAY STATION COMMAND] - ለግሩፑ ፒን ተደርጎ የሚቀመጥ አዝራር
+bot.command('payhere', async (ctx) => {
+    const stationText = `🏦 **የእሁድን በፍቅር ዲጂታል ዕድር**\n` +
+                        `━━━━━━━━━━━━━━━━━━\n` +
+                        `ሰላም አባላት! 👋 በዚህ ግሩፕ ውስጥ ክፍያ ለመፈጸም ወይም ቁጠባዎን ለማየት ከታች ያለውን **"ክፍያ ይፈጽሙ"** የሚለውን አዝራር ይጠቀሙ።\n\n` +
+                        `💡 **ማሳሰቢያ፦** መረጃውን በሚኒ አፑ ከላኩ በኋላ፣ ደረሰኝዎን ለቦቱ (@${ctx.botInfo.username}) በግል መላክዎን አይርሱ።\n` +
+                        `━━━━━━━━━━━━━━━━━━`;
+    
+    try {
+        await ctx.replyWithMarkdown(stationText, {
+            reply_markup: {
+                inline_keyboard: [[{ text: "💳 ክፍያ ይፈጽሙ / ሚኒ አፕ", web_app: { url: MINI_APP_URL } }]]
+            }
+        });
+        // አድሚኑን ፒን እንዲያደርግ ማሳሰብ
+        return ctx.reply("☝️ **የክፍያ አዝራሩ ተልኳል። አባላት በቀላሉ እንዲያገኙት እባክዎ ይህንን መልዕክት ፒን (Pin) ያድርጉት።**");
+    } catch (e) {
+        console.error("PayHere Error:", e);
+        return ctx.reply("❌ አዝራሩን መላክ አልተቻለም። ቦቱ አድሚን መሆኑን ያረጋግጡ።");
+    }
 });
 
 bot.command('pay', async (ctx) => {
@@ -285,7 +306,7 @@ async function startBot(retries = 10) {
         await sleep(6000); 
         
         await bot.launch({ dropPendingUpdates: true });
-        console.log("🚀 EdirPay Enterprise v5.7.2 Online!");
+        console.log("🚀 EdirPay Enterprise v5.7.3 Online!");
     } catch (err) {
         if (err.response && err.response.error_code === 409 && retries > 0) {
             console.warn(`⚠️ Conflict. Retrying in 10s... (${retries} left)`);
