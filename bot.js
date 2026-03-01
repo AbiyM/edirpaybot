@@ -1,7 +1,7 @@
 /**
- * እሁድን በፍቅር ዲጂታል ፕሮ v5.6.8 - Production Group Stability
+ * እሁድን በፍቅር ዲጂታል ፕሮ v5.6.9 - Enterprise Tracking & Stability
  * ቴክኖሎጂ፡ Telegraf (Telegram Bot API), sqlite (Database), Node.js
- * ማሻሻያ፡ ዝርዝር የሎግ መረጃ (Logging) እና የግሩፕ ትዕዛዞች ጥንካሬ ማረጋገጫ
+ * ማሻሻያ፡ ትዕዛዞች በግሩፕ ውስጥ ሲጠሩ ዝርዝር ሎግ (Logging) እንዲያሳዩ እና አስተማማኝነታቸው እንዲጨምር ተደርጓል
  */
 
 require('dotenv').config();
@@ -73,12 +73,10 @@ async function initDB() {
 // --- 4. HELPERS & ERROR HANDLING ---
 bot.use(session());
 
-// [GLOBAL ERROR HANDLER]
 bot.catch((err, ctx) => {
     console.error(`❌ Telegraf Error [${ctx.updateType}]:`, err);
 });
 
-// [LOGGING MIDDLEWARE] - Matches your provided logs
 bot.use(async (ctx, next) => {
     if (ctx.message && ctx.message.text) {
         console.log(`[INCOMING] ${ctx.chat.type}: ${ctx.message.text} from ${ctx.from.id} in ${ctx.chat.id}`);
@@ -122,6 +120,7 @@ bot.start(async (ctx) => {
 });
 
 bot.command('pay', async (ctx) => {
+    console.log(`[PAY] Triggered in ${ctx.chat.id} (${ctx.chat.type})`);
     try {
         const text = `ሰላም ${ctx.from.first_name}! ክፍያ ለመፈጸም ከታች ያለውን አዝራር ይጫኑ፦`;
         return await ctx.reply(text, Markup.inlineKeyboard([
@@ -245,7 +244,7 @@ async function startBot(retries = 10) {
         await sleep(6000); 
         
         await bot.launch({ dropPendingUpdates: true });
-        console.log("🚀 EdirPay Enterprise v5.6.8 Online!");
+        console.log("🚀 EdirPay Enterprise v5.6.9 Online!");
     } catch (err) {
         if (err.response && err.response.error_code === 409 && retries > 0) {
             console.warn(`⚠️ Conflict. Retrying in 10s... (${retries} left)`);
